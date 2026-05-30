@@ -6,15 +6,23 @@ export function Navbar() {
   const isProducts = pathname.startsWith('/products')
 
   return (
-    <header className="fixed top-0 z-40 w-full border-b border-white/5 bg-void/80 backdrop-blur-md">
+    <header className="fixed top-0 z-40 w-full border-b border-white/[0.06] bg-black">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/products" className="group flex items-center gap-3">
-          <span className="font-display text-2xl tracking-widest text-amber-glow transition group-hover:text-amber-deep">
-            晶刻
-          </span>
-          <span className="hidden text-xs tracking-[0.3em] text-white/40 sm:inline">
-            CRYSTOMADE
-          </span>
+        <Link
+          to="/products"
+          className="group flex items-center gap-2.5 transition hover:opacity-90 sm:gap-3"
+          aria-label="晶刻 Crystomade"
+        >
+          <img
+            src="/logomark.png"
+            alt=""
+            className="h-10 w-auto shrink-0 object-contain sm:h-11"
+          />
+          <img
+            src="/logoword.png"
+            alt=""
+            className="h-8 w-auto object-contain object-left sm:h-10"
+          />
         </Link>
 
         <nav className="flex items-center gap-6 text-sm">
