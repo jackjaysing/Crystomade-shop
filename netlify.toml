@@ -1,0 +1,9 @@
+# Netlify 部署設定（React Router 需導回 index.html）
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

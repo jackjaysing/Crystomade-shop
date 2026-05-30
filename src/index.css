@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-void font-sans antialiased text-white;
+  }
+
+  /* 自訂捲軸（深色精品感） */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-graphite;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-white/10;
+  }
+}
+
+@layer components {
+  /* 表單輸入共用樣式 */
+  .input-field {
+    @apply w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-amber-glow/50 focus:ring-1 focus:ring-amber-glow/30;
+  }
+}
+
+/* Masonry 瀑布流間距 */
+.masonry-grid {
+  margin-left: -1rem;
+}
+.masonry-column {
+  padding-left: 1rem;
+}

@@ -1,0 +1,86 @@
+import { formatErrorMessage } from '../formatError'
+import { normalizeProduct } from '../normalizeProduct'
+import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
+import type { Product, ProductFormData } from '../types'
+
+/** 取得所有商品（依上架時間新到舊） */
+export async function fetchProducts(): Promise<Product[]> {
+  if (!isSupabaseConfigured) {
+    throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
+  }
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return (data ?? []).map((row) =>
+    normalizeProduct(row as Record<string, unknown>)
+  )
+}
+
+/** 上傳單張圖片至 Storage，回傳公開 URL */
+async function uploadProductImage(file: File): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'jpg'
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(PRODUCT_IMAGE_BUCKET)
+    .upload(path, file, { cacheControl: '3600', upsert: false })
+
+  if (uploadError) throw uploadError
+
+  const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path)
+  return data.publicUrl
+}
+
+/** 批次上傳相簿圖片 */
+async function uploadGalleryImages(files: File[]): Promise<string[]> {
+  const urls: string[] = []
+  for (const file of files) {
+    urls.push(await uploadProductImage(file))
+  }
+  return urls
+}
+
+/** 後台：新增商品並上架 */
+export async function createProduct(form: ProductFormData): Promise<Product> {
+  if (!form.coverFile) {
+    throw new Error('請上傳封面照片')
+  }
+
+  const image_url = await uploadProductImage(form.coverFile)
+  const gallery_urls =
+    form.galleryFiles.length > 0
+      ? await uploadGalleryImages(form.galleryFiles)
+      : []
+
+  const { data, error } = await supabase
+    .from('products')
+    .insert({
+      name: form.name,
+      category: form.category,
+      price: form.price,
+      tags: form.tags,
+      image_url,
+      gallery_urls,
+      description: form.description,
+      status: 'available',
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Product
+}
+
+/** 後台：將商品標記為已售出 */
+export async function markProductSold(productId: string): Promise<void> {
+  const { error } = await supabase
+    .from('products')
+    .update({ status: 'sold' })
+    .eq('id', productId)
+
+  if (error) throw error
+}
