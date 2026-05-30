@@ -124,3 +124,23 @@ export async function markProductSold(productId: string): Promise<void> {
 
   if (error) throw error
 }
+
+/** 後台：永久刪除商品（若已有訂單則無法刪除） */
+export async function deleteProduct(productId: string): Promise<void> {
+  const { error } = await supabase.from('products').delete().eq('id', productId)
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/foreign key|23503|violates.*constraint|RESTRICT/i.test(msg)) {
+      throw new Error(
+        '此商品已有訂單紀錄，無法刪除。可先設為已售出，或待訂單處理後再試。'
+      )
+    }
+    if (/policy|permission|42501/i.test(msg)) {
+      throw new Error(
+        '資料庫尚未允許刪除商品，請在 Supabase SQL Editor 執行 supabase/migration-add-product-delete.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+}

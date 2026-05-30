@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { updateProduct } from '../../lib/api/products'
+import { updateProduct, deleteProduct } from '../../lib/api/products'
 import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
 import type { Product, ProductCategory, ProductEditData } from '../../lib/types'
@@ -35,6 +35,7 @@ export function ProductEditModal({
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -117,6 +118,30 @@ export function ProductEditModal({
       setSubmitting(false)
     }
   }
+
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        `確定要永久刪除「${product.name}」？\n\n刪除後前台將不再顯示，且無法復原。`
+      )
+    ) {
+      return
+    }
+
+    setDeleting(true)
+    setMessage('')
+    try {
+      await deleteProduct(product.id)
+      onSaved()
+      onClose()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '刪除失敗')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const busy = submitting || deleting
 
   const coverDisplay = coverPreview ?? product.image_url
 
@@ -312,19 +337,42 @@ export function ProductEditModal({
             </label>
           </div>
 
-          {message && <p className="text-sm text-red-400">{message}</p>}
+          {message && (
+            <p
+              className={`text-sm ${
+                message.includes('成功') ? 'text-emerald-400' : 'text-red-400'
+              }`}
+            >
+              {message}
+            </p>
+          )}
+
+          <div className="border-t border-white/10 pt-4">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy}
+              className="w-full rounded-lg border border-red-400/40 py-3 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+            >
+              {deleting ? '刪除中…' : '刪除此商品'}
+            </button>
+            <p className="mt-2 text-center text-[11px] text-white/35">
+              若已有訂單紀錄則無法刪除
+            </p>
+          </div>
 
           <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-white/20 py-3 text-sm text-white/60 transition hover:text-white"
+              disabled={busy}
+              className="flex-1 rounded-lg border border-white/20 py-3 text-sm text-white/60 transition hover:text-white disabled:opacity-50"
             >
               取消
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={busy}
               className="flex-1 rounded-lg bg-amber-glow/90 py-3 text-sm tracking-widest text-void disabled:opacity-50"
             >
               {submitting ? '儲存中…' : '儲存更新'}

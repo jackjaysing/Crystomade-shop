@@ -125,6 +125,11 @@ CREATE POLICY "更新訂單"
 ON orders FOR UPDATE
 USING (true);
 
+DROP POLICY IF EXISTS "刪除商品" ON products;
+CREATE POLICY "刪除商品"
+ON products FOR DELETE
+USING (true);
+
 -- ------------------------------------------------------------
 -- 範例資料（僅在尚無商品時插入）
 -- ------------------------------------------------------------
@@ -134,7 +139,7 @@ SELECT * FROM (VALUES
     '金鈦晶簇 · 晨曦',
     '擺件'::product_category,
     12800::numeric,
-    ARRAY['招財', '鈦晶']::text[],
+    ARRAY['財運', '事業']::text[],
     'https://images.unsplash.com/photo-1515568709171-3386a825eaeb?w=800&q=80',
     ARRAY[
       'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800&q=80',
@@ -147,7 +152,7 @@ SELECT * FROM (VALUES
     '粉晶心動 · 柔光',
     '手串'::product_category,
     3600::numeric,
-    ARRAY['人緣', '粉晶']::text[],
+    ARRAY['人緣', '情感']::text[],
     'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800&q=80',
     ARRAY[]::text[],
     'available'::product_status,
@@ -157,7 +162,7 @@ SELECT * FROM (VALUES
     '紫鋰輝雙尖 · 月夜',
     '礦石'::product_category,
     8800::numeric,
-    ARRAY['人緣', '紫鋰輝']::text[],
+    ARRAY['舒緩', '靈性']::text[],
     'https://images.unsplash.com/photo-1611085586311-8d3f1f6fcf2f?w=800&q=80',
     ARRAY[]::text[],
     'sold'::product_status,

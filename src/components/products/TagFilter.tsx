@@ -37,14 +37,8 @@ export function TagFilter({ activeFilterId, onSelect }: TagFilterProps) {
               ? 'border-amber-glow/60 bg-amber-glow/10 text-amber-glow'
               : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white/80'
           }`}
-          title={filter.description}
         >
           {filter.label}
-          {filter.description && (
-            <span className="ml-1 hidden text-xs opacity-50 sm:inline">
-              ({filter.description})
-            </span>
-          )}
         </button>
       ))}
       </div>
