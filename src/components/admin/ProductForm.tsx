@@ -13,6 +13,7 @@ const initialForm: ProductFormData = {
   name: '',
   category: '手串',
   price: 0,
+  stock: 1,
   tags: [],
   description: '',
   coverFile: null,
@@ -84,6 +85,10 @@ export function ProductForm({ onCreated }: ProductFormProps) {
       setMessage('請至少勾選一個標籤')
       return
     }
+    if (form.stock < 1) {
+      setMessage('庫存至少 1 件')
+      return
+    }
     if (!form.coverFile) {
       setMessage('請上傳封面照片')
       return
@@ -121,6 +126,16 @@ export function ProductForm({ onCreated }: ProductFormProps) {
           value={form.price || ''}
           onChange={(e) =>
             setForm({ ...form, price: Number(e.target.value) })
+          }
+          className="input-field"
+        />
+        <input
+          type="number"
+          min={1}
+          placeholder="庫存件數"
+          value={form.stock || ''}
+          onChange={(e) =>
+            setForm({ ...form, stock: Math.max(1, Number(e.target.value) || 1) })
           }
           className="input-field"
         />

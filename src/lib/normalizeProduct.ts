@@ -14,6 +14,16 @@ function parseCategory(value: unknown): ProductCategory {
 export function normalizeProduct(row: Record<string, unknown>): Product {
   const tags = row.tags
   const price = row.price
+  const status = row.status === 'sold' ? 'sold' : 'available'
+  const rawStock = row.stock
+  const stock =
+    typeof rawStock === 'number'
+      ? rawStock
+      : rawStock != null
+        ? Number(rawStock) || 0
+        : status === 'sold'
+          ? 0
+          : 1
 
   return {
     id: String(row.id ?? ''),
@@ -25,7 +35,8 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     gallery_urls: Array.isArray(row.gallery_urls)
       ? row.gallery_urls.map(String)
       : [],
-    status: row.status === 'sold' ? 'sold' : 'available',
+    status,
+    stock,
     description: String(row.description ?? ''),
     created_at: String(row.created_at ?? ''),
   }

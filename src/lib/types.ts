@@ -20,6 +20,8 @@ export interface Product {
   /** 詳情頁額外圖片（不含封面） */
   gallery_urls: string[]
   status: ProductStatus
+  /** 庫存件數，下單成功扣 1 */
+  stock: number
   description: string
   created_at: string
 }
@@ -57,6 +59,8 @@ export interface ProductFormData {
   price: number
   tags: string[]
   description: string
+  /** 上架庫存件數 */
+  stock: number
   /** 封面圖 */
   coverFile: File | null
   /** 詳情頁額外圖片 */

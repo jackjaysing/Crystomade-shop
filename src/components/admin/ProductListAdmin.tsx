@@ -1,4 +1,5 @@
 import { getCategoryLabel } from '../../constants/categories'
+import { isProductSoldOut } from '../../lib/productStock'
 import { markProductSold } from '../../lib/api/products'
 import type { Product } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -41,11 +42,13 @@ export function ProductListAdmin({ products, onUpdated }: ProductListAdminProps)
               </p>
               <p className="text-xs text-white/40">
                 {getCategoryLabel(p.category)} ·{' '}
-                {p.status === 'sold' ? '已售出' : '上架中'} ·{' '}
-                {new Date(p.created_at).toLocaleDateString('zh-TW')}
+                {isProductSoldOut(p)
+                  ? '已售罄'
+                  : `上架中 · 庫存 ${p.stock} 件`}{' '}
+                · {new Date(p.created_at).toLocaleDateString('zh-TW')}
               </p>
             </div>
-            {p.status === 'available' && (
+            {!isProductSoldOut(p) && (
               <button
                 type="button"
                 onClick={() => handleMarkSold(p.id)}

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS products (
   image_url TEXT NOT NULL,
   gallery_urls TEXT[] NOT NULL DEFAULT '{}',
   status product_status NOT NULL DEFAULT 'available',
+  stock INTEGER NOT NULL DEFAULT 1 CHECK (stock >= 0),
   description TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -40,6 +41,7 @@ COMMENT ON COLUMN products.category IS '品類：手串、擺件、礦石';
 COMMENT ON COLUMN products.gallery_urls IS '詳情頁額外圖片（不含封面 image_url）';
 COMMENT ON COLUMN products.tags IS '功效標籤，如 招財、人緣';
 COMMENT ON COLUMN products.status IS 'available=上架中, sold=已售出';
+COMMENT ON COLUMN products.stock IS '庫存件數，下單成功扣 1，0 為售罄';
 
 CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
 

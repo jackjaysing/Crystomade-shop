@@ -3,31 +3,35 @@ import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
 import type { Order, OrderFormData } from '../types'
 
-/** 建立訂單（買家前台 · 超商取件） */
+/** 建立訂單（買家前台 · 超商取件 · 原子扣庫存） */
 export async function createOrder(
   productId: string,
   totalAmount: number,
   form: OrderFormData
 ): Promise<Order> {
-  const lineName = form.line_name.trim() || null
+  const { data, error } = await supabase.rpc('place_order_with_stock', {
+    p_product_id: productId,
+    p_total_amount: totalAmount,
+    p_buyer_name: form.buyer_name.trim(),
+    p_line_name: form.line_name.trim(),
+    p_phone: form.phone.trim(),
+    p_cvs_brand: form.cvs_brand,
+    p_cvs_store: form.cvs_store.trim(),
+  })
 
-  const { data, error } = await supabase
-    .from('orders')
-    .insert({
-      buyer_name: form.buyer_name.trim(),
-      line_name: lineName,
-      phone: form.phone.trim(),
-      cvs_brand: form.cvs_brand,
-      cvs_store: form.cvs_store.trim(),
-      product_id: productId,
-      total_amount: totalAmount,
-      status: 'pending',
-    })
-    .select()
-    .single()
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (msg.includes('place_order_with_stock') || msg.includes('function')) {
+      throw new Error(
+        '資料庫尚未啟用庫存功能，請在 Supabase SQL Editor 執行 supabase/migration-add-stock.sql'
+      )
+    }
+    throw new Error(msg)
+  }
 
-  if (error) throw new Error(formatErrorMessage(error))
-  return normalizeOrder(data as Record<string, unknown>)
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) throw new Error('此商品已售罄，無法下單')
+  return normalizeOrder(row as Record<string, unknown>)
 }
 
 /** 後台：取得所有訂單（最新優先，含商品名稱） */

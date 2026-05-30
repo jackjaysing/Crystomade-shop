@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { CVS_BRANDS } from '../../constants/cvs'
 import { getCategoryLabel } from '../../constants/categories'
 import { createOrder } from '../../lib/api/orders'
+import { isProductSoldOut } from '../../lib/productStock'
 import { validateOrderForm } from '../../lib/normalizeOrder'
 import type { OrderFormData, Product } from '../../lib/types'
 import { ProductImageGallery } from './ProductImageGallery'
@@ -37,7 +38,7 @@ export function ProductModal({
 
   if (!product) return null
 
-  const isSold = product.status === 'sold'
+  const isSold = isProductSoldOut(product)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -95,7 +96,8 @@ export function ProductModal({
 
         <div className="p-8">
           <p className="text-xs tracking-[0.25em] text-amber-glow/70">
-            {getCategoryLabel(product.category)} · ONE OF ONE
+            {getCategoryLabel(product.category)}
+            {!isSold && ` · 庫存 ${product.stock} 件`}
           </p>
           <h2
             id="product-modal-title"

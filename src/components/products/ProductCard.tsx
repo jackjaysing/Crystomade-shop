@@ -1,4 +1,5 @@
 import { getCategoryLabel } from '../../constants/categories'
+import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 
 interface ProductCardProps {
@@ -8,7 +9,7 @@ interface ProductCardProps {
 
 /** 單一商品卡片（瀑布流格內） */
 export function ProductCard({ product, onClick }: ProductCardProps) {
-  const isSold = product.status === 'sold'
+  const isSold = isProductSoldOut(product)
 
   return (
     <article
@@ -51,6 +52,11 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         <p className="mt-1 text-sm text-amber-glow">
           NT$ {product.price.toLocaleString()}
         </p>
+        {!isSold && (
+          <p className="mt-1 text-xs text-white/45">
+            庫存 {product.stock} 件
+          </p>
+        )}
         <div className="mt-2 flex flex-wrap gap-1">
           {product.tags.slice(0, 3).map((tag) => (
             <span

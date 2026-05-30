@@ -66,6 +66,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       image_url,
       gallery_urls,
       description: form.description,
+      stock: form.stock,
       status: 'available',
     })
     .select()
@@ -75,11 +76,11 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
   return data as Product
 }
 
-/** 後台：將商品標記為已售出 */
+/** 後台：將商品標記為已售出（庫存歸零） */
 export async function markProductSold(productId: string): Promise<void> {
   const { error } = await supabase
     .from('products')
-    .update({ status: 'sold' })
+    .update({ status: 'sold', stock: 0 })
     .eq('id', productId)
 
   if (error) throw error
