@@ -86,10 +86,22 @@ export function ProductModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-20 rounded-full border border-white/10 p-2 text-white/60 transition hover:text-white"
+          className="absolute right-3 top-3 z-30 flex items-center gap-1.5 rounded-full border-2 border-white/50 bg-void/90 px-3.5 py-2 text-white shadow-[0_4px_16px_rgba(0,0,0,0.45)] backdrop-blur-md transition hover:border-amber-glow hover:bg-void hover:text-amber-glow"
           aria-label="關閉視窗"
         >
-          ✕
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            className="h-5 w-5 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+          <span className="text-xs font-medium tracking-widest">關閉</span>
         </button>
 
         <ProductImageGallery product={product} isSold={isSold} />
