@@ -29,13 +29,15 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
 
   return (
     <GlassPanel className="overflow-x-auto p-0">
-      <table className="w-full min-w-[800px] text-left text-sm">
+      <table className="w-full min-w-[960px] text-left text-sm">
         <thead>
           <tr className="border-b border-white/10 text-white/50">
             <th className="p-4 font-normal">下單時間</th>
             <th className="p-4 font-normal">買家</th>
+            <th className="p-4 font-normal">Line</th>
             <th className="p-4 font-normal">電話</th>
-            <th className="p-4 font-normal">地址</th>
+            <th className="p-4 font-normal">超商</th>
+            <th className="p-4 font-normal">門市</th>
             <th className="p-4 font-normal">商品</th>
             <th className="p-4 font-normal">金額</th>
             <th className="p-4 font-normal">狀態</th>
@@ -52,9 +54,13 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
                 {new Date(order.created_at).toLocaleString('zh-TW')}
               </td>
               <td className="p-4">{order.buyer_name}</td>
+              <td className="p-4 text-white/60">
+                {order.line_name?.trim() || '—'}
+              </td>
               <td className="p-4 text-white/70">{order.phone}</td>
-              <td className="max-w-[200px] truncate p-4 text-white/70" title={order.address}>
-                {order.address}
+              <td className="p-4 text-white/70">{order.cvs_brand}</td>
+              <td className="max-w-[180px] p-4 text-white/70" title={order.cvs_store}>
+                {order.cvs_store}
               </td>
               <td className="p-4">
                 {order.products?.name ?? order.product_id.slice(0, 8)}

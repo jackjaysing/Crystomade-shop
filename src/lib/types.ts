@@ -3,6 +3,9 @@
 export type ProductStatus = 'available' | 'sold'
 export type OrderStatus = 'pending' | 'shipped'
 
+/** 超商品牌 */
+export type CvsBrand = '7-11' | '全家'
+
 /** 商品品類 */
 export type ProductCategory = '手串' | '擺件' | '礦石'
 
@@ -26,8 +29,11 @@ export interface Order {
   id: string
   created_at: string
   buyer_name: string
+  /** Line 顯示名稱（選填） */
+  line_name: string | null
   phone: string
-  address: string
+  cvs_brand: CvsBrand
+  cvs_store: string
   product_id: string
   total_amount: number
   status: OrderStatus
@@ -38,8 +44,10 @@ export interface Order {
 /** 建立訂單表單 */
 export interface OrderFormData {
   buyer_name: string
+  line_name: string
   phone: string
-  address: string
+  cvs_brand: CvsBrand
+  cvs_store: string
 }
 
 /** 上架商品表單 */

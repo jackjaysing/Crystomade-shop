@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
+import { CVS_BRANDS } from '../../constants/cvs'
 import { getCategoryLabel } from '../../constants/categories'
 import { createOrder } from '../../lib/api/orders'
+import { validateOrderForm } from '../../lib/normalizeOrder'
 import type { OrderFormData, Product } from '../../lib/types'
 import { ProductImageGallery } from './ProductImageGallery'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -14,11 +16,13 @@ interface ProductModalProps {
 
 const emptyForm: OrderFormData = {
   buyer_name: '',
+  line_name: '',
   phone: '',
-  address: '',
+  cvs_brand: '7-11',
+  cvs_store: '',
 }
 
-/** 商品詳情毛玻璃彈窗 + 下單表單 */
+/** 商品詳情毛玻璃彈窗 + 超商取件下單表單 */
 export function ProductModal({
   product,
   onClose,
@@ -38,6 +42,12 @@ export function ProductModal({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (isSold) return
+
+    const validationError = validateOrderForm(form)
+    if (validationError) {
+      setMessage({ type: 'err', text: validationError })
+      return
+    }
 
     setSubmitting(true)
     setMessage(null)
@@ -64,7 +74,6 @@ export function ProductModal({
       aria-modal="true"
       aria-labelledby="product-modal-title"
     >
-      {/* 背景遮罩 */}
       <button
         type="button"
         className="absolute inset-0 bg-void/80 backdrop-blur-sm"
@@ -134,30 +143,72 @@ export function ProductModal({
 
           {!isSold && showForm && (
             <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-              <p className="text-xs tracking-widest text-white/40">填寫收件資訊</p>
+              <p className="text-xs tracking-widest text-white/40">
+                填寫取件資訊（超商宅配）
+              </p>
+
               <input
                 required
-                placeholder="姓名"
+                placeholder="姓名 *"
                 value={form.buyer_name}
                 onChange={(e) => setForm({ ...form, buyer_name: e.target.value })}
                 className="input-field"
               />
+
+              <input
+                placeholder="Line 名稱（選填）"
+                value={form.line_name}
+                onChange={(e) => setForm({ ...form, line_name: e.target.value })}
+                className="input-field"
+              />
+
               <input
                 required
                 type="tel"
-                placeholder="聯絡電話"
+                placeholder="聯絡電話 *"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="input-field"
               />
-              <textarea
+
+              <div>
+                <p className="mb-2 text-xs text-white/50">收件超商 *</p>
+                <div className="flex flex-wrap gap-2">
+                  {CVS_BRANDS.map((brand) => (
+                    <label
+                      key={brand.id}
+                      className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                        form.cvs_brand === brand.id
+                          ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
+                          : 'border-white/10 text-white/50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="cvs_brand"
+                        className="sr-only"
+                        checked={form.cvs_brand === brand.id}
+                        onChange={() =>
+                          setForm({ ...form, cvs_brand: brand.id })
+                        }
+                      />
+                      {brand.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <input
                 required
-                rows={3}
-                placeholder="收件地址"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                className="input-field resize-none"
+                placeholder="收件門市（店名或店號）*"
+                value={form.cvs_store}
+                onChange={(e) => setForm({ ...form, cvs_store: e.target.value })}
+                className="input-field"
               />
+              <p className="text-[11px] text-white/35">
+                例：7-11 信義門市、全家 南京復興店，或超商地圖上的店號
+              </p>
+
               <button
                 type="submit"
                 disabled={submitting}

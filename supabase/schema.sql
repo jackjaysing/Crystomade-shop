@@ -50,14 +50,19 @@ CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   buyer_name TEXT NOT NULL,
+  line_name TEXT,
   phone TEXT NOT NULL,
-  address TEXT NOT NULL,
+  cvs_brand TEXT NOT NULL CHECK (cvs_brand IN ('7-11', '全家')),
+  cvs_store TEXT NOT NULL,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
   total_amount NUMERIC(12, 2) NOT NULL CHECK (total_amount >= 0),
   status order_status NOT NULL DEFAULT 'pending'
 );
 
 COMMENT ON TABLE orders IS '買家訂單';
+COMMENT ON COLUMN orders.line_name IS 'Line 顯示名稱（選填）';
+COMMENT ON COLUMN orders.cvs_brand IS '收件超商：7-11 或 全家';
+COMMENT ON COLUMN orders.cvs_store IS '收件門市名稱或店號';
 COMMENT ON COLUMN orders.status IS 'pending=未處理, shipped=已出貨';
 
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders (created_at DESC);
