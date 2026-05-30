@@ -66,3 +66,19 @@ export interface ProductFormData {
   /** 詳情頁額外圖片 */
   galleryFiles: File[]
 }
+
+/** 後台編輯商品表單 */
+export interface ProductEditData {
+  name: string
+  category: ProductCategory
+  price: number
+  tags: string[]
+  description: string
+  stock: number
+  /** 新封面；null 表示沿用原圖 */
+  coverFile: File | null
+  /** 保留的既有相簿 URL */
+  existingGalleryUrls: string[]
+  /** 新追加的相簿圖片 */
+  galleryFiles: File[]
+}

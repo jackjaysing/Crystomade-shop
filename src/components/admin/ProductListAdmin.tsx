@@ -1,16 +1,19 @@
+import { useState } from 'react'
 import { getCategoryLabel } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import { markProductSold } from '../../lib/api/products'
 import type { Product } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
+import { ProductEditModal } from './ProductEditModal'
 
 interface ProductListAdminProps {
   products: Product[]
   onUpdated: () => void
 }
 
-/** 後台：現有商品列表與一鍵設為已售出 */
+/** 後台：現有商品列表、編輯與一鍵設為已售出 */
 export function ProductListAdmin({ products, onUpdated }: ProductListAdminProps) {
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const handleMarkSold = async (id: string) => {
     if (!confirm('確定將此商品標記為已售出？')) return
     try {
@@ -24,6 +27,13 @@ export function ProductListAdmin({ products, onUpdated }: ProductListAdminProps)
   return (
     <GlassPanel className="p-6">
       <h3 className="font-display text-xl text-amber-glow">現有商品</h3>
+      {editingProduct && (
+        <ProductEditModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSaved={onUpdated}
+        />
+      )}
       <ul className="mt-4 divide-y divide-white/5">
         {products.map((p) => (
           <li
@@ -48,15 +58,24 @@ export function ProductListAdmin({ products, onUpdated }: ProductListAdminProps)
                 · {new Date(p.created_at).toLocaleDateString('zh-TW')}
               </p>
             </div>
-            {!isProductSoldOut(p) && (
+            <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                onClick={() => handleMarkSold(p.id)}
-                className="shrink-0 rounded border border-white/20 px-4 py-2 text-xs text-white/70 transition hover:border-amber-glow/50 hover:text-amber-glow"
+                onClick={() => setEditingProduct(p)}
+                className="rounded border border-amber-glow/40 px-4 py-2 text-xs text-amber-glow transition hover:bg-amber-glow/10"
               >
-                一鍵設為已售出
+                編輯
               </button>
-            )}
+              {!isProductSoldOut(p) && (
+                <button
+                  type="button"
+                  onClick={() => handleMarkSold(p.id)}
+                  className="rounded border border-white/20 px-4 py-2 text-xs text-white/70 transition hover:border-amber-glow/50 hover:text-amber-glow"
+                >
+                  一鍵設為已售出
+                </button>
+              )}
+            </div>
           </li>
         ))}
       </ul>

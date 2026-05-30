@@ -121,7 +121,9 @@ export function ProductModal({
           </div>
 
           <MetalDivider />
-          <p className="mt-6 leading-relaxed text-white/70">{product.description}</p>
+          <p className="mt-6 whitespace-pre-line leading-relaxed text-white/70">
+            {product.description}
+          </p>
 
           {message && (
             <p

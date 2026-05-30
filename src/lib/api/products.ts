@@ -1,7 +1,7 @@
 import { formatErrorMessage } from '../formatError'
 import { normalizeProduct } from '../normalizeProduct'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
-import type { Product, ProductFormData } from '../types'
+import type { Product, ProductEditData, ProductFormData } from '../types'
 
 /** 取得所有商品（依上架時間新到舊） */
 export async function fetchProducts(): Promise<Product[]> {
@@ -74,6 +74,45 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
 
   if (error) throw error
   return data as Product
+}
+
+/** 後台：更新已上架商品 */
+export async function updateProduct(
+  productId: string,
+  form: ProductEditData,
+  currentImageUrl: string
+): Promise<Product> {
+  const image_url = form.coverFile
+    ? await uploadProductImage(form.coverFile)
+    : currentImageUrl
+
+  const newGalleryUrls =
+    form.galleryFiles.length > 0
+      ? await uploadGalleryImages(form.galleryFiles)
+      : []
+
+  const stock = Math.max(0, form.stock)
+  const status = stock <= 0 ? 'sold' : 'available'
+
+  const { data, error } = await supabase
+    .from('products')
+    .update({
+      name: form.name.trim(),
+      category: form.category,
+      price: form.price,
+      tags: form.tags,
+      image_url,
+      gallery_urls: [...form.existingGalleryUrls, ...newGalleryUrls],
+      description: form.description,
+      stock,
+      status,
+    })
+    .eq('id', productId)
+    .select()
+    .single()
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return normalizeProduct(data as Record<string, unknown>)
 }
 
 /** 後台：將商品標記為已售出（庫存歸零） */
