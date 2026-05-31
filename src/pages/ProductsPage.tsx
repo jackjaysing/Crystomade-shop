@@ -42,16 +42,14 @@ export function ProductsPage() {
   return (
     <div className="min-h-screen">
       {/* 英雄區 */}
-      <section className="relative overflow-hidden pb-16 pt-32">
+      <section className="relative overflow-hidden pb-8 pt-12">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#2a3a5c40_0%,_transparent_60%)]" />
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="text-xs tracking-[0.4em] text-amber-glow/60">CRYSTOMADE</p>
           <h1 className="mt-4 font-display text-5xl text-white sm:text-6xl">
             晶刻
           </h1>
-          <p className="mt-3 font-display text-xl tracking-wide text-white/70">
-            一物一圖 · 獨一無二
-          </p>
+          
           <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-white/50">
             每顆晶石皆承載大地的紋理與光澤。探索屬於您的能量伴侶。
           </p>
