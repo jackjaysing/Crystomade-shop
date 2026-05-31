@@ -50,7 +50,7 @@ export function ProductsPage() {
             晶刻
           </h1>
           
-          <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-white/50">
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-white/50">
             探索屬於您的水晶能量夥伴。
           </p>
         </div>
