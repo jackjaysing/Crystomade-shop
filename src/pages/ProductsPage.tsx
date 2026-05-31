@@ -51,7 +51,7 @@ export function ProductsPage() {
           </h1>
           
           <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-white/50">
-            每顆晶石皆承載大地的紋理與光澤。探索屬於您的能量伴侶。
+            探索屬於您的水晶能量夥伴。
           </p>
         </div>
       </section>
