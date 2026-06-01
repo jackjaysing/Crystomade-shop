@@ -5,6 +5,7 @@ import {
   productMatchesCrystalColor,
 } from '../constants/crystalColors'
 import { CategoryFilter } from '../components/products/CategoryFilter'
+import { BannerCarousel } from '../components/products/BannerCarousel'
 import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
 import { ProductMasonry } from '../components/products/ProductMasonry'
 import { ProductModal } from '../components/products/ProductModal'
@@ -12,12 +13,14 @@ import { ProductSearchBar } from '../components/products/ProductSearchBar'
 import { TagFilter } from '../components/products/TagFilter'
 import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
 import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
+import { useBanners } from '../hooks/useBanners'
 import { productMatchesSearchQuery } from '../lib/productSearch'
 import type { Product, ProductCategory } from '../lib/types'
 
 /** 買家前台：典藏商品頁 */
 export function ProductsPage() {
   const { products, loading, error } = useStorefrontProducts()
+  const { banners } = useBanners()
   const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(
     null
   )
@@ -79,6 +82,13 @@ export function ProductsPage() {
           </p>
         </div>
       </section>
+
+      {/* 公告橫幅（搜尋列上方） */}
+      {banners.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-3">
+          <BannerCarousel banners={banners} />
+        </section>
+      )}
 
       {/* 品類與功效篩選（手機極簡固定版） */}
         <section className="sticky top-[73px] z-30 border-y border-white/5 bg-neutral-950/90 backdrop-blur-md py-2">

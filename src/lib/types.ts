@@ -86,6 +86,16 @@ export interface ProductFormData {
   galleryFiles: File[]
 }
 
+/** 公告橫幅 */
+export interface AnnouncementBanner {
+  id: string
+  image_url: string
+  link_url: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+}
+
 /** 後台編輯商品表單 */
 export interface ProductEditData {
   name: string

@@ -1,0 +1,171 @@
+import { formatErrorMessage } from '../formatError'
+import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
+import type { AnnouncementBanner } from '../types'
+
+function normalizeBanner(row: Record<string, unknown>): AnnouncementBanner {
+  return {
+    id: String(row.id),
+    image_url: String(row.image_url),
+    link_url: row.link_url != null ? String(row.link_url) : null,
+    sort_order: Number(row.sort_order ?? 0),
+    is_active: Boolean(row.is_active ?? true),
+    created_at: String(row.created_at),
+  }
+}
+
+async function uploadBannerImage(file: File): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'jpg'
+  const path = `banners/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(PRODUCT_IMAGE_BUCKET)
+    .upload(path, file, { cacheControl: '3600', upsert: false })
+
+  if (uploadError) throw uploadError
+
+  const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path)
+  return data.publicUrl
+}
+
+async function getNextSortOrder(): Promise<number> {
+  const { data, error } = await supabase
+    .from('announcement_banners')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  if (error) throw new Error(formatErrorMessage(error))
+  const max = data?.[0]?.sort_order
+  return typeof max === 'number' ? max + 1 : 0
+}
+
+/** 前台：取得啟用中的公告橫幅 */
+export async function fetchActiveBanners(): Promise<AnnouncementBanner[]> {
+  if (!isSupabaseConfigured) return []
+
+  const { data, error } = await supabase
+    .from('announcement_banners')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    if (/announcement_banners|42P01|42703/i.test(formatErrorMessage(error))) {
+      return []
+    }
+    throw new Error(formatErrorMessage(error))
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeBanner(row as Record<string, unknown>)
+  )
+}
+
+/** 後台：取得所有公告橫幅 */
+export async function fetchAllBanners(): Promise<AnnouncementBanner[]> {
+  if (!isSupabaseConfigured) {
+    throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
+  }
+
+  const { data, error } = await supabase
+    .from('announcement_banners')
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(formatErrorMessage(error))
+
+  return (data ?? []).map((row) =>
+    normalizeBanner(row as Record<string, unknown>)
+  )
+}
+
+/** 後台：上傳並新增公告橫幅 */
+export async function createBanner(
+  file: File,
+  linkUrl?: string
+): Promise<AnnouncementBanner> {
+  const image_url = await uploadBannerImage(file)
+  const sort_order = await getNextSortOrder()
+  const trimmedLink = linkUrl?.trim()
+
+  const { data, error } = await supabase
+    .from('announcement_banners')
+    .insert({
+      image_url,
+      link_url: trimmedLink || null,
+      sort_order,
+      is_active: true,
+    })
+    .select()
+    .single()
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return normalizeBanner(data as Record<string, unknown>)
+}
+
+/** 後台：更新橫幅連結或啟用狀態 */
+export async function updateBanner(
+  id: string,
+  patch: { link_url?: string | null; is_active?: boolean }
+): Promise<AnnouncementBanner> {
+  const payload: Record<string, unknown> = {}
+  if ('link_url' in patch) {
+    const trimmed = patch.link_url?.trim()
+    payload.link_url = trimmed || null
+  }
+  if ('is_active' in patch) {
+    payload.is_active = patch.is_active
+  }
+
+  const { data, error } = await supabase
+    .from('announcement_banners')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return normalizeBanner(data as Record<string, unknown>)
+}
+
+/** 後台：調整橫幅排序 */
+export async function swapBannerOrder(
+  bannerId: string,
+  direction: 'up' | 'down',
+  banners: AnnouncementBanner[]
+): Promise<void> {
+  const index = banners.findIndex((b) => b.id === bannerId)
+  if (index < 0) return
+
+  const swapIndex = direction === 'up' ? index - 1 : index + 1
+  if (swapIndex < 0 || swapIndex >= banners.length) return
+
+  const current = banners[index]
+  const target = banners[swapIndex]
+
+  const { error: errorA } = await supabase
+    .from('announcement_banners')
+    .update({ sort_order: target.sort_order })
+    .eq('id', current.id)
+
+  if (errorA) throw new Error(formatErrorMessage(errorA))
+
+  const { error: errorB } = await supabase
+    .from('announcement_banners')
+    .update({ sort_order: current.sort_order })
+    .eq('id', target.id)
+
+  if (errorB) throw new Error(formatErrorMessage(errorB))
+}
+
+/** 後台：刪除公告橫幅 */
+export async function deleteBanner(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('announcement_banners')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(formatErrorMessage(error))
+}

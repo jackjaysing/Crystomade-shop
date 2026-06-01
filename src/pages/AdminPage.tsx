@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { AdminLogin } from '../components/admin/AdminLogin'
+import { BannerAdmin } from '../components/admin/BannerAdmin'
 import { DeletedProductsModal } from '../components/admin/DeletedProductsModal'
 import { PageViewStats } from '../components/admin/PageViewStats'
 import { OrderTable } from '../components/admin/OrderTable'
 import { ProductForm } from '../components/admin/ProductForm'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { useOrders } from '../hooks/useOrders'
+import { useBanners } from '../hooks/useBanners'
 import { usePageViewStats } from '../hooks/usePageViewStats'
 import { useProductViewStats } from '../hooks/useProductViewStats'
 import { useProducts } from '../hooks/useProducts'
@@ -29,6 +31,11 @@ export function AdminPage() {
     error: productViewError,
     reload: reloadProductViewStats,
   } = useProductViewStats(authed)
+  const {
+    banners,
+    error: bannerError,
+    reload: reloadBanners,
+  } = useBanners({ admin: true, enabled: authed })
 
   const reloadAnalytics = () => {
     reloadPageViewStats()
@@ -68,6 +75,17 @@ export function AdminPage() {
         error={pageViewError}
         onReload={reloadAnalytics}
       />
+
+      {/* 公告橫幅管理 */}
+      <section className="mb-16">
+        <h2 className="mb-4 text-lg tracking-wide text-white/80">公告橫幅</h2>
+        {bannerError && (
+          <p className="mb-3 text-sm text-amber-glow/90">
+            無法載入橫幅：{bannerError}（請執行 migration-add-announcement-banners.sql）
+          </p>
+        )}
+        <BannerAdmin banners={banners} onUpdated={reloadBanners} />
+      </section>
 
       {/* 功能一：訂單明細 */}
       <section className="mb-16">
