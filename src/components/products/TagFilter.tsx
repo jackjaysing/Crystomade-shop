@@ -10,7 +10,7 @@ export function TagFilter({ activeFilterId, onSelect }: TagFilterProps) {
   return (
     <div>
       <p className="mb-3 text-center text-[10px] tracking-[0.35em] text-white/40">
-        功效
+        
       </p>
       <div className="flex flex-wrap justify-center gap-3">
       <button
