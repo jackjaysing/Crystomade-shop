@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react'
 import { LINE_OFFICIAL_URL } from '../../constants/line'
 
-interface OrderSuccessModalProps {
-  onClose: () => void
+const COUNTDOWN_SECONDS = 10
+
+function redirectToLine() {
+  window.location.href = LINE_OFFICIAL_URL
 }
 
-const COUNTDOWN_SECONDS = 3
-
-/** 訂單成功後黑底金邊倒數跳轉彈窗 */
-export function OrderSuccessModal({ onClose }: OrderSuccessModalProps) {
+/** 訂單成功後黑底金邊倒數跳轉彈窗（強制跳轉 LINE） */
+export function OrderSuccessModal() {
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS)
 
   useEffect(() => {
     if (secondsLeft <= 0) {
-      window.location.href = LINE_OFFICIAL_URL
+      redirectToLine()
       return
     }
 
@@ -60,20 +60,10 @@ export function OrderSuccessModal({ onClose }: OrderSuccessModalProps) {
 
           <button
             type="button"
-            onClick={() => {
-              window.location.href = LINE_OFFICIAL_URL
-            }}
+            onClick={redirectToLine}
             className="mt-6 w-full rounded-lg border border-amber-glow/50 bg-amber-glow/10 py-3 text-sm tracking-widest text-amber-glow transition hover:bg-amber-glow/20"
           >
-            立即前往 LINE
-          </button>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-3 text-xs text-white/30 transition hover:text-white/50"
-          >
-            稍後再說
+            立即跳轉
           </button>
         </div>
       </div>

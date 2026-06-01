@@ -287,7 +287,7 @@ export function CheckoutPage() {
         </form>
       </div>
 
-      {showSuccess && <OrderSuccessModal onClose={() => setShowSuccess(false)} />}
+      {showSuccess && <OrderSuccessModal />}
     </div>
   )
 }
