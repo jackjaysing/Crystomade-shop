@@ -8,9 +8,11 @@ import { CategoryFilter } from '../components/products/CategoryFilter'
 import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
 import { ProductMasonry } from '../components/products/ProductMasonry'
 import { ProductModal } from '../components/products/ProductModal'
+import { ProductSearchBar } from '../components/products/ProductSearchBar'
 import { TagFilter } from '../components/products/TagFilter'
 import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
 import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
+import { productMatchesSearchQuery } from '../lib/productSearch'
 import type { Product, ProductCategory } from '../lib/types'
 
 /** 買家前台：典藏商品頁 */
@@ -23,11 +25,16 @@ export function ProductsPage() {
   const [activeCrystalColorId, setActiveCrystalColorId] = useState<string | null>(
     null
   )
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  /** 依品類 + 水晶色 + 功效標籤篩選 */
+  /** 依關鍵字 + 品類 + 水晶色 + 功效標籤篩選 */
   const filteredProducts = useMemo(() => {
     let list = products
+
+    if (searchQuery.trim()) {
+      list = list.filter((p) => productMatchesSearchQuery(p, searchQuery))
+    }
 
     if (activeCategory) {
       list = list.filter((p) => p.category === activeCategory)
@@ -54,7 +61,7 @@ export function ProductsPage() {
     }
 
     return list
-  }, [products, activeCategory, activeCrystalColorId, activeFilterId])
+  }, [products, searchQuery, activeCategory, activeCrystalColorId, activeFilterId])
 
   return (
     <div className="min-h-screen">
@@ -76,6 +83,9 @@ export function ProductsPage() {
       {/* 品類與功效篩選（手機極簡固定版） */}
         <section className="sticky top-[73px] z-30 border-y border-white/5 bg-neutral-950/90 backdrop-blur-md py-2">
           <div className="mx-auto max-w-7xl px-4">
+            <div className="pb-2">
+              <ProductSearchBar value={searchQuery} onChange={setSearchQuery} />
+            </div>
             
             {/* 第一排：品類（微型按鈕 - 強制裁剪防鬼影版） */}
             <div className="flex h-10 items-center gap-2 overflow-x-auto no-scrollbar py-1 overflow-hidden">
@@ -134,7 +144,9 @@ export function ProductsPage() {
           </div>
         )}
         {!loading && !error && filteredProducts.length === 0 && (
-          <p className="text-center text-white/40">此分類暫無商品</p>
+          <p className="text-center text-white/40">
+            {searchQuery.trim() ? '找不到符合搜尋的商品' : '此分類暫無商品'}
+          </p>
         )}
         {!loading && filteredProducts.length > 0 && (
           <ProductMasonry

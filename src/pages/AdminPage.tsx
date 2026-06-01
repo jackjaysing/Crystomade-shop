@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { AdminLogin } from '../components/admin/AdminLogin'
 import { DeletedProductsModal } from '../components/admin/DeletedProductsModal'
+import { PageViewStats } from '../components/admin/PageViewStats'
 import { OrderTable } from '../components/admin/OrderTable'
 import { ProductForm } from '../components/admin/ProductForm'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { useOrders } from '../hooks/useOrders'
+import { usePageViewStats } from '../hooks/usePageViewStats'
+import { useProductViewStats } from '../hooks/useProductViewStats'
 import { useProducts } from '../hooks/useProducts'
 import { isAdminAuthenticated, logoutAdmin } from '../lib/adminAuth'
 import { Archive } from 'lucide-react'
@@ -15,6 +18,22 @@ export function AdminPage() {
   const [showDeleted, setShowDeleted] = useState(false)
   const { products, reload: reloadProducts } = useProducts()
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(authed)
+  const {
+    stats: pageViewStats,
+    loading: pageViewLoading,
+    error: pageViewError,
+    reload: reloadPageViewStats,
+  } = usePageViewStats(authed)
+  const {
+    statsByProductId,
+    error: productViewError,
+    reload: reloadProductViewStats,
+  } = useProductViewStats(authed)
+
+  const reloadAnalytics = () => {
+    reloadPageViewStats()
+    reloadProductViewStats()
+  }
 
   useEffect(() => {
     setAuthed(isAdminAuthenticated())
@@ -43,6 +62,13 @@ export function AdminPage() {
         </button>
       </div>
 
+      <PageViewStats
+        stats={pageViewStats}
+        loading={pageViewLoading}
+        error={pageViewError}
+        onReload={reloadAnalytics}
+      />
+
       {/* 功能一：訂單明細 */}
       <section className="mb-16">
         <h2 className="mb-4 text-lg tracking-wide text-white/80">訂單明細</h2>
@@ -68,7 +94,15 @@ export function AdminPage() {
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <ProductForm onCreated={reloadProducts} />
-          <ProductListAdmin products={products} onUpdated={reloadProducts} />
+          <ProductListAdmin
+            products={products}
+            viewStatsByProductId={statsByProductId}
+            viewStatsError={productViewError}
+            onUpdated={() => {
+              reloadProducts()
+              reloadProductViewStats()
+            }}
+          />
         </div>
       </section>
 

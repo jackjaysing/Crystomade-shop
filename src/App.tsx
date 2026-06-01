@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { PageViewTracker } from './components/analytics/PageViewTracker'
 import { CartProvider } from './contexts/CartContext'
 import { Navbar } from './components/layout/Navbar'
 import { EnvSetupBanner } from './components/ui/EnvSetupBanner'
@@ -13,6 +14,7 @@ export default function App() {
       <div className="min-h-screen bg-void text-white">
         <EnvSetupBanner />
         <Navbar />
+        <PageViewTracker />
         <Routes>
           <Route path="/" element={<Navigate to="/products" replace />} />
           <Route path="/products" element={<ProductsPage />} />

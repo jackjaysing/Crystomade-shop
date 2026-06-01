@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCategoryLabel } from '../../constants/categories'
 import { useCart } from '../../contexts/CartContext'
+import { useProductViewTracker } from '../../hooks/useProductViewTracker'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { ProductImageGallery } from './ProductImageGallery'
@@ -18,6 +19,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   const navigate = useNavigate()
   const { addItem, openCart } = useCart()
   const [feedback, setFeedback] = useState<string | null>(null)
+
+  useProductViewTracker(product?.id)
 
   if (!product) return null
 

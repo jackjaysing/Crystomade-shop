@@ -2,17 +2,25 @@ import { useState } from 'react'
 import { getCategoryLabel } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import { markProductSold } from '../../lib/api/products'
+import type { ProductViewStats } from '../../lib/api/analytics'
 import type { Product } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { ProductEditModal } from './ProductEditModal'
 
 interface ProductListAdminProps {
   products: Product[]
+  viewStatsByProductId?: Map<string, ProductViewStats>
+  viewStatsError?: string | null
   onUpdated: () => void
 }
 
 /** 後台：現有商品列表、編輯與一鍵設為已售出 */
-export function ProductListAdmin({ products, onUpdated }: ProductListAdminProps) {
+export function ProductListAdmin({
+  products,
+  viewStatsByProductId,
+  viewStatsError,
+  onUpdated,
+}: ProductListAdminProps) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const handleMarkSold = async (id: string) => {
     if (!confirm('確定將此商品標記為已售出？')) return
@@ -27,6 +35,11 @@ export function ProductListAdmin({ products, onUpdated }: ProductListAdminProps)
   return (
     <GlassPanel className="p-6">
       <h3 className="font-display text-xl text-amber-glow">現有商品</h3>
+      {viewStatsError && (
+        <p className="mt-2 text-xs text-amber-glow/80">
+          商品瀏覽統計無法載入，請執行 migration-add-product-views.sql
+        </p>
+      )}
       {editingProduct && (
         <ProductEditModal
           product={editingProduct}
@@ -57,6 +70,19 @@ export function ProductListAdmin({ products, onUpdated }: ProductListAdminProps)
                   : `上架中 · 庫存 ${p.stock} 件`}{' '}
                 · {new Date(p.created_at).toLocaleDateString('zh-TW')}
               </p>
+              {!viewStatsError && (
+                <p className="mt-1 text-xs text-white/35">
+                  今日瀏覽{' '}
+                  <span className="text-amber-glow/80">
+                    {(viewStatsByProductId?.get(p.id)?.todayCount ?? 0).toLocaleString('zh-TW')}
+                  </span>
+                  {' · '}
+                  總瀏覽{' '}
+                  <span className="text-white/55">
+                    {(viewStatsByProductId?.get(p.id)?.totalCount ?? 0).toLocaleString('zh-TW')}
+                  </span>
+                </p>
+              )}
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
               <button
