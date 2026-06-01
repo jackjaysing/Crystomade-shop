@@ -8,11 +8,7 @@ interface TagFilterProps {
 /** 功效標籤快速篩選列 */
 export function TagFilter({ activeFilterId, onSelect }: TagFilterProps) {
   return (
-    <div>
-      <p className="mb-3 text-center text-[10px] tracking-[0.35em] text-white/40">
-        
-      </p>
-      <div className="flex flex-nowrap justify-start gap-2">
+    <div className="flex flex-nowrap items-center justify-start gap-2">
       <button
         type="button"
         onClick={() => onSelect(null)}
@@ -41,7 +37,6 @@ export function TagFilter({ activeFilterId, onSelect }: TagFilterProps) {
           {filter.label}
         </button>
       ))}
-      </div>
     </div>
   )
 }

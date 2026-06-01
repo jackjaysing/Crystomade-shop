@@ -22,7 +22,7 @@ export function CrystalColorFilter({
   onSelect,
 }: CrystalColorFilterProps) {
   return (
-    <div className="flex flex-nowrap items-center gap-2.5 py-0.5">
+    <div className="flex flex-nowrap items-center gap-2.5">
       <button
         type="button"
         onClick={() => onSelect(null)}

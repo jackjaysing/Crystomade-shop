@@ -97,31 +97,37 @@ export function ProductsPage() {
               <ProductSearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
             
-            {/* 第一排：品類（微型按鈕 - 強制裁剪防鬼影版） */}
-            <div className="flex h-10 items-center gap-2 overflow-x-auto no-scrollbar py-1 overflow-hidden">
-              <span className="text-[10px] text-neutral-500 shrink-0 mr-1">品類</span>
-              <CategoryFilter
-                activeCategory={activeCategory}
-                onSelect={setActiveCategory}
-              />
+            {/* 第一排：品類 */}
+            <div className="flex min-h-11 items-center gap-2 overflow-x-auto py-1.5 no-scrollbar">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">品類</span>
+              <div className="flex min-w-0 items-center">
+                <CategoryFilter
+                  activeCategory={activeCategory}
+                  onSelect={setActiveCategory}
+                />
+              </div>
             </div>
 
-            {/* 第二排：水晶色（圓形圖示） */}
-            <div className="flex min-h-11 items-center gap-2 overflow-x-auto no-scrollbar py-1.5 border-t border-white/5 mt-1">
-              <span className="text-[10px] text-neutral-500 shrink-0 mr-1">水晶</span>
-              <CrystalColorFilter
-                activeColorId={activeCrystalColorId}
-                onSelect={setActiveCrystalColorId}
-              />
+            {/* 第二排：水晶色 */}
+            <div className="flex min-h-11 items-center gap-2 overflow-x-auto border-t border-white/5 py-1.5 no-scrollbar">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">水晶</span>
+              <div className="flex min-w-0 items-center">
+                <CrystalColorFilter
+                  activeColorId={activeCrystalColorId}
+                  onSelect={setActiveCrystalColorId}
+                />
+              </div>
             </div>
 
-            {/* 第三排：功效（微型按鈕） */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 border-t border-white/5 mt-1">
-              <span className="text-[10px] text-neutral-500 shrink-0 mr-1">功效</span>
-              <TagFilter
-                activeFilterId={activeFilterId}
-                onSelect={setActiveFilterId}
-              />
+            {/* 第三排：功效 */}
+            <div className="flex min-h-11 items-center gap-2 overflow-x-auto border-t border-white/5 py-1.5 no-scrollbar">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">功效</span>
+              <div className="flex min-w-0 items-center">
+                <TagFilter
+                  activeFilterId={activeFilterId}
+                  onSelect={setActiveFilterId}
+                />
+              </div>
             </div>
 
           </div>

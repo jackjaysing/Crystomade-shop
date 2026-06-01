@@ -9,7 +9,7 @@ interface CategoryFilterProps {
 /** 品類選項：手串、擺件、礦石 */
 export function CategoryFilter({ activeCategory, onSelect }: CategoryFilterProps) {
   return (
-    <div className="flex flex-wrap justify-center gap-3">
+    <div className="flex flex-nowrap items-center justify-start gap-2">
       <button
         type="button"
         onClick={() => onSelect(null)}
