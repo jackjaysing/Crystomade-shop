@@ -5,12 +5,12 @@ import { ProductMasonry } from '../components/products/ProductMasonry'
 import { ProductModal } from '../components/products/ProductModal'
 import { TagFilter } from '../components/products/TagFilter'
 import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
-import { useProducts } from '../hooks/useProducts'
+import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
 import type { Product, ProductCategory } from '../lib/types'
 
 /** 買家前台：典藏商品頁 */
 export function ProductsPage() {
-  const { products, loading, error } = useProducts()
+  const { products, loading, error } = useStorefrontProducts()
   const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(
     null
   )

@@ -122,7 +122,7 @@ export function ProductEditModal({
   const handleDelete = async () => {
     if (
       !confirm(
-        `確定要永久刪除「${product.name}」？\n\n刪除後前台將不再顯示，且無法復原。`
+        `確定要刪除「${product.name}」？\n\n商品將移入「已刪除物品」，前台不再顯示。\n若尚有未出貨訂單則無法刪除；已出貨訂單紀錄會保留，之後可重新上架。`
       )
     ) {
       return

@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import { AdminLogin } from '../components/admin/AdminLogin'
+import { DeletedProductsModal } from '../components/admin/DeletedProductsModal'
 import { OrderTable } from '../components/admin/OrderTable'
 import { ProductForm } from '../components/admin/ProductForm'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useProducts } from '../hooks/useProducts'
 import { isAdminAuthenticated, logoutAdmin } from '../lib/adminAuth'
+import { Archive } from 'lucide-react'
 
 /** 賣家後台管理頁 */
 export function AdminPage() {
   const [authed, setAuthed] = useState(isAdminAuthenticated)
+  const [showDeleted, setShowDeleted] = useState(false)
   const { products, reload: reloadProducts } = useProducts()
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(authed)
 
@@ -52,12 +55,29 @@ export function AdminPage() {
 
       {/* 功能二：商品管理 */}
       <section>
-        <h2 className="mb-4 text-lg tracking-wide text-white/80">商品管理</h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg tracking-wide text-white/80">商品管理</h2>
+          <button
+            type="button"
+            onClick={() => setShowDeleted(true)}
+            className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
+          >
+            <Archive className="h-4 w-4" strokeWidth={1.5} />
+            已刪除物品
+          </button>
+        </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <ProductForm onCreated={reloadProducts} />
           <ProductListAdmin products={products} onUpdated={reloadProducts} />
         </div>
       </section>
+
+      {showDeleted && (
+        <DeletedProductsModal
+          onClose={() => setShowDeleted(false)}
+          onRestored={reloadProducts}
+        />
+      )}
     </div>
   )
 }

@@ -24,6 +24,8 @@ export interface Product {
   stock: number
   description: string
   created_at: string
+  /** 軟刪除時間；有值表示已從前台移除 */
+  deleted_at?: string | null
 }
 
 /** 訂單（含關聯商品名稱，供後台顯示） */
@@ -37,6 +39,10 @@ export interface Order {
   cvs_brand: CvsBrand
   cvs_store: string
   product_id: string
+  /** 下單當下商品名稱快照 */
+  product_name?: string | null
+  /** 下單當下商品封面快照 */
+  product_image_url?: string | null
   total_amount: number
   status: OrderStatus
   /** 同一結帳批次 ID（購物車併單） */

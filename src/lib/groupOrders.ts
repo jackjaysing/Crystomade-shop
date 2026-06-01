@@ -43,17 +43,21 @@ function buildLineItems(orders: Order[]): OrderLineItem[] {
   const map = new Map<string, OrderLineItem>()
 
   for (const order of orders) {
-    const existing = map.get(order.product_id)
+    const key = order.product_id || order.product_name || order.id
+    const productName =
+      order.products?.name ?? order.product_name ?? '（商品已刪除）'
+    const imageUrl = order.products?.image_url ?? order.product_image_url ?? undefined
+    const existing = map.get(key)
     if (existing) {
       existing.quantity += 1
       existing.lineTotal += order.total_amount
       continue
     }
 
-    map.set(order.product_id, {
-      productId: order.product_id,
-      productName: order.products?.name ?? `${order.product_id.slice(0, 8)}…`,
-      imageUrl: order.products?.image_url,
+    map.set(key, {
+      productId: order.product_id || key,
+      productName,
+      imageUrl,
       quantity: 1,
       lineTotal: order.total_amount,
     })

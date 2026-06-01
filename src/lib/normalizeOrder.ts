@@ -1,5 +1,21 @@
 import type { Order, OrderFormData } from './types'
 
+function resolveOrderProduct(
+  row: Record<string, unknown>
+): Order['products'] {
+  const joined = row.products as Order['products']
+  if (joined?.name) return joined
+
+  const snapshotName = row.product_name != null ? String(row.product_name) : ''
+  if (!snapshotName) return joined ?? null
+
+  return {
+    name: snapshotName,
+    image_url:
+      row.product_image_url != null ? String(row.product_image_url) : '',
+  }
+}
+
 /** 將 Supabase 訂單列整理為前端型別 */
 export function normalizeOrder(row: Record<string, unknown>): Order {
   const brand = String(row.cvs_brand ?? '')
@@ -14,14 +30,17 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
     phone: String(row.phone ?? ''),
     cvs_brand: cvsBrand,
     cvs_store: String(row.cvs_store ?? row.address ?? ''),
-    product_id: String(row.product_id ?? ''),
+    product_id: row.product_id != null ? String(row.product_id) : '',
+    product_name: row.product_name != null ? String(row.product_name) : null,
+    product_image_url:
+      row.product_image_url != null ? String(row.product_image_url) : null,
     total_amount:
       typeof row.total_amount === 'number'
         ? row.total_amount
         : Number(row.total_amount) || 0,
     status: row.status === 'shipped' ? 'shipped' : 'pending',
     checkout_id: row.checkout_id != null ? String(row.checkout_id) : null,
-    products: row.products as Order['products'],
+    products: resolveOrderProduct(row),
   }
 }
 

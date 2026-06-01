@@ -1,9 +1,16 @@
 import { formatErrorMessage } from '../formatError'
 import { normalizeProduct } from '../normalizeProduct'
+import { isProductActive } from '../productStock'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
 import type { Product, ProductEditData, ProductFormData } from '../types'
 
-/** 取得所有商品（依上架時間新到舊） */
+function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
+  return rows
+    .map((row) => normalizeProduct(row))
+    .filter(isProductActive)
+}
+
+/** 取得上架中商品（排除已軟刪除，依上架時間新到舊） */
 export async function fetchProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured) {
     throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
@@ -12,12 +19,24 @@ export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(formatErrorMessage(error))
-  return (data ?? []).map((row) =>
-    normalizeProduct(row as Record<string, unknown>)
-  )
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/deleted_at|42703|column/i.test(msg)) {
+      const { data: fallback, error: fallbackError } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (fallbackError) throw new Error(formatErrorMessage(fallbackError))
+      return mapActiveProducts((fallback ?? []) as Record<string, unknown>[])
+    }
+    throw new Error(msg)
+  }
+
+  return mapActiveProducts((data ?? []) as Record<string, unknown>[])
 }
 
 /** 上傳單張圖片至 Storage，回傳公開 URL */
@@ -125,22 +144,57 @@ export async function markProductSold(productId: string): Promise<void> {
   if (error) throw error
 }
 
-/** 後台：永久刪除商品（若已有訂單則無法刪除） */
-export async function deleteProduct(productId: string): Promise<void> {
-  const { error } = await supabase.from('products').delete().eq('id', productId)
-
-  if (error) {
-    const msg = formatErrorMessage(error)
-    if (/foreign key|23503|violates.*constraint|RESTRICT/i.test(msg)) {
-      throw new Error(
-        '此商品已有訂單紀錄，無法刪除。可先設為已售出，或待訂單處理後再試。'
-      )
-    }
-    if (/policy|permission|42501/i.test(msg)) {
-      throw new Error(
-        '資料庫尚未允許刪除商品，請在 Supabase SQL Editor 執行 supabase/migration-add-product-delete.sql'
-      )
-    }
-    throw new Error(msg)
+/** 後台：取得已軟刪除商品（最新刪除優先） */
+export async function fetchDeletedProducts(): Promise<Product[]> {
+  if (!isSupabaseConfigured) {
+    throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
   }
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return (data ?? []).map((row) =>
+    normalizeProduct(row as Record<string, unknown>)
+  )
+}
+
+/** 後台：軟刪除商品（移入已刪除物品；須先完成出貨） */
+export async function deleteProduct(productId: string): Promise<void> {
+  const { data: pendingOrders, error: checkError } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('product_id', productId)
+    .eq('status', 'pending')
+    .limit(1)
+
+  if (checkError) throw new Error(formatErrorMessage(checkError))
+  if (pendingOrders && pendingOrders.length > 0) {
+    throw new Error('此商品尚有未出貨訂單，請先完成出貨後再刪除。')
+  }
+
+  const { error } = await supabase
+    .from('products')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', productId)
+    .is('deleted_at', null)
+
+  if (error) throw new Error(formatErrorMessage(error))
+}
+
+/** 後台：重新上架已刪除商品 */
+export async function restoreProduct(productId: string): Promise<Product> {
+  const { data, error } = await supabase
+    .from('products')
+    .update({ deleted_at: null })
+    .eq('id', productId)
+    .not('deleted_at', 'is', null)
+    .select()
+    .single()
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return normalizeProduct(data as Record<string, unknown>)
 }

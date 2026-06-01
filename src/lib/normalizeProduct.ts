@@ -39,5 +39,6 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     stock,
     description: String(row.description ?? ''),
     created_at: String(row.created_at ?? ''),
+    deleted_at: row.deleted_at != null ? String(row.deleted_at) : null,
   }
 }
