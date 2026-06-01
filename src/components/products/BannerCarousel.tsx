@@ -9,6 +9,7 @@ interface BannerCarouselProps {
 export function BannerCarousel({ banners }: BannerCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const isTouchingRef = useRef(false)
 
   const scrollToIndex = useCallback((index: number) => {
     const container = scrollRef.current
@@ -16,7 +17,12 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
 
     const nextIndex = (index + banners.length) % banners.length
     const slide = container.children[nextIndex] as HTMLElement | undefined
-    slide?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    if (slide) {
+      container.scrollTo({
+        left: slide.offsetLeft,
+        behavior: 'smooth',
+      })
+    }
     setActiveIndex(nextIndex)
   }, [banners.length])
 
@@ -29,6 +35,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     if (banners.length <= 1) return
 
     const timer = window.setInterval(() => {
+      if (isTouchingRef.current) return
       scrollToIndex(activeIndex + 1)
     }, 5000)
 
@@ -38,6 +45,16 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
   useEffect(() => {
     const container = scrollRef.current
     if (!container || banners.length === 0) return
+
+    const handleTouchStart = () => {
+      isTouchingRef.current = true
+    }
+
+    const handleTouchEnd = () => {
+      window.setTimeout(() => {
+        isTouchingRef.current = false
+      }, 4000)
+    }
 
     const handleScroll = () => {
       const slides = Array.from(container.children) as HTMLElement[]
@@ -60,7 +77,15 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     }
 
     container.addEventListener('scroll', handleScroll, { passive: true })
-    return () => container.removeEventListener('scroll', handleScroll)
+    container.addEventListener('touchstart', handleTouchStart, { passive: true })
+    container.addEventListener('touchend', handleTouchEnd, { passive: true })
+    container.addEventListener('touchcancel', handleTouchEnd, { passive: true })
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+      container.removeEventListener('touchstart', handleTouchStart)
+      container.removeEventListener('touchend', handleTouchEnd)
+      container.removeEventListener('touchcancel', handleTouchEnd)
+    }
   }, [banners.length])
 
   if (banners.length === 0) return null
@@ -71,7 +96,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     <div className="relative mx-auto max-w-4xl overflow-hidden rounded-lg border border-white/10 bg-graphite/40">
       <div
         ref={scrollRef}
-        className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar scroll-smooth"
+        className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain touch-pan-x no-scrollbar scroll-smooth"
       >
         {banners.map((banner) => {
           const image = (
