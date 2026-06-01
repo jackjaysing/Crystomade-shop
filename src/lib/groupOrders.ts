@@ -13,6 +13,7 @@ export interface OrderLineItem {
 /** 後台合併顯示的訂單群組（同一結帳） */
 export interface OrderGroup {
   id: string
+  orderNumber: string | null
   created_at: string
   buyer_name: string
   line_name: string | null
@@ -89,6 +90,7 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
 
   return {
     id,
+    orderNumber: sorted.find((order) => order.order_number)?.order_number ?? null,
     created_at: sorted[0].created_at,
     buyer_name: sorted[0].buyer_name,
     line_name: sorted[0].line_name,
@@ -182,4 +184,62 @@ export function formatOrderPaymentStatus(status: OrderPaymentStatus): string {
   if (status === 'paid') return '已付款'
   if (status === 'partial') return '部分已付款'
   return '未付款'
+}
+
+/** 後台訂單明細分類 */
+export type OrderGroupFilter = 'all' | 'paid' | 'unpaid' | 'shipped' | 'unshipped'
+
+export const ORDER_GROUP_FILTERS: { id: OrderGroupFilter; label: string }[] = [
+  { id: 'all', label: '全部' },
+  { id: 'paid', label: '已結帳' },
+  { id: 'unpaid', label: '未結帳' },
+  { id: 'shipped', label: '已出貨' },
+  { id: 'unshipped', label: '未出貨' },
+]
+
+export function matchesOrderGroupFilter(
+  group: OrderGroup,
+  filter: OrderGroupFilter
+): boolean {
+  switch (filter) {
+    case 'all':
+      return true
+    case 'paid':
+      return group.paymentStatus === 'paid'
+    case 'unpaid':
+      return group.paymentStatus !== 'paid'
+    case 'shipped':
+      return group.status === 'shipped'
+    case 'unshipped':
+      return group.status !== 'shipped'
+  }
+}
+
+export function filterOrderGroups(
+  groups: OrderGroup[],
+  filter: OrderGroupFilter
+): OrderGroup[] {
+  if (filter === 'all') return groups
+  return groups.filter((group) => matchesOrderGroupFilter(group, filter))
+}
+
+export function countOrderGroupsByFilter(
+  groups: OrderGroup[]
+): Record<OrderGroupFilter, number> {
+  const counts: Record<OrderGroupFilter, number> = {
+    all: groups.length,
+    paid: 0,
+    unpaid: 0,
+    shipped: 0,
+    unshipped: 0,
+  }
+
+  for (const group of groups) {
+    if (matchesOrderGroupFilter(group, 'paid')) counts.paid += 1
+    if (matchesOrderGroupFilter(group, 'unpaid')) counts.unpaid += 1
+    if (matchesOrderGroupFilter(group, 'shipped')) counts.shipped += 1
+    if (matchesOrderGroupFilter(group, 'unshipped')) counts.unshipped += 1
+  }
+
+  return counts
 }

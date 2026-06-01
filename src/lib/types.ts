@@ -52,6 +52,8 @@ export interface Order {
   is_paid: boolean
   /** 同一結帳批次 ID（購物車併單） */
   checkout_id?: string | null
+  /** 人類可讀訂單編號（同一結帳批次共用） */
+  order_number?: string | null
   /** 關聯查詢時帶入 */
   products?: Pick<Product, 'name' | 'image_url'> | null
 }

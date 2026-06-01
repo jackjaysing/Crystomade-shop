@@ -8,7 +8,7 @@ function redirectToLine() {
 }
 
 /** 訂單成功後黑底金邊倒數跳轉彈窗（強制跳轉 LINE） */
-export function OrderSuccessModal() {
+export function OrderSuccessModal({ orderNumber }: { orderNumber?: string | null }) {
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS)
 
   useEffect(() => {
@@ -45,8 +45,17 @@ export function OrderSuccessModal() {
             訂單已成功送出！
           </h2>
 
+          {orderNumber && (
+            <p className="mt-4 font-display text-xl tracking-widest text-white/90">
+              訂單編號{' '}
+              <span className="text-amber-glow">{orderNumber}</span>
+            </p>
+          )}
+
           <p className="mt-6 text-base leading-relaxed text-white/85 sm:text-lg">
-            系統即將自動跳轉至官方 LINE，加入後請務必主動傳送「您的姓名」與「電話後四碼」，老闆收到後會立即為您核對訂單並安排付款、出貨事宜！
+            系統即將自動跳轉至官方 LINE，加入後請務必主動傳送「您的姓名」與「電話後四碼」
+            {orderNumber ? '，並附上訂單編號' : ''}
+            ，老闆收到後會立即為您核對訂單並安排付款、出貨事宜！
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-2">

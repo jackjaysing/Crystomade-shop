@@ -39,6 +39,7 @@ export function CheckoutPage() {
     null
   )
   const [showSuccess, setShowSuccess] = useState(false)
+  const [successOrderNumber, setSuccessOrderNumber] = useState<string | null>(null)
 
   if (items.length === 0 && !showSuccess) {
     return <Navigate to="/products" replace />
@@ -68,13 +69,14 @@ export function CheckoutPage() {
         throw new Error('部分商品剛被搶先收藏，已無可結帳品項，請返回購物車確認。')
       }
 
-      await createOrdersFromCart(
+      const createdOrders = await createOrdersFromCart(
         latest.checkoutItems,
         form,
         latest.shippingFee
       )
       clearCart()
       setForm(emptyForm)
+      setSuccessOrderNumber(createdOrders[0]?.order_number ?? null)
       setShowSuccess(true)
     } catch (err) {
       setMessage({
@@ -287,7 +289,7 @@ export function CheckoutPage() {
         </form>
       </div>
 
-      {showSuccess && <OrderSuccessModal />}
+      {showSuccess && <OrderSuccessModal orderNumber={successOrderNumber} />}
     </div>
   )
 }

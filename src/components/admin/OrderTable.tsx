@@ -1,14 +1,18 @@
-import { useMemo, useState } from 'react'
-import { ChevronDown, Package } from 'lucide-react'
+import { useMemo, useState, type MouseEvent } from 'react'
+import { ChevronDown, Copy, Package } from 'lucide-react'
 import {
   markOrderGroupPaid,
   markOrderGroupUnpaid,
   shipOrderGroup,
 } from '../../lib/api/orders'
 import {
+  countOrderGroupsByFilter,
+  filterOrderGroups,
   formatOrderGroupStatus,
   formatOrderPaymentStatus,
   groupOrders,
+  ORDER_GROUP_FILTERS,
+  type OrderGroupFilter,
   type OrderGroupStatus,
 } from '../../lib/groupOrders'
 import type { Order, OrderPaymentStatus } from '../../lib/types'
@@ -37,13 +41,62 @@ function panelAccentClassName(paymentStatus: OrderPaymentStatus): string {
   return 'border-l-[8px] border-l-red-500/60'
 }
 
+function OrderNumberBlock({ orderNumber }: { orderNumber: string | null }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    if (!orderNumber) return
+
+    try {
+      await navigator.clipboard.writeText(orderNumber)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      alert('無法複製，請手動選取訂單編號')
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-amber-glow/20 bg-amber-glow/[0.06] px-3 py-2.5">
+      <p className="text-xs font-medium tracking-wide text-amber-glow/70">訂單編號</p>
+      {orderNumber ? (
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <p className="font-display text-base tracking-wider text-amber-glow sm:text-lg">
+            {orderNumber}
+          </p>
+          <button
+            type="button"
+            onClick={(e) => void handleCopy(e)}
+            className="inline-flex items-center gap-1 rounded border border-amber-glow/30 px-2 py-0.5 text-[11px] text-amber-glow/80 transition hover:bg-amber-glow/10"
+          >
+            <Copy className="h-3 w-3" strokeWidth={1.5} />
+            {copied ? '已複製' : '複製'}
+          </button>
+        </div>
+      ) : (
+        <p className="mt-1 text-sm text-white/40">尚未產生（請執行 order_number migration）</p>
+      )}
+    </div>
+  )
+}
+
 /** 訂單明細（同一結帳合併 · 點擊展開細項） */
 export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [shippingId, setShippingId] = useState<string | null>(null)
   const [paymentUpdatingId, setPaymentUpdatingId] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter] = useState<OrderGroupFilter>('all')
 
   const orderGroups = useMemo(() => groupOrders(orders), [orders])
+  const filterCounts = useMemo(
+    () => countOrderGroupsByFilter(orderGroups),
+    [orderGroups]
+  )
+  const filteredGroups = useMemo(
+    () => filterOrderGroups(orderGroups, activeFilter),
+    [orderGroups, activeFilter]
+  )
 
   const toggleExpanded = (groupId: string) => {
     setExpandedIds((prev) => {
@@ -147,17 +200,54 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
     return <p className="text-white/50">載入訂單中…</p>
   }
 
-  if (orderGroups.length === 0) {
-    return <p className="text-white/50">尚無訂單</p>
-  }
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="-mx-1 overflow-x-auto px-1 pb-1">
+        <div className="flex min-w-max flex-nowrap items-center gap-2">
+          {ORDER_GROUP_FILTERS.map((filter) => {
+            const isActive = activeFilter === filter.id
+            const count = filterCounts[filter.id]
+
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setActiveFilter(filter.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+                  isActive
+                    ? 'border-amber-glow/60 bg-amber-glow/10 text-amber-glow'
+                    : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white/80'
+                }`}
+              >
+                {filter.label}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                    isActive ? 'bg-amber-glow/20 text-amber-glow' : 'bg-white/5 text-white/40'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <p className="text-xs text-white/40">
-        同一筆結帳已合併顯示 · 左側色條區分付款狀態 · 點擊訂單列可展開商品細項
+        同一筆結帳已合併顯示 · 已結帳＝已付款 · 左側色條區分付款狀態 · 點擊訂單列可展開商品細項
       </p>
 
-      {orderGroups.map((group) => {
+      {orderGroups.length === 0 && <p className="text-white/50">尚無訂單</p>}
+
+      {orderGroups.length > 0 && filteredGroups.length === 0 && (
+        <p className="text-white/50">
+          {ORDER_GROUP_FILTERS.find((filter) => filter.id === activeFilter)?.label}
+          分類目前沒有訂單
+        </p>
+      )}
+
+      <div className="space-y-3">
+      {filteredGroups.map((group) => {
         const isExpanded = expandedIds.has(group.id)
         const productSummary =
           group.lineItems.length === 1
@@ -181,7 +271,9 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <OrderNumberBlock orderNumber={group.orderNumber} />
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <p className="font-medium text-white">{group.buyer_name}</p>
                     <span
                       className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${paymentStatusClassName(group.paymentStatus)}`}
@@ -197,16 +289,31 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
 
                   <p className="mt-1 text-sm text-white/70">{productSummary}</p>
 
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/45">
-                    <span>
-                      {new Date(group.created_at).toLocaleString('zh-TW')}
-                    </span>
-                    <span>{group.phone}</span>
-                    <span>{group.cvs_brand} · {group.cvs_store}</span>
-                    {group.line_name?.trim() && (
-                      <span>Line：{group.line_name.trim()}</span>
-                    )}
+                  <div className="mt-3 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2.5">
+                    <p className="text-xs font-medium tracking-wide text-amber-glow/70">
+                      收貨資訊
+                    </p>
+                    <div className="mt-1.5 space-y-1">
+                      <p className="text-sm text-white/90">
+                        <span className="text-white/50">電話 · </span>
+                        {group.phone}
+                      </p>
+                      <p className="text-sm text-white/90">
+                        <span className="text-white/50">超商 · </span>
+                        {group.cvs_brand} · {group.cvs_store}
+                      </p>
+                      {group.line_name?.trim() && (
+                        <p className="text-sm text-white/90">
+                          <span className="text-white/50">Line · </span>
+                          {group.line_name.trim()}
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  <p className="mt-2 text-xs text-white/40">
+                    下單時間 {new Date(group.created_at).toLocaleString('zh-TW')}
+                  </p>
                 </div>
               </div>
 
@@ -264,6 +371,7 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
           </GlassPanel>
         )
       })}
+      </div>
     </div>
   )
 }

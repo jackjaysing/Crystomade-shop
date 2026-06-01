@@ -25,7 +25,7 @@ export async function createOrder(
     const msg = formatErrorMessage(error)
     if (msg.includes('place_order_with_stock') || msg.includes('function')) {
       throw new Error(
-        '資料庫尚未啟用庫存功能，請在 Supabase SQL Editor 執行 supabase/migration-add-stock.sql'
+        '資料庫尚未啟用最新訂單功能，請在 Supabase SQL Editor 依序執行 supabase/migration-add-stock.sql 與 migration-add-order-number.sql'
       )
     }
     throw new Error(msg)
