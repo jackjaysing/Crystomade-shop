@@ -9,10 +9,6 @@ interface CategoryFilterProps {
 /** 品類篩選：手串、擺件、礦石 */
 export function CategoryFilter({ activeCategory, onSelect }: CategoryFilterProps) {
   return (
-    <div className="mb-4">
-      <p className="mb-3 text-center text-[10px] tracking-[0.35em] text-white/40">
-        品類
-      </p>
       <div className="flex flex-wrap justify-center gap-3">
         <button
           type="button"
