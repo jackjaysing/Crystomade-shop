@@ -1,47 +1,69 @@
+import { ShoppingCart } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { CartDrawer } from '../cart/CartDrawer'
+import { useCart } from '../../contexts/CartContext'
 
 /** 全站導覽列 */
 export function Navbar() {
   const { pathname } = useLocation()
   const isProducts = pathname.startsWith('/products')
+  const { itemCount, openCart } = useCart()
 
   return (
-    <header className="fixed top-0 z-40 w-full border-b border-white/[0.06] bg-black">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link
-          to="/products"
-          className="group flex items-center gap-2.5 transition hover:opacity-90 sm:gap-3"
-          aria-label="晶刻 Crystomade"
-        >
-          <img
-            src="/logomark.png"
-            alt=""
-            className="h-10 w-auto shrink-0 object-contain sm:h-11"
-          />
-          <img
-            src="/logoword.png"
-            alt=""
-            className="h-8 w-auto object-contain object-left sm:h-10"
-          />
-        </Link>
-
-        <nav className="flex items-center gap-6 text-sm">
+    <>
+      <header className="fixed top-0 z-40 w-full border-b border-white/[0.06] bg-black">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link
             to="/products"
-            className={`tracking-wide transition ${
-              isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-            }`}
+            className="group flex items-center gap-2.5 transition hover:opacity-90 sm:gap-3"
+            aria-label="晶刻 Crystomade"
           >
-            典藏
+            <img
+              src="/logomark.png"
+              alt=""
+              className="h-10 w-auto shrink-0 object-contain sm:h-11"
+            />
+            <img
+              src="/logoword.png"
+              alt=""
+              className="h-8 w-auto object-contain object-left sm:h-10"
+            />
           </Link>
-          <Link
-            to="/admin"
-            className="text-white/40 transition hover:text-white/70"
-          >
-            管理
-          </Link>
-        </nav>
-      </div>
-    </header>
+
+          <nav className="flex items-center gap-4 text-sm sm:gap-6">
+            <Link
+              to="/products"
+              className={`tracking-wide transition ${
+                isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              典藏
+            </Link>
+            <Link
+              to="/admin"
+              className="text-white/40 transition hover:text-white/70"
+            >
+              管理
+            </Link>
+
+            <button
+              type="button"
+              onClick={openCart}
+              className="relative rounded-full border border-white/10 p-2.5 text-white/70 transition hover:border-amber-glow/40 hover:text-amber-glow"
+              aria-label={`購物車，${itemCount} 件商品`}
+            >
+              <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-[10px] font-medium text-void">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <CartDrawer />
+    </>
   )
 }

@@ -10,7 +10,7 @@ import type { Product, ProductCategory } from '../lib/types'
 
 /** 買家前台：典藏商品頁 */
 export function ProductsPage() {
-  const { products, loading, error, reload } = useProducts()
+  const { products, loading, error } = useProducts()
   const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(
     null
   )
@@ -121,7 +121,6 @@ export function ProductsPage() {
       <ProductModal
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onOrderSuccess={reload}
       />
     </div>
   )

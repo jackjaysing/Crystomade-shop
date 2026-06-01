@@ -1,7 +1,7 @@
 import { formatErrorMessage } from '../formatError'
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
-import type { Order, OrderFormData } from '../types'
+import type { CartItem, Order, OrderFormData } from '../types'
 
 /** 建立訂單（買家前台 · 超商取件 · 原子扣庫存） */
 export async function createOrder(
@@ -32,6 +32,33 @@ export async function createOrder(
   const row = Array.isArray(data) ? data[0] : data
   if (!row) throw new Error('此商品已售罄，無法下單')
   return normalizeOrder(row as Record<string, unknown>)
+}
+
+/** 購物車批次下單（運費計入第一筆訂單） */
+export async function createOrdersFromCart(
+  items: CartItem[],
+  form: OrderFormData,
+  shippingFee: number
+): Promise<Order[]> {
+  const orders: Order[] = []
+  let shippingAssigned = false
+
+  for (const item of items) {
+    for (let i = 0; i < item.quantity; i++) {
+      const includeShipping = !shippingAssigned && shippingFee > 0
+      const amount = item.price + (includeShipping ? shippingFee : 0)
+      if (includeShipping) shippingAssigned = true
+
+      const order = await createOrder(item.productId, amount, form)
+      orders.push(order)
+    }
+  }
+
+  if (!shippingAssigned && shippingFee > 0 && orders.length === 0) {
+    throw new Error('購物車是空的，無法下單')
+  }
+
+  return orders
 }
 
 /** 後台：取得所有訂單（最新優先，含商品名稱） */

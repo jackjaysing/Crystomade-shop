@@ -43,6 +43,17 @@ export interface Order {
   products?: Pick<Product, 'name' | 'image_url'> | null
 }
 
+/** 購物車品項（精簡快照，供 localStorage 暫存） */
+export interface CartItem {
+  productId: string
+  name: string
+  price: number
+  image_url: string
+  quantity: number
+  /** 加入當下可用庫存上限 */
+  maxStock: number
+}
+
 /** 建立訂單表單 */
 export interface OrderFormData {
   buyer_name: string
