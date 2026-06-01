@@ -2,12 +2,14 @@ import { ShoppingCart } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { CartDrawer } from '../cart/CartDrawer'
 import { useCart } from '../../contexts/CartContext'
+import { useCartAvailability } from '../../hooks/useCartAvailability'
 
 /** 全站導覽列 */
 export function Navbar() {
   const { pathname } = useLocation()
   const isProducts = pathname.startsWith('/products')
-  const { itemCount, openCart } = useCart()
+  const { openCart } = useCart()
+  const { checkoutItemCount } = useCartAvailability()
 
   return (
     <>
@@ -50,12 +52,12 @@ export function Navbar() {
               type="button"
               onClick={openCart}
               className="relative rounded-full border border-white/10 p-2.5 text-white/70 transition hover:border-amber-glow/40 hover:text-amber-glow"
-              aria-label={`購物車，${itemCount} 件商品`}
+              aria-label={`購物車，${checkoutItemCount} 件可結帳商品`}
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />
-              {itemCount > 0 && (
+              {checkoutItemCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-[10px] font-medium text-void">
-                  {itemCount > 99 ? '99+' : itemCount}
+                  {checkoutItemCount > 99 ? '99+' : checkoutItemCount}
                 </span>
               )}
             </button>
