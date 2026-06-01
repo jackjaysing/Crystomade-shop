@@ -28,12 +28,12 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-t-2xl bg-graphite">
-      <div className="relative aspect-[4/3] w-full">
+    <div className="relative w-full rounded-t-2xl bg-graphite">
+      <div className="relative flex min-h-[240px] max-h-[min(55vh,520px)] w-full items-center justify-center px-2 py-3">
         <img
           src={activeSrc}
           alt={`${product.name} ${activeIndex + 1}`}
-          className="h-full w-full object-cover"
+          className="max-h-[min(55vh,520px)] max-w-full object-contain"
         />
 
         {hasMultiple && (
@@ -82,7 +82,7 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
               key={`${url}-${index}`}
               type="button"
               onClick={() => setActiveIndex(index)}
-              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${
+              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-void/60 transition ${
                 index === activeIndex
                   ? 'border-amber-glow'
                   : 'border-transparent opacity-60 hover:opacity-100'
@@ -91,7 +91,7 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
               <img
                 src={url}
                 alt=""
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
               {index === 0 && (
                 <span className="absolute bottom-0 left-0 right-0 bg-void/80 py-0.5 text-[8px] text-amber-glow">
