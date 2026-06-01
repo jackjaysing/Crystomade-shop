@@ -1,6 +1,11 @@
 import { useMemo, useState } from 'react'
 import { TAG_FILTERS } from '../constants/tags'
+import {
+  CRYSTAL_COLOR_FILTERS,
+  productMatchesCrystalColor,
+} from '../constants/crystalColors'
 import { CategoryFilter } from '../components/products/CategoryFilter'
+import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
 import { ProductMasonry } from '../components/products/ProductMasonry'
 import { ProductModal } from '../components/products/ProductModal'
 import { TagFilter } from '../components/products/TagFilter'
@@ -15,14 +20,26 @@ export function ProductsPage() {
     null
   )
   const [activeFilterId, setActiveFilterId] = useState<string | null>(null)
+  const [activeCrystalColorId, setActiveCrystalColorId] = useState<string | null>(
+    null
+  )
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  /** 依品類 + 功效標籤篩選 */
+  /** 依品類 + 水晶色 + 功效標籤篩選 */
   const filteredProducts = useMemo(() => {
     let list = products
 
     if (activeCategory) {
       list = list.filter((p) => p.category === activeCategory)
+    }
+
+    if (activeCrystalColorId) {
+      const colorFilter = CRYSTAL_COLOR_FILTERS.find(
+        (f) => f.id === activeCrystalColorId
+      )
+      if (colorFilter) {
+        list = list.filter((p) => productMatchesCrystalColor(p, colorFilter))
+      }
     }
 
     if (activeFilterId) {
@@ -37,7 +54,7 @@ export function ProductsPage() {
     }
 
     return list
-  }, [products, activeCategory, activeFilterId])
+  }, [products, activeCategory, activeCrystalColorId, activeFilterId])
 
   return (
     <div className="min-h-screen">
@@ -69,7 +86,16 @@ export function ProductsPage() {
               />
             </div>
 
-            {/* 第二排：功效（微型按鈕） */}
+            {/* 第二排：水晶色（圓形圖示） */}
+            <div className="flex min-h-11 items-center gap-2 overflow-x-auto no-scrollbar py-1.5 border-t border-white/5 mt-1">
+              <span className="text-[10px] text-neutral-500 shrink-0 mr-1">水晶</span>
+              <CrystalColorFilter
+                activeColorId={activeCrystalColorId}
+                onSelect={setActiveCrystalColorId}
+              />
+            </div>
+
+            {/* 第三排：功效（微型按鈕） */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 border-t border-white/5 mt-1">
               <span className="text-[10px] text-neutral-500 shrink-0 mr-1">功效</span>
               <TagFilter

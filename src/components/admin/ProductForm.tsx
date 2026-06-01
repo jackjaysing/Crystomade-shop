@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
 import { createProduct } from '../../lib/api/products'
 import { PRODUCT_CATEGORIES } from '../../constants/categories'
+import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
 import type { ProductCategory, ProductFormData } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -186,6 +187,34 @@ export function ProductForm({ onCreated }: ProductFormProps) {
                   onChange={() => toggleTag(tag)}
                 />
                 {tag}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs text-white/50">水晶色</p>
+          <div className="flex flex-wrap gap-2">
+            {CRYSTAL_COLOR_FILTERS.map((color) => (
+              <label
+                key={color.id}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
+                  form.tags.includes(color.label)
+                    ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
+                    : 'border-white/10 text-white/50'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={form.tags.includes(color.label)}
+                  onChange={() => toggleTag(color.label)}
+                />
+                <span
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: color.hex }}
+                />
+                {color.label}
               </label>
             ))}
           </div>
