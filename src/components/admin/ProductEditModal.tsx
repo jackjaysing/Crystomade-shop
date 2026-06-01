@@ -20,6 +20,7 @@ function toEditForm(product: Product): ProductEditData {
     tags: [...product.tags],
     description: product.description,
     stock: product.stock,
+    is_hot: product.is_hot,
     coverFile: null,
     existingGalleryUrls: [...product.gallery_urls],
     galleryFiles: [],
@@ -205,6 +206,18 @@ export function ProductEditModal({
             }
             className="input-field"
           />
+
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={form.is_hot}
+              onChange={(e) =>
+                setForm({ ...form, is_hot: e.target.checked })
+              }
+              className="rounded border-white/20 bg-void"
+            />
+            標記為熱門商品（前台右上角顯示「熱門」）
+          </label>
 
           <div>
             <p className="mb-2 text-xs text-white/50">品類</p>

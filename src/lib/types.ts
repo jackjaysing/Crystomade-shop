@@ -29,6 +29,10 @@ export interface Product {
   created_at: string
   /** 軟刪除時間；有值表示已從前台移除 */
   deleted_at?: string | null
+  /** 後台標記熱門商品 */
+  is_hot: boolean
+  /** 排序：數字越小越前面（熱門商品仍置頂） */
+  sort_order: number
 }
 
 /** 訂單（含關聯商品名稱，供後台顯示） */
@@ -87,6 +91,8 @@ export interface ProductFormData {
   description: string
   /** 上架庫存件數 */
   stock: number
+  /** 標記為熱門商品 */
+  is_hot: boolean
   /** 封面圖 */
   coverFile: File | null
   /** 詳情頁額外圖片 */
@@ -120,6 +126,8 @@ export interface ProductEditData {
   tags: string[]
   description: string
   stock: number
+  /** 標記為熱門商品 */
+  is_hot: boolean
   /** 新封面；null 表示沿用原圖 */
   coverFile: File | null
   /** 保留的既有相簿 URL */

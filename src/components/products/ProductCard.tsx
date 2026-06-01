@@ -1,23 +1,47 @@
+import type { ReactNode } from 'react'
 import { getCategoryLabel } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
+import { HotProductBadge } from './HotProductBadge'
 
 interface ProductCardProps {
   product: Product
   onClick: () => void
 }
 
+/** 熱門商品：金屬漸層外框 */
+function HotProductFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative h-full rounded-[14px] bg-gradient-to-br from-amber-glow/90 via-orange-400/55 to-amber-deep/75 p-[2px] shadow-[0_0_28px_rgba(212,165,116,0.22)]">
+      <div
+        className="pointer-events-none absolute inset-[2px] rounded-[12px] border border-white/10"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 rounded-[14px] bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.12)_0%,_transparent_55%)]"
+        aria-hidden
+      />
+      {children}
+    </div>
+  )
+}
+
 /** 單一商品卡片（瀑布流格內） */
 export function ProductCard({ product, onClick }: ProductCardProps) {
   const isSold = isProductSoldOut(product)
+  const isHot = product.is_hot
 
-  return (
+  const card = (
     <article
       role="button"
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className="h-full flex flex-col group relative cursor-pointer overflow-hidden rounded-xl border border-white/5 bg-graphite transition hover:border-amber-glow/30 hover:shadow-gold"
+      className={`group relative flex h-full cursor-pointer flex-col overflow-hidden bg-graphite transition ${
+        isHot
+          ? 'rounded-[11px] hover:shadow-[0_0_24px_rgba(212,165,116,0.15)]'
+          : 'rounded-xl border border-white/5 hover:border-amber-glow/30 hover:shadow-gold'
+      }`}
     >
       <div className="relative aspect-[3/4] overflow-hidden">
         <img
@@ -32,6 +56,10 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         <span className="absolute left-3 top-3 rounded-full border border-white/20 bg-void/70 px-2.5 py-1 text-[10px] tracking-wider text-amber-glow/90 backdrop-blur-sm">
           {getCategoryLabel(product.category)}
         </span>
+
+        {product.is_hot && (
+          <HotProductBadge className="absolute right-3 top-3 backdrop-blur-sm" />
+        )}
 
         {isSold && (
           <div className="absolute inset-0 flex items-center justify-center bg-void/60 backdrop-blur-[2px]">
@@ -70,4 +98,10 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       </div>
     </article>
   )
+
+  if (isHot) {
+    return <HotProductFrame>{card}</HotProductFrame>
+  }
+
+  return card
 }

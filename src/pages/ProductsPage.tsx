@@ -10,11 +10,13 @@ import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
 import { ProductMasonry } from '../components/products/ProductMasonry'
 import { ProductModal } from '../components/products/ProductModal'
 import { ProductSearchBar } from '../components/products/ProductSearchBar'
+import { ProductSortFilter } from '../components/products/ProductSortFilter'
 import { TagFilter } from '../components/products/TagFilter'
 import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
 import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
 import { useBanners } from '../hooks/useBanners'
 import { productMatchesSearchQuery } from '../lib/productSearch'
+import { sortProductsByMode, type ProductSortMode } from '../lib/sortProducts'
 import type { Product, ProductCategory } from '../lib/types'
 
 /** 買家前台：典藏商品頁 */
@@ -29,9 +31,10 @@ export function ProductsPage() {
     null
   )
   const [searchQuery, setSearchQuery] = useState('')
+  const [sortMode, setSortMode] = useState<ProductSortMode>('default')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  /** 依關鍵字 + 品類 + 水晶色 + 功效標籤篩選 */
+  /** 依關鍵字 + 品類 + 水晶色 + 功效標籤篩選，再套用排序 */
   const filteredProducts = useMemo(() => {
     let list = products
 
@@ -63,8 +66,8 @@ export function ProductsPage() {
       }
     }
 
-    return list
-  }, [products, searchQuery, activeCategory, activeCrystalColorId, activeFilterId])
+    return sortProductsByMode(list, sortMode)
+  }, [products, searchQuery, activeCategory, activeCrystalColorId, activeFilterId, sortMode])
 
   return (
     <div className="min-h-screen">
@@ -127,6 +130,14 @@ export function ProductsPage() {
                   activeFilterId={activeFilterId}
                   onSelect={setActiveFilterId}
                 />
+              </div>
+            </div>
+
+            {/* 第四排：排序 */}
+            <div className="flex min-h-11 items-center gap-2 overflow-x-auto border-t border-white/5 py-1.5 no-scrollbar">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">排序</span>
+              <div className="flex min-w-0 items-center">
+                <ProductSortFilter activeSort={sortMode} onSelect={setSortMode} />
               </div>
             </div>
 

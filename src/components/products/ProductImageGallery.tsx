@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getProductImages } from '../../lib/productImages'
 import type { Product } from '../../lib/types'
+import { HotProductBadge } from './HotProductBadge'
 
 interface ProductImageGalleryProps {
   product: Product
@@ -64,6 +65,10 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
           <span className="absolute left-3 top-3 rounded-full border border-amber-glow/40 bg-void/70 px-2.5 py-1 text-[10px] tracking-wider text-amber-glow backdrop-blur-sm">
             封面
           </span>
+        )}
+
+        {product.is_hot && (
+          <HotProductBadge className="absolute right-3 top-3 backdrop-blur-sm" />
         )}
 
         {isSold && (

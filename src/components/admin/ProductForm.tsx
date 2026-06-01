@@ -15,6 +15,7 @@ const initialForm: ProductFormData = {
   category: '手串',
   price: 0,
   stock: 1,
+  is_hot: false,
   tags: [],
   description: '',
   coverFile: null,
@@ -140,6 +141,16 @@ export function ProductForm({ onCreated }: ProductFormProps) {
           }
           className="input-field"
         />
+
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+          <input
+            type="checkbox"
+            checked={form.is_hot}
+            onChange={(e) => setForm({ ...form, is_hot: e.target.checked })}
+            className="rounded border-white/20 bg-void"
+          />
+          標記為熱門商品（前台右上角顯示「熱門」）
+        </label>
 
         <div>
           <p className="mb-2 text-xs text-white/50">品類</p>

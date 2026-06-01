@@ -1,16 +1,29 @@
 import { formatErrorMessage } from '../formatError'
 import { normalizeProduct } from '../normalizeProduct'
 import { isProductActive } from '../productStock'
+import { sortProducts } from '../sortProducts'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
 import type { Product, ProductEditData, ProductFormData } from '../types'
 
 function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
-  return rows
-    .map((row) => normalizeProduct(row))
-    .filter(isProductActive)
+  return sortProducts(
+    rows.map((row) => normalizeProduct(row)).filter(isProductActive)
+  )
 }
 
-/** 取得上架中商品（排除已軟刪除，依上架時間新到舊） */
+async function getNextProductSortOrder(): Promise<number> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  if (error) throw new Error(formatErrorMessage(error))
+  const max = data?.[0]?.sort_order
+  return typeof max === 'number' ? max + 1 : 0
+}
+
+/** 取得上架中商品（排除已軟刪除，熱門置頂 + 自訂排序） */
 export async function fetchProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured) {
     throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
@@ -20,11 +33,12 @@ export async function fetchProducts(): Promise<Product[]> {
     .from('products')
     .select('*')
     .is('deleted_at', null)
+    .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
   if (error) {
     const msg = formatErrorMessage(error)
-    if (/deleted_at|42703|column/i.test(msg)) {
+    if (/deleted_at|42703|column|sort_order/i.test(msg)) {
       const { data: fallback, error: fallbackError } = await supabase
         .from('products')
         .select('*')
@@ -75,6 +89,8 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       ? await uploadGalleryImages(form.galleryFiles)
       : []
 
+  const sort_order = await getNextProductSortOrder()
+
   const { data, error } = await supabase
     .from('products')
     .insert({
@@ -87,6 +103,8 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       description: form.description,
       stock: form.stock,
       status: 'available',
+      is_hot: form.is_hot,
+      sort_order,
     })
     .select()
     .single()
@@ -125,6 +143,7 @@ export async function updateProduct(
       description: form.description,
       stock,
       status,
+      is_hot: form.is_hot,
     })
     .eq('id', productId)
     .select()
@@ -142,6 +161,52 @@ export async function markProductSold(productId: string): Promise<void> {
     .eq('id', productId)
 
   if (error) throw error
+}
+
+/** 後台：切換熱門商品標示 */
+export async function setProductHot(
+  productId: string,
+  isHot: boolean
+): Promise<Product> {
+  const { data, error } = await supabase
+    .from('products')
+    .update({ is_hot: isHot })
+    .eq('id', productId)
+    .select()
+    .single()
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return normalizeProduct(data as Record<string, unknown>)
+}
+
+/** 後台：調整商品排序（與列表中相鄰項目交換 sort_order） */
+export async function swapProductOrder(
+  productId: string,
+  direction: 'up' | 'down',
+  products: Product[]
+): Promise<void> {
+  const index = products.findIndex((p) => p.id === productId)
+  if (index < 0) return
+
+  const swapIndex = direction === 'up' ? index - 1 : index + 1
+  if (swapIndex < 0 || swapIndex >= products.length) return
+
+  const current = products[index]
+  const target = products[swapIndex]
+
+  const { error: errorA } = await supabase
+    .from('products')
+    .update({ sort_order: target.sort_order })
+    .eq('id', current.id)
+
+  if (errorA) throw new Error(formatErrorMessage(errorA))
+
+  const { error: errorB } = await supabase
+    .from('products')
+    .update({ sort_order: current.sort_order })
+    .eq('id', target.id)
+
+  if (errorB) throw new Error(formatErrorMessage(errorB))
 }
 
 /** 後台：取得已軟刪除商品（最新刪除優先） */
