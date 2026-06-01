@@ -68,7 +68,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
   const hasMultiple = banners.length > 1
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-graphite/40">
+    <div className="relative mx-auto max-w-4xl overflow-hidden rounded-lg border border-white/10 bg-graphite/40">
       <div
         ref={scrollRef}
         className="flex snap-x snap-mandatory overflow-x-auto no-scrollbar scroll-smooth"
@@ -78,7 +78,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
             <img
               src={banner.image_url}
               alt="公告橫幅"
-              className="aspect-[2/1] w-full object-cover sm:aspect-[21/9]"
+              className="aspect-[3/1] w-full max-h-[216px] object-cover sm:max-h-[240px] md:max-h-[264px]"
               loading="lazy"
             />
           )
@@ -110,7 +110,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
           <button
             type="button"
             onClick={() => scrollToIndex(activeIndex - 1)}
-            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-void/70 px-2.5 py-1.5 text-sm text-white/80 backdrop-blur-sm transition hover:text-white"
+            className="absolute left-1.5 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-void/70 px-2 py-1 text-xs text-white/80 backdrop-blur-sm transition hover:text-white"
             aria-label="上一張橫幅"
           >
             ‹
@@ -118,13 +118,13 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
           <button
             type="button"
             onClick={() => scrollToIndex(activeIndex + 1)}
-            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-void/70 px-2.5 py-1.5 text-sm text-white/80 backdrop-blur-sm transition hover:text-white"
+            className="absolute right-1.5 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-void/70 px-2 py-1 text-xs text-white/80 backdrop-blur-sm transition hover:text-white"
             aria-label="下一張橫幅"
           >
             ›
           </button>
 
-          <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+          <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1">
             {banners.map((banner, index) => (
               <button
                 key={banner.id}

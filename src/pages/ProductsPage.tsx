@@ -85,7 +85,7 @@ export function ProductsPage() {
 
       {/* 公告橫幅（搜尋列上方） */}
       {banners.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-3">
+        <section className="mx-auto max-w-7xl px-4 pb-2">
           <BannerCarousel banners={banners} />
         </section>
       )}
