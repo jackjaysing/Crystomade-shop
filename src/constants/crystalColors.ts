@@ -5,7 +5,7 @@ export interface CrystalColorFilterOption {
   label: string
   /** 圓形圖示色 */
   hex: string
-  /** 比對商品名稱、描述、tags */
+  /** 比對商品 tags（後台勾選）；keywords 僅供文件參考，不再用於自動判斷 */
   keywords: string[]
 }
 
@@ -68,12 +68,10 @@ export const CRYSTAL_RAINBOW_GRADIENT =
 /** 後台可勾選的水晶色標籤 */
 export const CRYSTAL_COLOR_TAGS = CRYSTAL_COLOR_FILTERS.map((c) => c.label)
 
-/** 商品是否符合指定水晶色篩選 */
+/** 商品是否符合指定水晶色篩選（僅比對後台勾選的 tags） */
 export function productMatchesCrystalColor(
   product: Product,
   filter: CrystalColorFilterOption
 ): boolean {
-  const haystack = [product.name, product.description, ...product.tags].join(' ')
-  if (product.tags.includes(filter.label)) return true
-  return filter.keywords.some((kw) => haystack.includes(kw))
+  return product.tags.includes(filter.label)
 }

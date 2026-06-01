@@ -58,11 +58,7 @@ export function ProductsPage() {
     if (activeFilterId) {
       const filter = TAG_FILTERS.find((f) => f.id === activeFilterId)
       if (filter) {
-        list = list.filter((p) =>
-          filter.keywords.some((kw) =>
-            p.tags.some((tag) => tag.includes(kw) || kw.includes(tag))
-          )
-        )
+        list = list.filter((p) => p.tags.includes(filter.label))
       }
     }
 

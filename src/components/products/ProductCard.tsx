@@ -86,7 +86,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           </p>
         )}
         <div className="mt-2 flex flex-wrap gap-1">
-          {product.tags.slice(0, 3).map((tag) => (
+          {product.tags.map((tag) => (
             <span
               key={tag}
               className="rounded border border-white/10 px-2 py-0.5 text-[10px] tracking-wider text-white/40"

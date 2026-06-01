@@ -5,8 +5,9 @@
 
 export interface TagFilterOption {
   id: string
+  /** 前台篩選標籤；僅比對 products.tags 是否含 label */
   label: string
-  /** 對應 products.tags 陣列中的關鍵字（含舊標籤相容） */
+  /** 已停用：不再從商品名稱推斷關鍵字 */
   keywords: string[]
 }
 

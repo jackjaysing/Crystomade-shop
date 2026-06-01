@@ -1,5 +1,6 @@
 import { formatErrorMessage } from '../formatError'
 import { normalizeProduct } from '../normalizeProduct'
+import { sanitizeProductTags } from '../productTags'
 import { isProductActive } from '../productStock'
 import { sortProducts } from '../sortProducts'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
@@ -97,7 +98,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       name: form.name,
       category: form.category,
       price: form.price,
-      tags: form.tags,
+      tags: sanitizeProductTags(form.tags),
       image_url,
       gallery_urls,
       description: form.description,
@@ -137,7 +138,7 @@ export async function updateProduct(
       name: form.name.trim(),
       category: form.category,
       price: form.price,
-      tags: form.tags,
+      tags: sanitizeProductTags(form.tags),
       image_url,
       gallery_urls: [...form.existingGalleryUrls, ...newGalleryUrls],
       description: form.description,
