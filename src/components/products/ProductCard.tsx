@@ -17,7 +17,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className="group relative cursor-pointer overflow-hidden rounded-xl border border-white/5 bg-graphite transition hover:border-amber-glow/30 hover:shadow-gold"
+      className="h-full flex flex-col group relative cursor-pointer overflow-hidden rounded-xl border border-white/5 bg-graphite transition hover:border-amber-glow/30 hover:shadow-gold"
     >
       <div className="relative aspect-[3/4] overflow-hidden">
         <img

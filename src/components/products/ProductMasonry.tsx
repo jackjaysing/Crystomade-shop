@@ -6,14 +6,12 @@ interface ProductMasonryProps {
   onProductClick: (product: Product) => void
 }
 
-/**
- * 瀑布流商品網格（純 CSS columns，避免第三方套件在 Vite 下造成白屏）
- */
 export function ProductMasonry({ products, onProductClick }: ProductMasonryProps) {
   return (
-    <div className="columns-2 gap-3 sm:columns-2 lg:columns-3 xl:columns-4">
+    // 這裡改用 grid 排版，並讓內部卡片等高 (items-stretch)
+    <div className="grid grid-cols-2 gap-x-3 gap-y-5 items-stretch sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((product) => (
-        <div key={product.id} className="mb-4 break-inside-avoid">
+        <div key={product.id} className="flex flex-col h-full">
           <ProductCard
             product={product}
             onClick={() => onProductClick(product)}
@@ -21,5 +19,5 @@ export function ProductMasonry({ products, onProductClick }: ProductMasonryProps
         </div>
       ))}
     </div>
-  )
+  );
 }
