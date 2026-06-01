@@ -12,7 +12,7 @@ export function TagFilter({ activeFilterId, onSelect }: TagFilterProps) {
       <p className="mb-3 text-center text-[10px] tracking-[0.35em] text-white/40">
         
       </p>
-      <div className="flex flex-wrap justify-center gap-3">
+      <div className="flex flex-nowrap justify-start gap-2">
       <button
         type="button"
         onClick={() => onSelect(null)}
