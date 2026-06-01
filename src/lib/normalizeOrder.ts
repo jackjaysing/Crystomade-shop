@@ -39,6 +39,7 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
         ? row.total_amount
         : Number(row.total_amount) || 0,
     status: row.status === 'shipped' ? 'shipped' : 'pending',
+    is_paid: Boolean(row.is_paid),
     checkout_id: row.checkout_id != null ? String(row.checkout_id) : null,
     products: resolveOrderProduct(row),
   }

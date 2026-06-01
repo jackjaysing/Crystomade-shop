@@ -1,4 +1,4 @@
-import type { CvsBrand, Order, OrderStatus } from './types'
+import type { CvsBrand, Order, OrderPaymentStatus, OrderStatus } from './types'
 
 export type OrderGroupStatus = OrderStatus | 'partial'
 
@@ -25,6 +25,7 @@ export interface OrderGroup {
   totalAmount: number
   itemCount: number
   status: OrderGroupStatus
+  paymentStatus: OrderPaymentStatus
 }
 
 const LEGACY_GROUP_WINDOW_MS = 2 * 60 * 1000
@@ -73,6 +74,13 @@ function resolveGroupStatus(orders: Order[]): OrderGroupStatus {
   return 'partial'
 }
 
+function resolvePaymentStatus(orders: Order[]): OrderPaymentStatus {
+  const paidCount = orders.filter((order) => order.is_paid).length
+  if (paidCount === 0) return 'unpaid'
+  if (paidCount === orders.length) return 'paid'
+  return 'partial'
+}
+
 function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
   const sorted = [...orders].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -95,6 +103,7 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
     totalAmount: sorted.reduce((sum, order) => sum + order.total_amount, 0),
     itemCount: sorted.length,
     status: resolveGroupStatus(sorted),
+    paymentStatus: resolvePaymentStatus(sorted),
   }
 }
 
@@ -166,5 +175,11 @@ export function groupOrders(orders: Order[]): OrderGroup[] {
 export function formatOrderGroupStatus(status: OrderGroupStatus): string {
   if (status === 'shipped') return '已出貨'
   if (status === 'partial') return '部分出貨'
-  return '未處理'
+  return '待出貨'
+}
+
+export function formatOrderPaymentStatus(status: OrderPaymentStatus): string {
+  if (status === 'paid') return '已付款'
+  if (status === 'partial') return '部分已付款'
+  return '未付款'
 }

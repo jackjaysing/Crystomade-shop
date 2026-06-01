@@ -3,6 +3,9 @@
 export type ProductStatus = 'available' | 'sold'
 export type OrderStatus = 'pending' | 'shipped'
 
+/** 訂單付款狀態（後台標記） */
+export type OrderPaymentStatus = 'unpaid' | 'paid' | 'partial'
+
 /** 超商品牌 */
 export type CvsBrand = '7-11' | '全家'
 
@@ -45,6 +48,8 @@ export interface Order {
   product_image_url?: string | null
   total_amount: number
   status: OrderStatus
+  /** 後台標記是否已付款 */
+  is_paid: boolean
   /** 同一結帳批次 ID（購物車併單） */
   checkout_id?: string | null
   /** 關聯查詢時帶入 */

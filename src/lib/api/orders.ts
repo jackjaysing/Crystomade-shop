@@ -104,3 +104,27 @@ export async function shipOrderGroup(orderIds: string[]): Promise<void> {
 
   if (error) throw new Error(formatErrorMessage(error))
 }
+
+/** 後台：整筆訂單標記已付款 */
+export async function markOrderGroupPaid(orderIds: string[]): Promise<void> {
+  if (orderIds.length === 0) return
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ is_paid: true })
+    .in('id', orderIds)
+
+  if (error) throw new Error(formatErrorMessage(error))
+}
+
+/** 後台：整筆訂單改回未付款 */
+export async function markOrderGroupUnpaid(orderIds: string[]): Promise<void> {
+  if (orderIds.length === 0) return
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ is_paid: false })
+    .in('id', orderIds)
+
+  if (error) throw new Error(formatErrorMessage(error))
+}

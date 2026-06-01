@@ -1,12 +1,17 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown, Package } from 'lucide-react'
-import { shipOrderGroup } from '../../lib/api/orders'
+import {
+  markOrderGroupPaid,
+  markOrderGroupUnpaid,
+  shipOrderGroup,
+} from '../../lib/api/orders'
 import {
   formatOrderGroupStatus,
+  formatOrderPaymentStatus,
   groupOrders,
   type OrderGroupStatus,
 } from '../../lib/groupOrders'
-import type { Order } from '../../lib/types'
+import type { Order, OrderPaymentStatus } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface OrderTableProps {
@@ -15,16 +20,28 @@ interface OrderTableProps {
   onUpdated: () => void
 }
 
-function statusClassName(status: OrderGroupStatus): string {
-  if (status === 'shipped') return 'bg-emerald-500/20 text-emerald-400'
-  if (status === 'partial') return 'bg-sky-500/20 text-sky-300'
-  return 'bg-amber-glow/10 text-amber-glow'
+function shipStatusClassName(status: OrderGroupStatus): string {
+  if (status === 'shipped') return 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+  if (status === 'partial') return 'border-sky-500/40 bg-sky-500/15 text-sky-300'
+  return 'border-amber-glow/40 bg-amber-glow/10 text-amber-glow'
+}
+
+function paymentStatusClassName(status: OrderPaymentStatus): string {
+  if (status === 'paid') return 'border-emerald-500/50 bg-emerald-500/20 text-emerald-200'
+  if (status === 'partial') return 'border-orange-400/40 bg-orange-400/10 text-orange-200'
+  return 'border-red-400/50 bg-red-500/15 text-red-200'
+}
+
+function panelAccentClassName(paymentStatus: OrderPaymentStatus): string {
+  if (paymentStatus === 'paid') return 'border-l-[8px] border-l-emerald-500/70'
+  return 'border-l-[8px] border-l-red-500/60'
 }
 
 /** 訂單明細（同一結帳合併 · 點擊展開細項） */
 export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [shippingId, setShippingId] = useState<string | null>(null)
+  const [paymentUpdatingId, setPaymentUpdatingId] = useState<string | null>(null)
 
   const orderGroups = useMemo(() => groupOrders(orders), [orders])
 
@@ -52,6 +69,80 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
     }
   }
 
+  const handleMarkPaid = async (groupId: string, orderIds: string[]) => {
+    setPaymentUpdatingId(groupId)
+    try {
+      await markOrderGroupPaid(orderIds)
+      onUpdated()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '標記付款失敗')
+    } finally {
+      setPaymentUpdatingId(null)
+    }
+  }
+
+  const handleMarkUnpaid = async (groupId: string, orderIds: string[]) => {
+    if (!confirm('確定改回未付款？')) return
+    setPaymentUpdatingId(groupId)
+    try {
+      await markOrderGroupUnpaid(orderIds)
+      onUpdated()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '更新失敗')
+    } finally {
+      setPaymentUpdatingId(null)
+    }
+  }
+
+  const renderActionButtons = (group: ReturnType<typeof groupOrders>[number]) => {
+    const isUpdatingPayment = paymentUpdatingId === group.id
+    const isShipping = shippingId === group.id
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {group.paymentStatus !== 'paid' && (
+          <button
+            type="button"
+            disabled={isUpdatingPayment}
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleMarkPaid(group.id, group.orderIds)
+            }}
+            className="rounded border border-emerald-500/50 bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-500/25 disabled:opacity-50"
+          >
+            {isUpdatingPayment ? '處理中…' : '標記已付款'}
+          </button>
+        )}
+        {group.paymentStatus === 'paid' && (
+          <button
+            type="button"
+            disabled={isUpdatingPayment}
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleMarkUnpaid(group.id, group.orderIds)
+            }}
+            className="rounded border border-white/15 px-3 py-1.5 text-xs text-white/50 transition hover:border-white/30 hover:text-white/70 disabled:opacity-50"
+          >
+            {isUpdatingPayment ? '處理中…' : '改回未付款'}
+          </button>
+        )}
+        {group.pendingOrderIds.length > 0 && (
+          <button
+            type="button"
+            disabled={isShipping}
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleShipGroup(group.id, group.pendingOrderIds)
+            }}
+            className="rounded border border-amber-glow/40 px-3 py-1.5 text-xs text-amber-glow transition hover:bg-amber-glow/10 disabled:opacity-50"
+          >
+            {isShipping ? '處理中…' : '一鍵出貨'}
+          </button>
+        )}
+      </div>
+    )
+  }
+
   if (loading) {
     return <p className="text-white/50">載入訂單中…</p>
   }
@@ -63,7 +154,7 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
   return (
     <div className="space-y-3">
       <p className="text-xs text-white/40">
-        同一筆結帳已合併顯示 · 點擊訂單列可展開商品細項
+        同一筆結帳已合併顯示 · 左側色條區分付款狀態 · 點擊訂單列可展開商品細項
       </p>
 
       {orderGroups.map((group) => {
@@ -74,7 +165,10 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
             : `${group.lineItems.length} 種商品，共 ${group.itemCount} 件`
 
         return (
-          <GlassPanel key={group.id} className="overflow-hidden p-0">
+          <GlassPanel
+            key={group.id}
+            className={`overflow-hidden p-0 ${panelAccentClassName(group.paymentStatus)}`}
+          >
             <button
               type="button"
               onClick={() => toggleExpanded(group.id)}
@@ -90,7 +184,12 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium text-white">{group.buyer_name}</p>
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] ${statusClassName(group.status)}`}
+                      className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${paymentStatusClassName(group.paymentStatus)}`}
+                    >
+                      {formatOrderPaymentStatus(group.paymentStatus)}
+                    </span>
+                    <span
+                      className={`rounded-full border px-2.5 py-0.5 text-[11px] ${shipStatusClassName(group.status)}`}
                     >
                       {formatOrderGroupStatus(group.status)}
                     </span>
@@ -153,29 +252,13 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
                   ))}
                 </ul>
 
-                {group.pendingOrderIds.length > 0 && (
-                  <button
-                    type="button"
-                    disabled={shippingId === group.id}
-                    onClick={() => handleShipGroup(group.id, group.pendingOrderIds)}
-                    className="mt-4 rounded border border-amber-glow/40 px-4 py-2 text-sm text-amber-glow transition hover:bg-amber-glow/10 disabled:opacity-50"
-                  >
-                    {shippingId === group.id ? '處理中…' : '整筆訂單一鍵出貨'}
-                  </button>
-                )}
+                <div className="mt-4">{renderActionButtons(group)}</div>
               </div>
             )}
 
-            {!isExpanded && group.pendingOrderIds.length > 0 && (
+            {!isExpanded && (
               <div className="border-t border-white/5 px-4 py-3 sm:px-5">
-                <button
-                  type="button"
-                  disabled={shippingId === group.id}
-                  onClick={() => handleShipGroup(group.id, group.pendingOrderIds)}
-                  className="rounded border border-amber-glow/40 px-3 py-1.5 text-xs text-amber-glow transition hover:bg-amber-glow/10 disabled:opacity-50"
-                >
-                  {shippingId === group.id ? '處理中…' : '一鍵出貨'}
-                </button>
+                {renderActionButtons(group)}
               </div>
             )}
           </GlassPanel>
