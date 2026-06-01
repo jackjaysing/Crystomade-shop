@@ -2,6 +2,9 @@ import type { CvsBrand, Order, OrderPaymentStatus, OrderStatus } from './types'
 
 export type OrderGroupStatus = OrderStatus | 'partial'
 
+/** 超過此天數未付款視為太久未結帳 */
+export const OVERDUE_UNPAID_DAYS = 7
+
 export interface OrderLineItem {
   productId: string
   productName: string
@@ -23,10 +26,15 @@ export interface OrderGroup {
   lineItems: OrderLineItem[]
   orderIds: string[]
   pendingOrderIds: string[]
+  shippedOrderIds: string[]
   totalAmount: number
   itemCount: number
   status: OrderGroupStatus
   paymentStatus: OrderPaymentStatus
+  /** 未結帳天數（僅未付款且未取消時計算） */
+  unpaidDays: number
+  /** 超過 7 天未結帳 */
+  isOverdueUnpaid: boolean
 }
 
 const LEGACY_GROUP_WINDOW_MS = 2 * 60 * 1000
@@ -69,10 +77,26 @@ function buildLineItems(orders: Order[]): OrderLineItem[] {
 }
 
 function resolveGroupStatus(orders: Order[]): OrderGroupStatus {
-  const shippedCount = orders.filter((order) => order.status === 'shipped').length
+  const active = orders.filter((order) => order.status !== 'cancelled')
+  if (active.length === 0) return 'cancelled'
+
+  const shippedCount = active.filter((order) => order.status === 'shipped').length
   if (shippedCount === 0) return 'pending'
-  if (shippedCount === orders.length) return 'shipped'
+  if (shippedCount === active.length) return 'shipped'
   return 'partial'
+}
+
+export function getUnpaidDays(createdAt: string): number {
+  const elapsed = Date.now() - new Date(createdAt).getTime()
+  return Math.max(0, Math.floor(elapsed / (24 * 60 * 60 * 1000)))
+}
+
+export function isOverdueUnpaidGroup(group: Pick<OrderGroup, 'paymentStatus' | 'status' | 'unpaidDays'>): boolean {
+  return (
+    group.status !== 'cancelled' &&
+    group.paymentStatus !== 'paid' &&
+    group.unpaidDays > OVERDUE_UNPAID_DAYS
+  )
 }
 
 function resolvePaymentStatus(orders: Order[]): OrderPaymentStatus {
@@ -87,6 +111,12 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
   const lineItems = buildLineItems(sorted)
+  const paymentStatus = resolvePaymentStatus(sorted)
+  const status = resolveGroupStatus(sorted)
+  const unpaidDays =
+    status !== 'cancelled' && paymentStatus !== 'paid'
+      ? getUnpaidDays(sorted[0].created_at)
+      : 0
 
   return {
     id,
@@ -102,10 +132,18 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
     pendingOrderIds: sorted
       .filter((order) => order.status === 'pending')
       .map((order) => order.id),
+    shippedOrderIds: sorted
+      .filter((order) => order.status === 'shipped')
+      .map((order) => order.id),
     totalAmount: sorted.reduce((sum, order) => sum + order.total_amount, 0),
     itemCount: sorted.length,
-    status: resolveGroupStatus(sorted),
-    paymentStatus: resolvePaymentStatus(sorted),
+    status,
+    paymentStatus,
+    unpaidDays,
+    isOverdueUnpaid:
+      status !== 'cancelled' &&
+      paymentStatus !== 'paid' &&
+      unpaidDays > OVERDUE_UNPAID_DAYS,
   }
 }
 
@@ -175,6 +213,7 @@ export function groupOrders(orders: Order[]): OrderGroup[] {
 }
 
 export function formatOrderGroupStatus(status: OrderGroupStatus): string {
+  if (status === 'cancelled') return '訂單未完成'
   if (status === 'shipped') return '已出貨'
   if (status === 'partial') return '部分出貨'
   return '待出貨'
@@ -187,14 +226,23 @@ export function formatOrderPaymentStatus(status: OrderPaymentStatus): string {
 }
 
 /** 後台訂單明細分類 */
-export type OrderGroupFilter = 'all' | 'paid' | 'unpaid' | 'shipped' | 'unshipped'
+export type OrderGroupFilter =
+  | 'all'
+  | 'paid'
+  | 'unpaid'
+  | 'shipped'
+  | 'unshipped'
+  | 'overdue_unpaid'
+  | 'incomplete'
 
 export const ORDER_GROUP_FILTERS: { id: OrderGroupFilter; label: string }[] = [
   { id: 'all', label: '全部' },
   { id: 'paid', label: '已結帳' },
   { id: 'unpaid', label: '未結帳' },
+  { id: 'overdue_unpaid', label: '太久未結帳' },
   { id: 'shipped', label: '已出貨' },
   { id: 'unshipped', label: '未出貨' },
+  { id: 'incomplete', label: '未完成訂單' },
 ]
 
 export function matchesOrderGroupFilter(
@@ -205,13 +253,17 @@ export function matchesOrderGroupFilter(
     case 'all':
       return true
     case 'paid':
-      return group.paymentStatus === 'paid'
+      return group.status !== 'cancelled' && group.paymentStatus === 'paid'
     case 'unpaid':
-      return group.paymentStatus !== 'paid'
+      return group.status !== 'cancelled' && group.paymentStatus !== 'paid'
+    case 'overdue_unpaid':
+      return group.isOverdueUnpaid
     case 'shipped':
       return group.status === 'shipped'
     case 'unshipped':
-      return group.status !== 'shipped'
+      return group.status !== 'shipped' && group.status !== 'cancelled'
+    case 'incomplete':
+      return group.status === 'cancelled'
   }
 }
 
@@ -230,15 +282,19 @@ export function countOrderGroupsByFilter(
     all: groups.length,
     paid: 0,
     unpaid: 0,
+    overdue_unpaid: 0,
     shipped: 0,
     unshipped: 0,
+    incomplete: 0,
   }
 
   for (const group of groups) {
     if (matchesOrderGroupFilter(group, 'paid')) counts.paid += 1
     if (matchesOrderGroupFilter(group, 'unpaid')) counts.unpaid += 1
+    if (matchesOrderGroupFilter(group, 'overdue_unpaid')) counts.overdue_unpaid += 1
     if (matchesOrderGroupFilter(group, 'shipped')) counts.shipped += 1
     if (matchesOrderGroupFilter(group, 'unshipped')) counts.unshipped += 1
+    if (matchesOrderGroupFilter(group, 'incomplete')) counts.incomplete += 1
   }
 
   return counts

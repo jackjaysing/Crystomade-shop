@@ -105,6 +105,19 @@ export async function shipOrderGroup(orderIds: string[]): Promise<void> {
   if (error) throw new Error(formatErrorMessage(error))
 }
 
+/** 後台：同一結帳批次改回未出貨 */
+export async function unshipOrderGroup(orderIds: string[]): Promise<void> {
+  if (orderIds.length === 0) return
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ status: 'pending' })
+    .in('id', orderIds)
+    .eq('status', 'shipped')
+
+  if (error) throw new Error(formatErrorMessage(error))
+}
+
 /** 後台：整筆訂單標記已付款 */
 export async function markOrderGroupPaid(orderIds: string[]): Promise<void> {
   if (orderIds.length === 0) return
@@ -127,4 +140,25 @@ export async function markOrderGroupUnpaid(orderIds: string[]): Promise<void> {
     .in('id', orderIds)
 
   if (error) throw new Error(formatErrorMessage(error))
+}
+
+/** 後台：取消訂單群組（還原庫存） */
+export async function cancelOrderGroup(orderIds: string[]): Promise<number> {
+  if (orderIds.length === 0) return 0
+
+  const { data, error } = await supabase.rpc('cancel_order_group', {
+    p_order_ids: orderIds,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (msg.includes('cancel_order_group') || msg.includes('function')) {
+      throw new Error(
+        '資料庫尚未啟用取消訂單功能，請在 Supabase SQL Editor 執行 supabase/migration-add-order-cancel.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  return typeof data === 'number' ? data : Number(data) || 0
 }

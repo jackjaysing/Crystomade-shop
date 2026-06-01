@@ -1,7 +1,7 @@
 /** 資料庫型別定義（對應 Supabase 表格） */
 
 export type ProductStatus = 'available' | 'sold'
-export type OrderStatus = 'pending' | 'shipped'
+export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
 
 /** 訂單付款狀態（後台標記） */
 export type OrderPaymentStatus = 'unpaid' | 'paid' | 'partial'

@@ -1,9 +1,11 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { ChevronDown, Copy, Package } from 'lucide-react'
+import { ChevronDown, Copy, Package, Star } from 'lucide-react'
 import {
+  cancelOrderGroup,
   markOrderGroupPaid,
   markOrderGroupUnpaid,
   shipOrderGroup,
+  unshipOrderGroup,
 } from '../../lib/api/orders'
 import {
   countOrderGroupsByFilter,
@@ -25,6 +27,7 @@ interface OrderTableProps {
 }
 
 function shipStatusClassName(status: OrderGroupStatus): string {
+  if (status === 'cancelled') return 'border-white/20 bg-white/5 text-white/50'
   if (status === 'shipped') return 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
   if (status === 'partial') return 'border-sky-500/40 bg-sky-500/15 text-sky-300'
   return 'border-amber-glow/40 bg-amber-glow/10 text-amber-glow'
@@ -36,7 +39,11 @@ function paymentStatusClassName(status: OrderPaymentStatus): string {
   return 'border-red-400/50 bg-red-500/15 text-red-200'
 }
 
-function panelAccentClassName(paymentStatus: OrderPaymentStatus): string {
+function panelAccentClassName(
+  paymentStatus: OrderPaymentStatus,
+  status: OrderGroupStatus
+): string {
+  if (status === 'cancelled') return 'border-l-[8px] border-l-white/25'
   if (paymentStatus === 'paid') return 'border-l-[8px] border-l-emerald-500/70'
   return 'border-l-[8px] border-l-red-500/60'
 }
@@ -85,7 +92,9 @@ function OrderNumberBlock({ orderNumber }: { orderNumber: string | null }) {
 export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [shippingId, setShippingId] = useState<string | null>(null)
+  const [unshippingId, setUnshippingId] = useState<string | null>(null)
   const [paymentUpdatingId, setPaymentUpdatingId] = useState<string | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<OrderGroupFilter>('all')
 
   const orderGroups = useMemo(() => groupOrders(orders), [orders])
@@ -122,6 +131,19 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
     }
   }
 
+  const handleUnshipGroup = async (groupId: string, shippedOrderIds: string[]) => {
+    if (!confirm('確定改回未出貨？')) return
+    setUnshippingId(groupId)
+    try {
+      await unshipOrderGroup(shippedOrderIds)
+      onUpdated()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '更新失敗')
+    } finally {
+      setUnshippingId(null)
+    }
+  }
+
   const handleMarkPaid = async (groupId: string, orderIds: string[]) => {
     setPaymentUpdatingId(groupId)
     try {
@@ -147,9 +169,34 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
     }
   }
 
+  const handleCancelGroup = async (groupId: string, orderIds: string[]) => {
+    if (
+      !confirm(
+        '確定取消此訂單？\n將標記為「訂單未完成」並把商品庫存加回去。'
+      )
+    ) {
+      return
+    }
+
+    setCancellingId(groupId)
+    try {
+      await cancelOrderGroup(orderIds)
+      onUpdated()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '取消失敗')
+    } finally {
+      setCancellingId(null)
+    }
+  }
+
   const renderActionButtons = (group: ReturnType<typeof groupOrders>[number]) => {
     const isUpdatingPayment = paymentUpdatingId === group.id
     const isShipping = shippingId === group.id
+    const isUnshipping = unshippingId === group.id
+    const isCancelling = cancellingId === group.id
+    const isCancelled = group.status === 'cancelled'
+
+    if (isCancelled) return null
 
     return (
       <div className="flex flex-wrap gap-2">
@@ -190,6 +237,32 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
             className="rounded border border-amber-glow/40 px-3 py-1.5 text-xs text-amber-glow transition hover:bg-amber-glow/10 disabled:opacity-50"
           >
             {isShipping ? '處理中…' : '一鍵出貨'}
+          </button>
+        )}
+        {group.shippedOrderIds.length > 0 && (
+          <button
+            type="button"
+            disabled={isUnshipping}
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleUnshipGroup(group.id, group.shippedOrderIds)
+            }}
+            className="rounded border border-white/15 px-3 py-1.5 text-xs text-white/50 transition hover:border-white/30 hover:text-white/70 disabled:opacity-50"
+          >
+            {isUnshipping ? '處理中…' : '改回未出貨'}
+          </button>
+        )}
+        {group.pendingOrderIds.length > 0 && (
+          <button
+            type="button"
+            disabled={isCancelling}
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleCancelGroup(group.id, group.pendingOrderIds)
+            }}
+            className="rounded border border-red-400/40 px-3 py-1.5 text-xs text-red-300 transition hover:bg-red-500/10 disabled:opacity-50"
+          >
+            {isCancelling ? '處理中…' : '取消訂單'}
           </button>
         )}
       </div>
@@ -234,7 +307,7 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
       </div>
 
       <p className="text-xs text-white/40">
-        同一筆結帳已合併顯示 · 已結帳＝已付款 · 左側色條區分付款狀態 · 點擊訂單列可展開商品細項
+        同一筆結帳已合併顯示 · 已結帳＝已付款 · ★ 超過 7 天未結帳 · 取消訂單會還庫存
       </p>
 
       {orderGroups.length === 0 && <p className="text-white/50">尚無訂單</p>}
@@ -257,7 +330,7 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
         return (
           <GlassPanel
             key={group.id}
-            className={`overflow-hidden p-0 ${panelAccentClassName(group.paymentStatus)}`}
+            className={`overflow-hidden p-0 ${panelAccentClassName(group.paymentStatus, group.status)}`}
           >
             <button
               type="button"
@@ -274,6 +347,15 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
                   <OrderNumberBlock orderNumber={group.orderNumber} />
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {group.isOverdueUnpaid && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full border border-orange-400/50 bg-orange-400/10 px-2.5 py-0.5 text-[11px] font-medium text-orange-200"
+                        title={`超過 ${group.unpaidDays} 天未結帳`}
+                      >
+                        <Star className="h-3 w-3 fill-orange-300 text-orange-300" />
+                        超過 {group.unpaidDays} 天未結帳
+                      </span>
+                    )}
                     <p className="font-medium text-white">{group.buyer_name}</p>
                     <span
                       className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${paymentStatusClassName(group.paymentStatus)}`}
