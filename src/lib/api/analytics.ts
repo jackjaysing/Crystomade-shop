@@ -11,6 +11,12 @@ export interface ProductViewStats {
   totalCount: number
 }
 
+interface ProductViewStatsRow {
+  product_id: string
+  today_count: number
+  total_count: number
+}
+
 /** 記錄一次頁面瀏覽（fire-and-forget） */
 export async function incrementPageView(): Promise<void> {
   const { error } = await supabase.rpc('increment_page_view')
@@ -53,16 +59,9 @@ export async function fetchProductViewStats(): Promise<ProductViewStats[]> {
     throw new Error(error.message)
   }
 
-  return (data ?? []).map((row) => {
-    const item = row as {
-      product_id: string
-      today_count: number
-      total_count: number
-    }
-    return {
-      productId: item.product_id,
-      todayCount: Number(item.today_count ?? 0),
-      totalCount: Number(item.total_count ?? 0),
-    }
-  })
+  return (data ?? []).map((row: ProductViewStatsRow) => ({
+    productId: row.product_id,
+    todayCount: Number(row.today_count ?? 0),
+    totalCount: Number(row.total_count ?? 0),
+  }))
 }
