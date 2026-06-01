@@ -60,8 +60,8 @@ export function ProductsPage() {
         <section className="sticky top-[73px] z-30 border-y border-white/5 bg-neutral-950/90 backdrop-blur-md py-2">
           <div className="mx-auto max-w-7xl px-4">
             
-            {/* 第一排：品類（微型按鈕） */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            {/* 第一排：品類（微型按鈕 - 強制裁剪防鬼影版） */}
+            <div className="flex h-10 items-center gap-2 overflow-x-auto no-scrollbar py-1 overflow-hidden">
               <span className="text-[10px] text-neutral-500 shrink-0 mr-1">品類</span>
               <CategoryFilter
                 activeCategory={activeCategory}
