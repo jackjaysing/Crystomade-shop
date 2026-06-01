@@ -33,7 +33,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     const timer = window.setInterval(() => {
       if (Date.now() < pauseUntilRef.current) return
       setActiveIndex((i) => (i + 1) % banners.length)
-    }, 5000)
+    }, 8000)
 
     return () => window.clearInterval(timer)
   }, [banners.length])
