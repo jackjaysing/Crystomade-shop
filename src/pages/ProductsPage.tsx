@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { TAG_FILTERS } from '../constants/tags'
 import {
   CRYSTAL_COLOR_FILTERS,
@@ -33,6 +33,14 @@ export function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortMode, setSortMode] = useState<ProductSortMode>('default')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const productSectionRef = useRef<HTMLElement>(null)
+
+  const handleSortChange = (mode: ProductSortMode) => {
+    setSortMode(mode)
+    requestAnimationFrame(() => {
+      productSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
 
   /** 依關鍵字 + 品類 + 水晶色 + 功效標籤篩選，再套用排序 */
   const filteredProducts = useMemo(() => {
@@ -133,7 +141,7 @@ export function ProductsPage() {
             <div className="flex min-h-11 items-center gap-2 overflow-x-auto border-t border-white/5 py-1.5 no-scrollbar">
               <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">排序</span>
               <div className="flex min-w-0 items-center">
-                <ProductSortFilter activeSort={sortMode} onSelect={setSortMode} />
+                <ProductSortFilter activeSort={sortMode} onSelect={handleSortChange} />
               </div>
             </div>
 
@@ -141,7 +149,7 @@ export function ProductsPage() {
         </section>
 
       {/* 商品瀑布流 */}
-      <section className="mx-auto max-w-7xl px-6 py-12">
+      <section ref={productSectionRef} className="mx-auto max-w-7xl scroll-mt-72 px-6 py-12">
         {loading && (
           <p className="text-center text-white/40">載入典藏中…</p>
         )}
