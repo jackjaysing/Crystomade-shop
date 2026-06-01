@@ -20,6 +20,7 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
         ? row.total_amount
         : Number(row.total_amount) || 0,
     status: row.status === 'shipped' ? 'shipped' : 'pending',
+    checkout_id: row.checkout_id != null ? String(row.checkout_id) : null,
     products: row.products as Order['products'],
   }
 }

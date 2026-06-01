@@ -7,7 +7,8 @@ import type { CartItem, Order, OrderFormData } from '../types'
 export async function createOrder(
   productId: string,
   totalAmount: number,
-  form: OrderFormData
+  form: OrderFormData,
+  checkoutId?: string
 ): Promise<Order> {
   const { data, error } = await supabase.rpc('place_order_with_stock', {
     p_product_id: productId,
@@ -17,6 +18,7 @@ export async function createOrder(
     p_phone: form.phone.trim(),
     p_cvs_brand: form.cvs_brand,
     p_cvs_store: form.cvs_store.trim(),
+    p_checkout_id: checkoutId ?? null,
   })
 
   if (error) {
@@ -42,6 +44,7 @@ export async function createOrdersFromCart(
 ): Promise<Order[]> {
   const orders: Order[] = []
   let shippingAssigned = false
+  const checkoutId = crypto.randomUUID()
 
   for (const item of items) {
     for (let i = 0; i < item.quantity; i++) {
@@ -49,7 +52,7 @@ export async function createOrdersFromCart(
       const amount = item.price + (includeShipping ? shippingFee : 0)
       if (includeShipping) shippingAssigned = true
 
-      const order = await createOrder(item.productId, amount, form)
+      const order = await createOrder(item.productId, amount, form, checkoutId)
       orders.push(order)
     }
   }
@@ -85,6 +88,19 @@ export async function shipOrder(orderId: string): Promise<void> {
     .from('orders')
     .update({ status: 'shipped' })
     .eq('id', orderId)
+
+  if (error) throw new Error(formatErrorMessage(error))
+}
+
+/** 後台：同一結帳批次一鍵出貨 */
+export async function shipOrderGroup(orderIds: string[]): Promise<void> {
+  if (orderIds.length === 0) return
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ status: 'shipped' })
+    .in('id', orderIds)
+    .eq('status', 'pending')
 
   if (error) throw new Error(formatErrorMessage(error))
 }

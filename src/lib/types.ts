@@ -39,6 +39,8 @@ export interface Order {
   product_id: string
   total_amount: number
   status: OrderStatus
+  /** 同一結帳批次 ID（購物車併單） */
+  checkout_id?: string | null
   /** 關聯查詢時帶入 */
   products?: Pick<Product, 'name' | 'image_url'> | null
 }
