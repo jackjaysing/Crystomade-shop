@@ -56,19 +56,30 @@ export function ProductsPage() {
         </div>
       </section>
 
-      {/* 品類與功效篩選 */}
-      <section className="sticky top-[73px] z-30 border-y border-white/5 bg-void/90 py-4 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-6">
-          <CategoryFilter
-            activeCategory={activeCategory}
-            onSelect={setActiveCategory}
-          />
-          <TagFilter
-            activeFilterId={activeFilterId}
-            onSelect={setActiveFilterId}
-          />
-        </div>
-      </section>
+      {/* 品類與功效篩選（手機極簡固定版） */}
+        <section className="sticky top-[73px] z-30 border-y border-white/5 bg-neutral-950/90 backdrop-blur-md py-2">
+          <div className="mx-auto max-w-7xl px-4">
+            
+            {/* 第一排：品類（微型按鈕） */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              <span className="text-[10px] text-neutral-500 shrink-0 mr-1">品類</span>
+              <CategoryFilter
+                activeCategory={activeCategory}
+                onSelect={setActiveCategory}
+              />
+            </div>
+
+            {/* 第二排：功效（微型按鈕） */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 border-t border-white/5 mt-1">
+              <span className="text-[10px] text-neutral-500 shrink-0 mr-1">功效</span>
+              <TagFilter
+                activeFilterId={activeFilterId}
+                onSelect={setActiveFilterId}
+              />
+            </div>
+
+          </div>
+        </section>
 
       {/* 商品瀑布流 */}
       <section className="mx-auto max-w-7xl px-6 py-12">
