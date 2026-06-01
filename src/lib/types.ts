@@ -96,11 +96,20 @@ export interface ProductFormData {
 /** 公告橫幅 */
 export interface AnnouncementBanner {
   id: string
+  /** 橫幅名稱（後台識別） */
+  name: string
   image_url: string
   link_url: string | null
   sort_order: number
   is_active: boolean
   created_at: string
+}
+
+/** 後台編輯公告橫幅 */
+export interface BannerEditData {
+  name: string
+  link_url: string
+  imageFile: File | null
 }
 
 /** 後台編輯商品表單 */

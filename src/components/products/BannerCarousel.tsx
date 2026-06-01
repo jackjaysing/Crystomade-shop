@@ -115,10 +115,11 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
         style={{ transform: `translate3d(-${activeIndex * 100}%, 0, 0)` }}
       >
         {banners.map((banner) => {
+          const altText = banner.name.trim() || '公告橫幅'
           const image = (
             <img
               src={banner.image_url}
-              alt="公告橫幅"
+              alt={altText}
               className="aspect-[3/1] w-full max-h-[216px] object-cover sm:max-h-[240px] md:max-h-[264px]"
               loading="lazy"
               draggable={false}
@@ -175,7 +176,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
                     ? 'w-5 bg-amber-glow'
                     : 'w-1.5 bg-white/40 hover:bg-white/70'
                 }`}
-                aria-label={`第 ${index + 1} 張橫幅`}
+                aria-label={`${banner.name.trim() || `第 ${index + 1} 張`}橫幅`}
               />
             ))}
           </div>

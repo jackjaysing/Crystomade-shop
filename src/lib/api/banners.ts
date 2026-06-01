@@ -5,6 +5,7 @@ import type { AnnouncementBanner } from '../types'
 function normalizeBanner(row: Record<string, unknown>): AnnouncementBanner {
   return {
     id: String(row.id),
+    name: row.name != null ? String(row.name) : '',
     image_url: String(row.image_url),
     link_url: row.link_url != null ? String(row.link_url) : null,
     sort_order: Number(row.sort_order ?? 0),
@@ -84,15 +85,21 @@ export async function fetchAllBanners(): Promise<AnnouncementBanner[]> {
 /** 後台：上傳並新增公告橫幅 */
 export async function createBanner(
   file: File,
-  linkUrl?: string
+  options: { name: string; linkUrl?: string }
 ): Promise<AnnouncementBanner> {
+  const trimmedName = options.name.trim()
+  if (!trimmedName) {
+    throw new Error('請填寫橫幅名稱')
+  }
+
   const image_url = await uploadBannerImage(file)
   const sort_order = await getNextSortOrder()
-  const trimmedLink = linkUrl?.trim()
+  const trimmedLink = options.linkUrl?.trim()
 
   const { data, error } = await supabase
     .from('announcement_banners')
     .insert({
+      name: trimmedName,
       image_url,
       link_url: trimmedLink || null,
       sort_order,
@@ -105,18 +112,32 @@ export async function createBanner(
   return normalizeBanner(data as Record<string, unknown>)
 }
 
-/** 後台：更新橫幅連結或啟用狀態 */
+/** 後台：更新橫幅名稱、連結、圖片或啟用狀態 */
 export async function updateBanner(
   id: string,
-  patch: { link_url?: string | null; is_active?: boolean }
+  patch: {
+    name?: string
+    link_url?: string | null
+    is_active?: boolean
+    imageFile?: File | null
+  }
 ): Promise<AnnouncementBanner> {
   const payload: Record<string, unknown> = {}
+
+  if ('name' in patch) {
+    const trimmed = patch.name?.trim()
+    if (!trimmed) throw new Error('請填寫橫幅名稱')
+    payload.name = trimmed
+  }
   if ('link_url' in patch) {
     const trimmed = patch.link_url?.trim()
     payload.link_url = trimmed || null
   }
   if ('is_active' in patch) {
     payload.is_active = patch.is_active
+  }
+  if (patch.imageFile) {
+    payload.image_url = await uploadBannerImage(patch.imageFile)
   }
 
   const { data, error } = await supabase
