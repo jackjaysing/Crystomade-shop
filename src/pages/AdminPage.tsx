@@ -12,6 +12,7 @@ import { usePageViewStats } from '../hooks/usePageViewStats'
 import { useProductViewStats } from '../hooks/useProductViewStats'
 import { useProducts } from '../hooks/useProducts'
 import { isAdminAuthenticated, logoutAdmin } from '../lib/adminAuth'
+import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 import { Archive } from 'lucide-react'
 
 type AdminTab = 'products' | 'orders' | 'banners' | 'analytics'
@@ -170,6 +171,8 @@ export function AdminPage() {
           />
         )}
       </div>
+
+      <ScrollToTopFab ariaLabel="回到後台頂部" title="回到後台頂部" />
 
       {showDeleted && (
         <DeletedProductsModal

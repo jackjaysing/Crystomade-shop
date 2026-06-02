@@ -7,21 +7,31 @@ interface ScrollToTopFabProps {
   /** 捲動目標；未指定則回到頁面頂部 */
   targetRef?: RefObject<HTMLElement | null>
   className?: string
+  ariaLabel?: string
+  title?: string
+  /** 捲動超過此像素才顯示 */
+  showAfterPx?: number
 }
 
-/** 右側懸浮：一鍵回到商品／頁面頂部 */
-export function ScrollToTopFab({ targetRef, className = '' }: ScrollToTopFabProps) {
+/** 右側懸浮：一鍵回到頁面頂部 */
+export function ScrollToTopFab({
+  targetRef,
+  className = '',
+  ariaLabel = '回到頁面頂部',
+  title = '回到頁面頂部',
+  showAfterPx = SHOW_AFTER_PX,
+}: ScrollToTopFabProps) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     const onScroll = () => {
-      setVisible(window.scrollY > SHOW_AFTER_PX)
+      setVisible(window.scrollY > showAfterPx)
     }
 
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [showAfterPx])
 
   const handleClick = () => {
     if (targetRef?.current) {
@@ -39,8 +49,8 @@ export function ScrollToTopFab({ targetRef, className = '' }: ScrollToTopFabProp
       onClick={handleClick}
       className={`fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-amber-glow/40 bg-graphite/90 text-amber-glow shadow-[0_4px_24px_rgba(0,0,0,0.45),0_0_20px_rgba(212,165,116,0.15)] backdrop-blur-md transition hover:border-amber-glow/70 hover:bg-amber-glow/15 hover:text-white sm:right-6 ${className}`}
       style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom, 0px))' }}
-      aria-label="回到商品頂部"
-      title="回到商品頂部"
+      aria-label={ariaLabel}
+      title={title}
     >
       <ChevronUp className="h-5 w-5" strokeWidth={2} aria-hidden />
     </button>

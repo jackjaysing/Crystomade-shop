@@ -229,7 +229,11 @@ export function ProductsPage() {
         onClose={() => setSelectedProduct(null)}
       />
 
-      <ScrollToTopFab targetRef={productSectionRef} />
+      <ScrollToTopFab
+        targetRef={productSectionRef}
+        ariaLabel="回到商品頂部"
+        title="回到商品頂部"
+      />
     </div>
   )
 }
