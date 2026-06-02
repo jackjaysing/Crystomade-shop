@@ -55,6 +55,8 @@ export interface Order {
   product_name?: string | null
   /** 下單當下商品封面快照 */
   product_image_url?: string | null
+  /** 手串淨手圍等規格快照（例如 15cm） */
+  selected_size?: string | null
   total_amount: number
   status: OrderStatus
   /** 後台標記是否已付款 */
@@ -77,11 +79,15 @@ export interface Order {
 
 /** 購物車品項（精簡快照，供 localStorage 暫存） */
 export interface CartItem {
+  /** 列唯一識別（productId 或 productId_手圍） */
+  cartItemKey: string
   productId: string
   name: string
   price: number
   image_url: string
   quantity: number
+  /** 手串淨手圍（cm 數字字串，如 "15"）；非手串為 null */
+  selectedSize: string | null
   /** 加入當下可用庫存上限 */
   maxStock: number
 }

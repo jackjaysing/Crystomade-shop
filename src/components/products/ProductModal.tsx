@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCategoryLabel } from '../../constants/categories'
+import {
+  productRequiresBraceletSize,
+} from '../../constants/braceletSizes'
 import { useCart } from '../../contexts/CartContext'
 import { useProductViewTracker } from '../../hooks/useProductViewTracker'
 import { isProductSoldOut } from '../../lib/productStock'
@@ -9,6 +12,7 @@ import { HotProductFrame } from './HotProductFrame'
 import { ProductImageGallery } from './ProductImageGallery'
 import { ProductOrderPaymentNotice } from './ProductOrderPaymentNotice'
 import { ProductPriceDisplay } from './ProductPriceDisplay'
+import { BraceletSizePicker } from './BraceletSizePicker'
 import { GlassPanel } from '../ui/GlassPanel'
 import { MetalDivider } from '../ui/MetalDivider'
 
@@ -22,23 +26,39 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   const navigate = useNavigate()
   const { addItem } = useCart()
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [sizeError, setSizeError] = useState<string | null>(null)
 
   useProductViewTracker(product?.id)
 
   if (!product) return null
 
   const isSold = isProductSoldOut(product)
+  const needsSize = productRequiresBraceletSize(product.category)
+  const canAdd = !needsSize || Boolean(selectedSize)
+
+  const tryAdd = (onSuccess: () => void) => {
+    if (needsSize && !selectedSize) {
+      setSizeError('請先選擇淨手圍')
+      return
+    }
+    setSizeError(null)
+    addItem(product, { selectedSize: needsSize ? selectedSize : null })
+    onSuccess()
+  }
 
   const handleAddToCart = () => {
-    addItem(product)
-    setFeedback('已加入購物車')
-    window.setTimeout(() => setFeedback(null), 2000)
+    tryAdd(() => {
+      setFeedback('已加入購物車')
+      window.setTimeout(() => setFeedback(null), 2000)
+    })
   }
 
   const handleBuyNow = () => {
-    addItem(product)
-    onClose()
-    navigate('/checkout')
+    tryAdd(() => {
+      onClose()
+      navigate('/checkout')
+    })
   }
 
   return (
@@ -118,6 +138,21 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
           <ProductOrderPaymentNotice />
 
+          {!isSold && needsSize && (
+            <div className="mt-6">
+              <BraceletSizePicker
+                value={selectedSize}
+                onChange={(size) => {
+                  setSelectedSize(size)
+                  setSizeError(null)
+                }}
+              />
+              {sizeError && (
+                <p className="mt-2 text-xs text-red-300/90">{sizeError}</p>
+              )}
+            </div>
+          )}
+
           {feedback && (
             <p className="mt-4 text-sm text-emerald-400">{feedback}</p>
           )}
@@ -127,14 +162,16 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex-1 rounded-lg border border-amber-glow/50 bg-amber-glow/10 py-4 text-sm tracking-[0.15em] text-amber-glow transition hover:bg-amber-glow/20"
+                disabled={!canAdd}
+                className="flex-1 rounded-lg border border-amber-glow/50 bg-amber-glow/10 py-4 text-sm tracking-[0.15em] text-amber-glow transition hover:bg-amber-glow/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 加入購物車
               </button>
               <button
                 type="button"
                 onClick={handleBuyNow}
-                className="flex-1 rounded-lg bg-amber-glow/90 py-4 text-sm font-medium tracking-[0.15em] text-void transition hover:bg-amber-glow"
+                disabled={!canAdd}
+                className="flex-1 rounded-lg bg-amber-glow/90 py-4 text-sm font-medium tracking-[0.15em] text-void transition hover:bg-amber-glow disabled:cursor-not-allowed disabled:opacity-50"
               >
                 立即購買
               </button>

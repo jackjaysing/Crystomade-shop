@@ -1,4 +1,8 @@
 import { useMemo, useState, type MouseEvent } from 'react'
+import {
+  formatBraceletSizeLabel,
+  formatOrderLineItemDetail,
+} from '../../constants/braceletSizes'
 import { ChevronDown, Copy, Package, Search, Star, Trash2, X } from 'lucide-react'
 import { CopyLineNotifyButton } from './CopyLineNotifyButton'
 import { CopyLineVerifyButton } from './CopyLineVerifyButton'
@@ -541,7 +545,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
         const isExpanded = expandedIds.has(group.id)
         const productSummary =
           group.lineItems.length === 1
-            ? `${group.lineItems[0].productName}${group.lineItems[0].quantity > 1 ? ` × ${group.lineItems[0].quantity}` : ''}`
+            ? formatOrderLineItemDetail(group.lineItems[0])
             : `${group.lineItems.length} 種商品，共 ${group.itemCount} 件`
 
         return (
@@ -635,7 +639,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                 <ul className="space-y-2">
                   {group.lineItems.map((item) => (
                     <li
-                      key={item.productId}
+                      key={`${item.productId}-${item.selectedSize ?? ''}`}
                       className="flex items-center gap-4 rounded-lg border border-white/5 bg-void/40 p-3"
                     >
                       {item.imageUrl ? (
@@ -649,6 +653,11 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-white">{item.productName}</p>
+                        {item.selectedSize && (
+                          <p className="mt-1 text-[11px] text-amber-glow/80">
+                            {formatBraceletSizeLabel(item.selectedSize)}
+                          </p>
+                        )}
                         <p className="mt-0.5 text-xs text-white/40">數量 {item.quantity}</p>
                       </div>
                       <p className="shrink-0 text-sm text-amber-glow">

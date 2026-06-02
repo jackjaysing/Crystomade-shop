@@ -9,6 +9,8 @@ export interface OrderLineItem {
   productId: string
   productName: string
   imageUrl?: string
+  /** 手串手圍等規格 */
+  selectedSize?: string | null
   quantity: number
   lineTotal: number
 }
@@ -55,10 +57,12 @@ function buildLineItems(orders: Order[]): OrderLineItem[] {
   const map = new Map<string, OrderLineItem>()
 
   for (const order of orders) {
-    const key = order.product_id || order.product_name || order.id
+    const sizeKey = order.selected_size?.trim() ?? ''
+    const key = `${order.product_id || order.product_name || order.id}::${sizeKey}`
     const productName =
       order.products?.name ?? order.product_name ?? '（商品已刪除）'
     const imageUrl = order.products?.image_url ?? order.product_image_url ?? undefined
+    const selectedSize = order.selected_size?.trim() || null
     const existing = map.get(key)
     if (existing) {
       existing.quantity += 1
@@ -70,6 +74,7 @@ function buildLineItems(orders: Order[]): OrderLineItem[] {
       productId: order.product_id || key,
       productName,
       imageUrl,
+      selectedSize,
       quantity: 1,
       lineTotal: order.total_amount,
     })

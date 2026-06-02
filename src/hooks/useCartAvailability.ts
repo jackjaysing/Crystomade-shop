@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCart } from '../contexts/CartContext'
 import { fetchProducts } from '../lib/api/products'
 import {
@@ -49,34 +49,42 @@ function buildSnapshot(items: CartItem[], products: Product[]): CartAvailability
 export function useCartAvailability(options: UseCartAvailabilityOptions = {}) {
   const { items } = useCart()
   const enabled = options.enabled ?? items.length > 0
+  const itemsRef = useRef(items)
+  itemsRef.current = items
+  const productsRef = useRef<Product[]>([])
 
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  productsRef.current = products
 
   const refresh = useCallback(async (): Promise<CartAvailabilitySnapshot | null> => {
-    if (items.length === 0) {
+    const currentItems = itemsRef.current
+    if (currentItems.length === 0) {
       setProducts([])
+      productsRef.current = []
       return null
     }
 
-    setLoading(true)
+    const showLoadingBanner = productsRef.current.length === 0
+    if (showLoadingBanner) setLoading(true)
     setError(null)
     try {
       const data = await fetchProducts()
       setProducts(data)
-      return buildSnapshot(items, data)
+      productsRef.current = data
+      return buildSnapshot(currentItems, data)
     } catch (err) {
       setError(err instanceof Error ? err.message : '無法更新庫存狀態')
       return null
     } finally {
-      setLoading(false)
+      if (showLoadingBanner) setLoading(false)
     }
-  }, [items])
+  }, [])
 
   useEffect(() => {
     if (enabled && items.length > 0) {
-      refresh()
+      void refresh()
     }
   }, [enabled, items.length, refresh])
 

@@ -2,6 +2,7 @@ import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
 import { FreeShippingProgress } from './FreeShippingProgress'
+import { CartItemSizeEditor } from './CartItemSizeEditor'
 import { CartQuickAddSection } from './CartQuickAddSection'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 import { useQuickAddProducts } from '../../hooks/useQuickAddProducts'
@@ -75,7 +76,7 @@ export function CartDrawer() {
             <p className="py-12 text-center text-sm text-white/40">購物車是空的</p>
           ) : (
             <>
-              {loading && (
+              {loading && resolvedItems.length === 0 && items.length > 0 && (
                 <p className="mb-4 text-center text-xs text-white/40">更新庫存中…</p>
               )}
               {hasSnatchedItems && !loading && (
@@ -87,7 +88,7 @@ export function CartDrawer() {
                 {resolvedItems.map(
                   ({ item, currentStock, isFullySnatched, snatchedQuantity }) => (
                     <li
-                      key={item.productId}
+                      key={item.cartItemKey}
                       className={`flex gap-4 rounded-xl border p-3 ${
                         isFullySnatched
                           ? 'border-white/5 bg-white/[0.01] opacity-60'
@@ -116,6 +117,11 @@ export function CartDrawer() {
                         >
                           {item.name}
                         </p>
+                        <CartItemSizeEditor
+                          cartItemKey={item.cartItemKey}
+                          selectedSize={item.selectedSize}
+                          disabled={isFullySnatched}
+                        />
                         {isFullySnatched ? (
                           <p className="mt-1 text-xs text-red-300/80">
                             該物品已被搶先收藏
@@ -135,7 +141,7 @@ export function CartDrawer() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    updateQuantity(item.productId, item.quantity - 1)
+                                    updateQuantity(item.cartItemKey, item.quantity - 1)
                                   }
                                   className="rounded border border-white/10 p-1 text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
                                   aria-label="減少數量"
@@ -148,7 +154,7 @@ export function CartDrawer() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    updateQuantity(item.productId, item.quantity + 1)
+                                    updateQuantity(item.cartItemKey, item.quantity + 1)
                                   }
                                   disabled={item.quantity >= currentStock}
                                   className="rounded border border-white/10 p-1 text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow disabled:opacity-30"
@@ -159,7 +165,7 @@ export function CartDrawer() {
                               </div>
                               <button
                                 type="button"
-                                onClick={() => removeItem(item.productId)}
+                                onClick={() => removeItem(item.cartItemKey)}
                                 className="text-white/30 transition hover:text-red-400"
                                 aria-label="移除商品"
                               >
@@ -171,7 +177,7 @@ export function CartDrawer() {
                         {isFullySnatched && (
                           <button
                             type="button"
-                            onClick={() => removeItem(item.productId)}
+                            onClick={() => removeItem(item.cartItemKey)}
                             className="mt-2 text-xs text-white/40 transition hover:text-red-400"
                           >
                             移出購物車
@@ -187,8 +193,8 @@ export function CartDrawer() {
                 <CartQuickAddSection
                   products={quickAddProducts}
                   loading={quickAddLoading}
-                  onAdd={(product) => {
-                    addItem(product, 1)
+                  onAdd={(product, selectedSize) => {
+                    addItem(product, { quantity: 1, selectedSize })
                     void refresh()
                   }}
                 />

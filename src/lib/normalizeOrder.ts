@@ -47,6 +47,8 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
     product_name: row.product_name != null ? String(row.product_name) : null,
     product_image_url:
       row.product_image_url != null ? String(row.product_image_url) : null,
+    selected_size:
+      row.selected_size != null ? String(row.selected_size) : null,
     total_amount:
       typeof row.total_amount === 'number'
         ? row.total_amount

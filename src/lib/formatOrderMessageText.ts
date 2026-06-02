@@ -1,3 +1,4 @@
+import { formatOrderLineItemDetail } from '../constants/braceletSizes'
 import type { OrderLineItem } from './groupOrders'
 
 /** 編號欄位（無 emoji，LINE 複製後較整齊） */
@@ -16,8 +17,13 @@ export function formatNumberedItemSection(
   lineItems: OrderLineItem[]
 ): string[] {
   const header = `${index}. ${sectionLabel}`
-  const detailLines = lineItems.map(
-    (item, i) => `   ${i + 1}) ${item.productName} x ${item.quantity}`
-  )
+  const detailLines = lineItems.map((item, i) => {
+    const line = formatOrderLineItemDetail({
+      productName: item.productName,
+      quantity: item.quantity,
+      selectedSize: item.selectedSize,
+    })
+    return `   ${i + 1}) ${line}`
+  })
   return detailLines.length > 0 ? [header, ...detailLines] : [`${header}：（無）`]
 }

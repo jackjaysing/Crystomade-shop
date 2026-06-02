@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Archive, RotateCcw } from 'lucide-react'
 import { restoreOrderGroup } from '../../lib/api/orders'
 import { formatOrderDisplayId } from '../../lib/buildLineOrderNotification'
+import { formatOrderLineItemDetail } from '../../constants/braceletSizes'
 import {
   formatOrderGroupStatus,
   formatOrderPaymentStatus,
@@ -83,7 +84,9 @@ export function DeletedOrdersPanel({
                 </div>
                 <p className="mt-2 text-sm text-white/80">{group.buyer_name}</p>
                 <p className="mt-1 text-xs text-white/45">
-                  {group.lineItems.map((item) => `${item.productName} x ${item.quantity}`).join('、')}
+                  {group.lineItems
+                    .map((item) => formatOrderLineItemDetail(item))
+                    .join('、')}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
                   <span className="rounded-full border border-white/15 px-2 py-0.5 text-white/50">

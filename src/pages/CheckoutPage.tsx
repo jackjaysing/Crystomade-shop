@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
+import { CartItemSizeEditor } from '../components/cart/CartItemSizeEditor'
 import { OrderSuccessModal } from '../components/cart/OrderSuccessModal'
 import { CVS_BRANDS } from '../constants/cvs'
 import { FREE_SHIPPING_THRESHOLD } from '../constants/shipping'
@@ -97,7 +98,7 @@ export function CheckoutPage() {
         <GlassPanel className="mt-8 p-6 sm:p-8">
           <h2 className="text-sm tracking-widest text-white/50">訂購明細</h2>
 
-          {loading && (
+          {loading && resolvedItems.length === 0 && items.length > 0 && (
             <p className="mt-3 text-xs text-white/40">正在確認最新庫存…</p>
           )}
 
@@ -111,7 +112,7 @@ export function CheckoutPage() {
             {resolvedItems.map(
               ({ item, checkoutQuantity, isFullySnatched, snatchedQuantity }) => (
                 <li
-                  key={item.productId}
+                  key={item.cartItemKey}
                   className={`flex items-center gap-4 rounded-lg border p-3 ${
                     isFullySnatched
                       ? 'border-white/5 bg-white/[0.01] opacity-60'
@@ -140,6 +141,11 @@ export function CheckoutPage() {
                     >
                       {item.name}
                     </p>
+                    <CartItemSizeEditor
+                      cartItemKey={item.cartItemKey}
+                      selectedSize={item.selectedSize}
+                      disabled={isFullySnatched}
+                    />
                     {isFullySnatched ? (
                       <p className="mt-0.5 text-xs text-red-300/80">
                         該物品已被搶先收藏

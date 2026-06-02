@@ -30,8 +30,11 @@ export async function createOrder(
   productId: string,
   totalAmount: number,
   form: OrderFormData,
-  checkoutId?: string
+  checkoutId?: string,
+  selectedSize?: string | null
 ): Promise<Order> {
+  const sizeValue = selectedSize?.trim() || null
+
   const { data, error } = await supabase.rpc('place_order_with_stock', {
     p_product_id: productId,
     p_total_amount: totalAmount,
@@ -41,13 +44,27 @@ export async function createOrder(
     p_cvs_brand: form.cvs_brand,
     p_cvs_store: form.cvs_store.trim(),
     p_checkout_id: checkoutId ?? null,
+    p_selected_size: sizeValue,
   })
 
   if (error) {
     const msg = formatErrorMessage(error)
+    if (
+      msg.includes('idx_orders_order_number') ||
+      (msg.includes('duplicate key') && msg.includes('order_number'))
+    ) {
+      throw new Error(
+        '訂單編號索引設定錯誤：請在 Supabase SQL Editor 執行 supabase/migration-fix-order-number-unique.sql'
+      )
+    }
     if (msg.includes('place_order_with_stock') || msg.includes('function')) {
       throw new Error(
-        '資料庫尚未啟用最新訂單功能，請在 Supabase SQL Editor 依序執行 supabase/migration-add-stock.sql 與 migration-add-order-number.sql'
+        '資料庫尚未啟用最新訂單功能，請在 Supabase SQL Editor 依序執行 supabase/migration-add-stock.sql、migration-add-order-number.sql 與 migration-add-order-selected-size.sql'
+      )
+    }
+    if (msg.includes('selected_size') || msg.includes('p_selected_size')) {
+      throw new Error(
+        '資料庫尚未啟用手圍規格欄位，請在 Supabase SQL Editor 執行 supabase/migration-add-order-selected-size.sql'
       )
     }
     throw new Error(msg)
@@ -74,7 +91,13 @@ export async function createOrdersFromCart(
       const amount = item.price + (includeShipping ? shippingFee : 0)
       if (includeShipping) shippingAssigned = true
 
-      const order = await createOrder(item.productId, amount, form, checkoutId)
+      const order = await createOrder(
+        item.productId,
+        amount,
+        form,
+        checkoutId,
+        item.selectedSize
+      )
       orders.push(order)
     }
   }

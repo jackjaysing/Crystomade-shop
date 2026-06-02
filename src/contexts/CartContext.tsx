@@ -7,11 +7,20 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import {
+  buildCartItemKey,
+  productRequiresBraceletSize,
+} from '../constants/braceletSizes'
 import { calcGrandTotal, calcShippingFee, calcSubtotal } from '../lib/cartShipping'
 import { getProductSalePrice } from '../lib/productPricing'
 import type { CartItem, Product } from '../lib/types'
 
 const STORAGE_KEY = 'crystomade-cart'
+
+export interface AddToCartOptions {
+  quantity?: number
+  selectedSize?: string | null
+}
 
 interface CartContextValue {
   items: CartItem[]
@@ -22,13 +31,42 @@ interface CartContextValue {
   isOpen: boolean
   openCart: () => void
   closeCart: () => void
-  addItem: (product: Product, quantity?: number) => void
-  removeItem: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  addItem: (product: Product, options?: AddToCartOptions) => void
+  removeItem: (cartItemKey: string) => void
+  updateQuantity: (cartItemKey: string, quantity: number) => void
+  /** 變更手串手圍（會依新規格合併或拆列） */
+  updateItemSize: (cartItemKey: string, newSelectedSize: string) => void
   clearCart: () => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
+
+function normalizeStoredItem(raw: CartItem): CartItem | null {
+  if (!raw || typeof raw.productId !== 'string' || typeof raw.quantity !== 'number') {
+    return null
+  }
+  if (raw.quantity <= 0) return null
+
+  const selectedSize =
+    raw.selectedSize != null && String(raw.selectedSize).trim()
+      ? String(raw.selectedSize).trim()
+      : null
+  const cartItemKey =
+    typeof raw.cartItemKey === 'string' && raw.cartItemKey
+      ? raw.cartItemKey
+      : buildCartItemKey(raw.productId, selectedSize)
+
+  return {
+    cartItemKey,
+    productId: raw.productId,
+    name: String(raw.name ?? ''),
+    price: Number(raw.price) || 0,
+    image_url: String(raw.image_url ?? ''),
+    quantity: raw.quantity,
+    selectedSize,
+    maxStock: Math.max(Number(raw.maxStock) || 0, 0),
+  }
+}
 
 function loadStoredItems(): CartItem[] {
   try {
@@ -36,25 +74,27 @@ function loadStoredItems(): CartItem[] {
     if (!raw) return []
     const parsed = JSON.parse(raw) as CartItem[]
     if (!Array.isArray(parsed)) return []
-    return parsed.filter(
-      (item) =>
-        item &&
-        typeof item.productId === 'string' &&
-        typeof item.quantity === 'number' &&
-        item.quantity > 0
-    )
+    return parsed
+      .map((item) => normalizeStoredItem(item))
+      .filter((item): item is CartItem => item != null)
   } catch {
     return []
   }
 }
 
-function productToCartItem(product: Product, quantity: number): CartItem {
+function productToCartItem(
+  product: Product,
+  quantity: number,
+  selectedSize: string | null
+): CartItem {
   return {
+    cartItemKey: buildCartItemKey(product.id, selectedSize),
     productId: product.id,
     name: product.name,
     price: getProductSalePrice(product),
     image_url: product.image_url,
     quantity,
+    selectedSize,
     maxStock: Math.max(product.stock, 0),
   }
 }
@@ -80,15 +120,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openCart = useCallback(() => setIsOpen(true), [])
   const closeCart = useCallback(() => setIsOpen(false), [])
 
-  const addItem = useCallback((product: Product, quantity = 1) => {
-    const qty = Math.max(1, Math.floor(quantity))
+  const addItem = useCallback((product: Product, options: AddToCartOptions = {}) => {
+    const qty = Math.max(1, Math.floor(options.quantity ?? 1))
+    const needsSize = productRequiresBraceletSize(product.category)
+    const selectedSize = options.selectedSize?.trim() || null
+
+    if (needsSize && !selectedSize) return
+
+    const cartItemKey = buildCartItemKey(product.id, selectedSize)
+
     setItems((prev) => {
-      const existing = prev.find((item) => item.productId === product.id)
+      const existing = prev.find((item) => item.cartItemKey === cartItemKey)
       if (existing) {
         const nextQty = Math.min(existing.quantity + qty, product.stock)
         if (nextQty <= 0) return prev
         return prev.map((item) =>
-          item.productId === product.id
+          item.cartItemKey === cartItemKey
             ? {
                 ...item,
                 name: product.name,
@@ -101,26 +148,66 @@ export function CartProvider({ children }: { children: ReactNode }) {
         )
       }
       if (product.stock <= 0) return prev
-      return [...prev, productToCartItem(product, Math.min(qty, product.stock))]
+      return [
+        ...prev,
+        productToCartItem(product, Math.min(qty, product.stock), selectedSize),
+      ]
     })
   }, [])
 
-  const removeItem = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((item) => item.productId !== productId))
+  const removeItem = useCallback((cartItemKey: string) => {
+    setItems((prev) => prev.filter((item) => item.cartItemKey !== cartItemKey))
   }, [])
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((cartItemKey: string, quantity: number) => {
     setItems((prev) => {
       if (quantity <= 0) {
-        return prev.filter((item) => item.productId !== productId)
+        return prev.filter((item) => item.cartItemKey !== cartItemKey)
       }
       return prev.map((item) => {
-        if (item.productId !== productId) return item
+        if (item.cartItemKey !== cartItemKey) return item
         return {
           ...item,
           quantity: Math.min(Math.max(1, quantity), item.maxStock),
         }
       })
+    })
+  }, [])
+
+  const updateItemSize = useCallback((cartItemKey: string, newSelectedSize: string) => {
+    const size = newSelectedSize.trim()
+    if (!size) return
+
+    setItems((prev) => {
+      const current = prev.find((item) => item.cartItemKey === cartItemKey)
+      if (!current || current.selectedSize == null) return prev
+
+      const newKey = buildCartItemKey(current.productId, size)
+      if (newKey === cartItemKey) return prev
+
+      const rest = prev.filter((item) => item.cartItemKey !== cartItemKey)
+      const merged = rest.find((item) => item.cartItemKey === newKey)
+
+      if (merged) {
+        const combinedQty = merged.quantity + current.quantity
+        return rest.map((item) =>
+          item.cartItemKey === newKey
+            ? {
+                ...item,
+                quantity: Math.min(combinedQty, item.maxStock),
+              }
+            : item
+        )
+      }
+
+      return [
+        ...rest,
+        {
+          ...current,
+          cartItemKey: newKey,
+          selectedSize: size,
+        },
+      ]
     })
   }, [])
 
@@ -139,6 +226,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addItem,
       removeItem,
       updateQuantity,
+      updateItemSize,
       clearCart,
     }),
     [
@@ -153,6 +241,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addItem,
       removeItem,
       updateQuantity,
+      updateItemSize,
       clearCart,
     ]
   )
