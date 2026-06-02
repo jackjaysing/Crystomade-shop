@@ -5,6 +5,7 @@ import {
   productMatchesCrystalColor,
 } from '../constants/crystalColors'
 import { CategoryFilter } from '../components/products/CategoryFilter'
+import { StorefrontFilterBar } from '../components/products/StorefrontFilterBar'
 import { BannerCarousel } from '../components/products/BannerCarousel'
 import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
 import { ProductMasonry } from '../components/products/ProductMasonry'
@@ -122,70 +123,63 @@ export function ProductsPage() {
         </section>
       )}
 
-      {/* 品類與功效篩選（手機極簡固定版） */}
-        <section className="sticky top-[73px] z-30 border-y border-white/5 bg-neutral-950/90 backdrop-blur-md py-2">
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="flex items-center gap-2 pb-2">
-              <div className="min-w-0 flex-1">
-                <ProductSearchBar value={searchQuery} onChange={setSearchQuery} />
-              </div>
-              <SoldOutToggle
-                showSoldOut={showSoldOut}
-                onChange={handleSoldOutVisibilityChange}
-              />
-            </div>
-            
-            {/* 第一排：品類（標籤固定，僅右側可橫滑） */}
-            <div className="flex min-h-11 items-center gap-2 py-1.5">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
-                品類
-              </span>
-              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
-                <CategoryFilter
-                  activeCategory={activeCategory}
-                  onSelect={setActiveCategory}
-                />
-              </div>
-            </div>
-
-            {/* 第二排：顏色 */}
-            <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
-                顏色
-              </span>
-              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar py-0.5 pl-2.5 pr-1">
-                <CrystalColorFilter
-                  activeColorId={activeCrystalColorId}
-                  onSelect={setActiveCrystalColorId}
-                />
-              </div>
-            </div>
-
-            {/* 第三排：功效 */}
-            <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
-                功效
-              </span>
-              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
-                <TagFilter
-                  activeFilterId={activeFilterId}
-                  onSelect={setActiveFilterId}
-                />
-              </div>
-            </div>
-
-            {/* 第四排：排序 */}
-            <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
-                排序
-              </span>
-              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
-                <ProductSortFilter activeSort={sortMode} onSelect={handleSortChange} />
-              </div>
-            </div>
-
+      {/* 品類與功效篩選（客戶可自行收起） */}
+      <StorefrontFilterBar>
+        <div className="flex items-center gap-2 pb-2">
+          <div className="min-w-0 flex-1">
+            <ProductSearchBar value={searchQuery} onChange={setSearchQuery} />
           </div>
-        </section>
+          <SoldOutToggle
+            showSoldOut={showSoldOut}
+            onChange={handleSoldOutVisibilityChange}
+          />
+        </div>
+
+        <div className="flex min-h-11 items-center gap-2 py-1.5">
+          <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+            品類
+          </span>
+          <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+            <CategoryFilter
+              activeCategory={activeCategory}
+              onSelect={setActiveCategory}
+            />
+          </div>
+        </div>
+
+        <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+          <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+            顏色
+          </span>
+          <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar py-0.5 pl-2.5 pr-1">
+            <CrystalColorFilter
+              activeColorId={activeCrystalColorId}
+              onSelect={setActiveCrystalColorId}
+            />
+          </div>
+        </div>
+
+        <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+          <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+            功效
+          </span>
+          <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+            <TagFilter
+              activeFilterId={activeFilterId}
+              onSelect={setActiveFilterId}
+            />
+          </div>
+        </div>
+
+        <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+          <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+            排序
+          </span>
+          <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+            <ProductSortFilter activeSort={sortMode} onSelect={handleSortChange} />
+          </div>
+        </div>
+      </StorefrontFilterBar>
 
       {/* 商品瀑布流 */}
       <section ref={productSectionRef} className="mx-auto max-w-7xl scroll-mt-72 px-6 py-12">
