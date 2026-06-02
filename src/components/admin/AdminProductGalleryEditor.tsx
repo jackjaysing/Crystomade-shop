@@ -83,17 +83,17 @@ export function AdminProductGalleryEditor({
                     item.isNew ? 'ring-2 ring-amber-glow/50' : ''
                   }`}
                 />
-                <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded bg-void/50 text-[10px] tracking-wide text-white/90 opacity-0 transition group-hover:opacity-100">
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded bg-void/50 text-sm font-medium tracking-wide text-white/95 opacity-0 transition group-hover:opacity-100">
                   更換
                 </span>
               </button>
               <div className="min-w-0 flex-1">
                 {item.isNew ? (
-                  <span className="text-[10px] tracking-wide text-amber-glow/80">
+                  <span className="text-sm tracking-wide text-amber-glow/80">
                     待上傳
                   </span>
                 ) : (
-                  <span className="text-[10px] text-white/35">點縮圖可更換</span>
+                  <span className="text-sm text-white/55">點縮圖可更換</span>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -136,7 +136,7 @@ export function AdminProductGalleryEditor({
 
       <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-white/20 py-6 transition hover:border-amber-glow/40">
         <span className="text-sm text-white/40">{appendLabel}</span>
-        <span className="mt-1 text-[11px] text-white/30">
+        <span className="mt-1 text-xs text-white/40">
           可多次選擇；點縮圖可單張更換；順序即詳情頁切換順序
         </span>
         <input
