@@ -7,6 +7,7 @@ import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageGallery } from './ProductImageGallery'
+import { ProductOrderPaymentNotice } from './ProductOrderPaymentNotice'
 import { ProductPriceDisplay } from './ProductPriceDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
 import { MetalDivider } from '../ui/MetalDivider'
@@ -114,6 +115,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           <p className="mt-6 whitespace-pre-line leading-relaxed text-white/70">
             {product.description}
           </p>
+
+          <ProductOrderPaymentNotice />
 
           {feedback && (
             <p className="mt-4 text-sm text-emerald-400">{feedback}</p>
