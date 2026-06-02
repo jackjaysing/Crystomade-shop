@@ -111,7 +111,7 @@ export function ProductsPage() {
           </h1>
           
           <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-white/50">
-            探索屬於您的水晶能量夥伴。
+            - 刻定屬於您的水晶能量夥伴 -
           </p>
         </div>
       </section>
