@@ -124,6 +124,11 @@ export interface BannerEditData {
   imageFile: File | null
 }
 
+/** 後台編輯商品相簿項目（可排序） */
+export type ProductGalleryEditItem =
+  | { kind: 'existing'; url: string }
+  | { kind: 'new'; file: File; previewUrl: string }
+
 /** 後台編輯商品表單 */
 export interface ProductEditData {
   name: string
@@ -139,8 +144,6 @@ export interface ProductEditData {
   is_hot: boolean
   /** 新封面；null 表示沿用原圖 */
   coverFile: File | null
-  /** 保留的既有相簿 URL */
-  existingGalleryUrls: string[]
-  /** 新追加的相簿圖片 */
-  galleryFiles: File[]
+  /** 詳情相簿（封面之後的順序） */
+  galleryItems: ProductGalleryEditItem[]
 }

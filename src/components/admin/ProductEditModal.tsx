@@ -6,7 +6,12 @@ import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
 import type { Product, ProductCategory, ProductEditData } from '../../lib/types'
+import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
+import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
+import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
+import { moveListItem } from '../../lib/reorderList'
+import type { ProductGalleryEditItem } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface ProductEditModalProps {
@@ -26,8 +31,16 @@ function toEditForm(product: Product): ProductEditData {
     stock: product.stock,
     is_hot: product.is_hot,
     coverFile: null,
-    existingGalleryUrls: [...product.gallery_urls],
-    galleryFiles: [],
+    galleryItems: product.gallery_urls.map((url) => ({
+      kind: 'existing' as const,
+      url,
+    })),
+  }
+}
+
+function revokeNewGalleryPreviews(items: ProductGalleryEditItem[]) {
+  for (const item of items) {
+    if (item.kind === 'new') URL.revokeObjectURL(item.previewUrl)
   }
 }
 
@@ -39,7 +52,6 @@ export function ProductEditModal({
 }: ProductEditModalProps) {
   const [form, setForm] = useState<ProductEditData>(() => toEditForm(product))
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
-  const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
@@ -54,9 +66,11 @@ export function ProductEditModal({
   }, [])
 
   useEffect(() => {
-    setForm(toEditForm(product))
+    setForm((prev) => {
+      revokeNewGalleryPreviews(prev.galleryItems)
+      return toEditForm(product)
+    })
     setCoverPreview(null)
-    setNewGalleryPreviews([])
     setMessage('')
     scrollRef.current?.scrollTo({ top: 0 })
   }, [product])
@@ -64,9 +78,8 @@ export function ProductEditModal({
   useEffect(() => {
     return () => {
       if (coverPreview) URL.revokeObjectURL(coverPreview)
-      newGalleryPreviews.forEach((url) => URL.revokeObjectURL(url))
     }
-  }, [coverPreview, newGalleryPreviews])
+  }, [coverPreview])
 
   const toggleTag = (tag: string) => {
     setForm((prev) => ({
@@ -84,28 +97,76 @@ export function ProductEditModal({
     setCoverPreview(file ? URL.createObjectURL(file) : null)
   }
 
-  const handleGalleryChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    newGalleryPreviews.forEach((url) => URL.revokeObjectURL(url))
-    setForm((prev) => ({ ...prev, galleryFiles: files }))
-    setNewGalleryPreviews(files.map((f) => URL.createObjectURL(f)))
-  }
-
-  const removeExistingGallery = (index: number) => {
+  const appendGalleryFiles = (files: File[]) => {
+    const newItems: ProductGalleryEditItem[] = files.map((file) => ({
+      kind: 'new',
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }))
     setForm((prev) => ({
       ...prev,
-      existingGalleryUrls: prev.existingGalleryUrls.filter((_, i) => i !== index),
+      galleryItems: [...prev.galleryItems, ...newItems],
     }))
   }
 
-  const removeNewGallery = (index: number) => {
+  const removeGalleryItem = (index: number) => {
+    setForm((prev) => {
+      const removed = prev.galleryItems[index]
+      if (removed?.kind === 'new') URL.revokeObjectURL(removed.previewUrl)
+      return {
+        ...prev,
+        galleryItems: prev.galleryItems.filter((_, i) => i !== index),
+      }
+    })
+  }
+
+  const moveGalleryItem = (index: number, direction: 'up' | 'down') => {
     setForm((prev) => ({
       ...prev,
-      galleryFiles: prev.galleryFiles.filter((_, i) => i !== index),
+      galleryItems: moveListItem(prev.galleryItems, index, direction),
     }))
-    URL.revokeObjectURL(newGalleryPreviews[index])
-    setNewGalleryPreviews((prev) => prev.filter((_, i) => i !== index))
   }
+
+  const downloadGalleryItem = async (index: number) => {
+    const item = form.galleryItems[index]
+    if (!item) return
+    const source = item.kind === 'new' ? item.file : item.url
+    await downloadWatermarkedImage(
+      source,
+      `${form.name || product.name}-gallery-${index + 1}`
+    )
+  }
+
+  const downloadCoverImage = async () => {
+    const source = form.coverFile ?? product.image_url
+    await downloadWatermarkedImage(
+      source,
+      `${form.name || product.name}-cover`
+    )
+  }
+
+  const replaceGalleryItem = (index: number, file: File) => {
+    setForm((prev) => {
+      const next = [...prev.galleryItems]
+      const old = next[index]
+      if (old?.kind === 'new') URL.revokeObjectURL(old.previewUrl)
+      next[index] = {
+        kind: 'new',
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }
+      return { ...prev, galleryItems: next }
+    })
+  }
+
+  const galleryEditorItems = form.galleryItems.map((item) => ({
+    key:
+      item.kind === 'existing'
+        ? `existing-${item.url}`
+        : `new-${item.previewUrl}`,
+    previewSrc: item.kind === 'existing' ? item.url : item.previewUrl,
+    isNew: item.kind === 'new',
+  }))
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -331,9 +392,15 @@ export function ProductEditModal({
           />
 
           <div>
-            <p className="mb-2 text-xs text-white/50">
-              封面照片（不上傳則保留原圖）
-            </p>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-white/50">
+                封面照片（不上傳則保留原圖）
+              </p>
+              <WatermarkedImageDownloadButton
+                label="下載封面浮水印圖"
+                onDownload={downloadCoverImage}
+              />
+            </div>
             <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-amber-glow/30 py-8 transition hover:border-amber-glow/50">
               <img
                 src={coverDisplay}
@@ -351,56 +418,17 @@ export function ProductEditModal({
           </div>
 
           <div>
-            <p className="mb-2 text-xs text-white/50">詳情相簿</p>
-            {(form.existingGalleryUrls.length > 0 ||
-              newGalleryPreviews.length > 0) && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {form.existingGalleryUrls.map((url, index) => (
-                  <div key={url} className="relative">
-                    <img
-                      src={url}
-                      alt=""
-                      className="h-20 w-20 rounded object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeExistingGallery(index)}
-                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/90 text-xs text-white"
-                      aria-label="移除"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {newGalleryPreviews.map((url, index) => (
-                  <div key={url} className="relative">
-                    <img
-                      src={url}
-                      alt=""
-                      className="h-20 w-20 rounded object-cover ring-2 ring-amber-glow/50"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeNewGallery(index)}
-                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/90 text-xs text-white"
-                      aria-label="移除"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-white/20 py-6 transition hover:border-amber-glow/40">
-              <span className="text-sm text-white/40">追加相簿照片</span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handleGalleryChange}
-              />
-            </label>
+            <p className="mb-2 text-xs text-white/50">
+              詳情相簿（封面之後的順序，可用箭頭調整）
+            </p>
+            <AdminProductGalleryEditor
+              items={galleryEditorItems}
+              onMove={moveGalleryItem}
+              onRemove={removeGalleryItem}
+              onReplace={replaceGalleryItem}
+              onDownload={downloadGalleryItem}
+              onAppendFiles={appendGalleryFiles}
+            />
           </div>
 
             {message && (

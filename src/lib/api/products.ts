@@ -5,7 +5,12 @@ import { sanitizeProductTags } from '../productTags'
 import { isProductActive } from '../productStock'
 import { sortProducts } from '../sortProducts'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
-import type { Product, ProductEditData, ProductFormData } from '../types'
+import type {
+  Product,
+  ProductEditData,
+  ProductFormData,
+  ProductGalleryEditItem,
+} from '../types'
 
 function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
   return sortProducts(
@@ -99,6 +104,21 @@ async function uploadGalleryImages(files: File[]): Promise<string[]> {
   return urls
 }
 
+/** 依排序後的相簿項目產生 URL 列表 */
+async function resolveGalleryItems(
+  items: ProductGalleryEditItem[]
+): Promise<string[]> {
+  const urls: string[] = []
+  for (const item of items) {
+    if (item.kind === 'existing') {
+      urls.push(item.url)
+    } else {
+      urls.push(await uploadProductImage(item.file))
+    }
+  }
+  return urls
+}
+
 /** 後台：新增商品並上架 */
 export async function createProduct(form: ProductFormData): Promise<Product> {
   if (!form.coverFile) {
@@ -146,10 +166,7 @@ export async function updateProduct(
     ? await uploadProductImage(form.coverFile)
     : currentImageUrl
 
-  const newGalleryUrls =
-    form.galleryFiles.length > 0
-      ? await uploadGalleryImages(form.galleryFiles)
-      : []
+  const gallery_urls = await resolveGalleryItems(form.galleryItems)
 
   const stock = Math.max(0, form.stock)
   const status = stock <= 0 ? 'sold' : 'available'
@@ -163,7 +180,7 @@ export async function updateProduct(
       discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),
       image_url,
-      gallery_urls: [...form.existingGalleryUrls, ...newGalleryUrls],
+      gallery_urls,
       description: form.description,
       stock,
       status,

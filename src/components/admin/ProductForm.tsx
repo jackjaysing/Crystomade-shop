@@ -4,7 +4,11 @@ import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
 import type { ProductCategory, ProductFormData } from '../../lib/types'
+import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
+import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
+import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
+import { moveListItem } from '../../lib/reorderList'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface ProductFormProps {
@@ -55,20 +59,53 @@ export function ProductForm({ onCreated }: ProductFormProps) {
     setCoverPreview(file ? URL.createObjectURL(file) : null)
   }
 
-  const handleGalleryChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    galleryPreviews.forEach((url) => URL.revokeObjectURL(url))
-    setForm((prev) => ({ ...prev, galleryFiles: files }))
-    setGalleryPreviews(files.map((f) => URL.createObjectURL(f)))
+  const appendGalleryFiles = (files: File[]) => {
+    const previews = files.map((f) => URL.createObjectURL(f))
+    setForm((prev) => ({
+      ...prev,
+      galleryFiles: [...prev.galleryFiles, ...files],
+    }))
+    setGalleryPreviews((prev) => [...prev, ...previews])
   }
 
   const removeGalleryImage = (index: number) => {
+    URL.revokeObjectURL(galleryPreviews[index])
     setForm((prev) => ({
       ...prev,
       galleryFiles: prev.galleryFiles.filter((_, i) => i !== index),
     }))
-    URL.revokeObjectURL(galleryPreviews[index])
     setGalleryPreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const moveGalleryImage = (index: number, direction: 'up' | 'down') => {
+    setForm((prev) => ({
+      ...prev,
+      galleryFiles: moveListItem(prev.galleryFiles, index, direction),
+    }))
+    setGalleryPreviews((prev) => moveListItem(prev, index, direction))
+  }
+
+  const downloadGalleryImage = async (index: number) => {
+    const file = form.galleryFiles[index]
+    if (!file) return
+    await downloadWatermarkedImage(
+      file,
+      `${form.name || 'product'}-gallery-${index + 1}`
+    )
+  }
+
+  const replaceGalleryImage = (index: number, file: File) => {
+    URL.revokeObjectURL(galleryPreviews[index])
+    setForm((prev) => {
+      const files = [...prev.galleryFiles]
+      files[index] = file
+      return { ...prev, galleryFiles: files }
+    })
+    setGalleryPreviews((prev) => {
+      const urls = [...prev]
+      urls[index] = URL.createObjectURL(file)
+      return urls
+    })
   }
 
   const resetForm = () => {
@@ -240,7 +277,17 @@ export function ProductForm({ onCreated }: ProductFormProps) {
         />
 
         <div>
-          <p className="mb-2 text-xs text-white/50">封面照片（列表與卡片顯示）</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-white/50">封面照片（列表與卡片顯示）</p>
+            {form.coverFile && (
+              <WatermarkedImageDownloadButton
+                label="下載封面浮水印圖"
+                onDownload={() =>
+                  downloadWatermarkedImage(form.coverFile!, `${form.name || 'cover'}-cover`)
+                }
+              />
+            )}
+          </div>
           <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-amber-glow/30 py-8 transition hover:border-amber-glow/50">
             {coverPreview ? (
               <img
@@ -262,41 +309,21 @@ export function ProductForm({ onCreated }: ProductFormProps) {
 
         <div>
           <p className="mb-2 text-xs text-white/50">
-            詳情相簿（可選，點進商品後可切換瀏覽）
+            詳情相簿（可選，點進商品後可切換瀏覽；可用箭頭調整順序）
           </p>
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-white/20 py-6 transition hover:border-amber-glow/40">
-            <span className="text-sm text-white/40">
-              點擊上傳多張照片（可一次選多張）
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleGalleryChange}
-            />
-          </label>
-          {galleryPreviews.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {galleryPreviews.map((url, index) => (
-                <div key={url} className="relative">
-                  <img
-                    src={url}
-                    alt=""
-                    className="h-20 w-20 rounded object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeGalleryImage(index)}
-                    className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/90 text-xs text-white"
-                    aria-label="移除"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <AdminProductGalleryEditor
+            items={galleryPreviews.map((url) => ({
+              key: url,
+              previewSrc: url,
+              isNew: true,
+            }))}
+            onMove={moveGalleryImage}
+            onRemove={removeGalleryImage}
+            onReplace={replaceGalleryImage}
+            onDownload={downloadGalleryImage}
+            onAppendFiles={appendGalleryFiles}
+            appendLabel="點擊追加相簿照片"
+          />
         </div>
 
         {message && (

@@ -31,26 +31,19 @@ function drawWatermark(
 ) {
   const minDim = Math.min(width, height)
   const edge = Math.max(10, Math.round(minDim * 0.022))
-  const padX = Math.max(6, Math.round(fontSize * 0.35))
-  const padY = Math.max(4, Math.round(fontSize * 0.25))
 
   ctx.save()
   ctx.font = `normal ${fontSize}px ${FONT_FAMILY}`
   ctx.textBaseline = 'bottom'
 
   const textWidth = ctx.measureText(WATERMARK_TEXT).width
-  const boxW = textWidth + padX * 2
-  const boxH = fontSize + padY * 2
-  const boxX = width - edge - boxW
-  const boxY = height - edge - boxH
-
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.18)'
-  ctx.fillRect(boxX, boxY, boxW, boxH)
+  const textX = width - edge - textWidth
+  const textY = height - edge
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.52)'
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.32)'
-  ctx.shadowBlur = Math.max(2, Math.round(fontSize * 0.12))
-  ctx.fillText(WATERMARK_TEXT, boxX + padX, boxY + boxH - padY)
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)'
+  ctx.shadowBlur = Math.max(3, Math.round(fontSize * 0.18))
+  ctx.fillText(WATERMARK_TEXT, textX, textY)
   ctx.restore()
 }
 
