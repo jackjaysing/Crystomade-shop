@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { loginAdmin } from '../../lib/adminAuth'
-import { ADMIN_PASSWORD } from '../../lib/supabase'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface AdminLoginProps {
@@ -14,11 +13,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (!ADMIN_PASSWORD) {
-      setError('請在 .env 設定 VITE_ADMIN_PASSWORD')
-      return
-    }
-    if (loginAdmin(password, ADMIN_PASSWORD)) {
+    if (loginAdmin(password)) {
       onSuccess()
     } else {
       setError('密碼錯誤')

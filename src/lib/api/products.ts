@@ -1,3 +1,4 @@
+import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { applyCrystomadeWatermark } from '../watermarkProductImage'
 import { normalizeProduct } from '../normalizeProduct'
@@ -153,7 +154,15 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
     .single()
 
   if (error) throw error
-  return data as Product
+  const product = normalizeProduct(data as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'create',
+    entityType: 'product',
+    entityId: product.id,
+    entityLabel: product.name,
+    summary: `新增商品「${product.name}」`,
+  })
+  return product
 }
 
 /** 後台：更新已上架商品 */
@@ -191,17 +200,40 @@ export async function updateProduct(
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeProduct(data as Record<string, unknown>)
+  const product = normalizeProduct(data as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'product',
+    entityId: product.id,
+    entityLabel: product.name,
+    summary: `修改商品「${product.name}」`,
+  })
+  return product
 }
 
 /** 後台：將商品標記為已售出（庫存歸零） */
 export async function markProductSold(productId: string): Promise<void> {
+  const { data: row } = await supabase
+    .from('products')
+    .select('name')
+    .eq('id', productId)
+    .single()
+
   const { error } = await supabase
     .from('products')
     .update({ status: 'sold', stock: 0 })
     .eq('id', productId)
 
   if (error) throw error
+
+  const name = row?.name ? String(row.name) : productId
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'product',
+    entityId: productId,
+    entityLabel: name,
+    summary: `將商品「${name}」標記為已售出`,
+  })
 }
 
 /** 後台：切換熱門商品標示 */
@@ -217,7 +249,15 @@ export async function setProductHot(
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeProduct(data as Record<string, unknown>)
+  const product = normalizeProduct(data as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'product',
+    entityId: product.id,
+    entityLabel: product.name,
+    summary: `${isHot ? '設為' : '取消'}熱門商品「${product.name}」`,
+  })
+  return product
 }
 
 /** 後台：調整商品排序（與列表中相鄰項目交換 sort_order） */
@@ -250,6 +290,15 @@ export async function swapProductOrder(
     .eq('id', target.id)
 
   if (errorB) throw new Error(formatErrorMessage(errorB))
+
+  const dirLabel = direction === 'up' ? '上移' : '下移'
+  void recordAdminActivity({
+    action: 'sort',
+    entityType: 'product',
+    entityId: current.id,
+    entityLabel: current.name,
+    summary: `調整商品排序：「${current.name}」${dirLabel}`,
+  })
 }
 
 /** 後台：取得已軟刪除商品（最新刪除優先） */
@@ -272,6 +321,12 @@ export async function fetchDeletedProducts(): Promise<Product[]> {
 
 /** 後台：軟刪除商品（移入已刪除物品；須先完成出貨） */
 export async function deleteProduct(productId: string): Promise<void> {
+  const { data: productRow } = await supabase
+    .from('products')
+    .select('name')
+    .eq('id', productId)
+    .single()
+
   const { data: pendingOrders, error: checkError } = await supabase
     .from('orders')
     .select('id')
@@ -291,6 +346,15 @@ export async function deleteProduct(productId: string): Promise<void> {
     .is('deleted_at', null)
 
   if (error) throw new Error(formatErrorMessage(error))
+
+  const name = productRow?.name ? String(productRow.name) : productId
+  void recordAdminActivity({
+    action: 'delete',
+    entityType: 'product',
+    entityId: productId,
+    entityLabel: name,
+    summary: `刪除商品「${name}」`,
+  })
 }
 
 /** 後台：重新上架已刪除商品 */
@@ -304,5 +368,13 @@ export async function restoreProduct(productId: string): Promise<Product> {
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeProduct(data as Record<string, unknown>)
+  const product = normalizeProduct(data as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'restore',
+    entityType: 'product',
+    entityId: product.id,
+    entityLabel: product.name,
+    summary: `重新上架商品「${product.name}」`,
+  })
+  return product
 }

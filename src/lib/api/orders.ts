@@ -1,7 +1,29 @@
+import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
 import type { CartItem, Order, OrderFormData } from '../types'
+
+async function orderGroupSummary(orderIds: string[], verb: string): Promise<string> {
+  if (orderIds.length === 0) return verb
+
+  const { data } = await supabase
+    .from('orders')
+    .select('order_number')
+    .in('id', orderIds)
+    .limit(1)
+
+  const orderNumber =
+    data?.[0]?.order_number != null ? String(data[0].order_number) : null
+
+  if (orderIds.length === 1 && orderNumber) {
+    return `${verb}訂單 ${orderNumber}`
+  }
+  if (orderNumber) {
+    return `${verb}訂單 ${orderNumber} 等 ${orderIds.length} 筆`
+  }
+  return `${verb}${orderIds.length} 筆訂單`
+}
 
 /** 建立訂單（買家前台 · 超商取件 · 原子扣庫存） */
 export async function createOrder(
@@ -90,6 +112,13 @@ export async function shipOrder(orderId: string): Promise<void> {
     .eq('id', orderId)
 
   if (error) throw new Error(formatErrorMessage(error))
+
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'order',
+    entityId: orderId,
+    summary: await orderGroupSummary([orderId], '標記出貨：'),
+  })
 }
 
 /** 後台：同一結帳批次一鍵出貨 */
@@ -103,6 +132,12 @@ export async function shipOrderGroup(orderIds: string[]): Promise<void> {
     .eq('status', 'pending')
 
   if (error) throw new Error(formatErrorMessage(error))
+
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, '標記出貨：'),
+  })
 }
 
 /** 後台：同一結帳批次改回未出貨 */
@@ -116,6 +151,12 @@ export async function unshipOrderGroup(orderIds: string[]): Promise<void> {
     .eq('status', 'shipped')
 
   if (error) throw new Error(formatErrorMessage(error))
+
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, '改回未出貨：'),
+  })
 }
 
 /** 後台：整筆訂單標記已付款 */
@@ -128,6 +169,12 @@ export async function markOrderGroupPaid(orderIds: string[]): Promise<void> {
     .in('id', orderIds)
 
   if (error) throw new Error(formatErrorMessage(error))
+
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, '標記已付款：'),
+  })
 }
 
 /** 後台：整筆訂單改回未付款 */
@@ -140,6 +187,12 @@ export async function markOrderGroupUnpaid(orderIds: string[]): Promise<void> {
     .in('id', orderIds)
 
   if (error) throw new Error(formatErrorMessage(error))
+
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, '改回未付款：'),
+  })
 }
 
 /** 後台：取消訂單群組（還原庫存） */
@@ -160,5 +213,13 @@ export async function cancelOrderGroup(orderIds: string[]): Promise<number> {
     throw new Error(msg)
   }
 
-  return typeof data === 'number' ? data : Number(data) || 0
+  const count = typeof data === 'number' ? data : Number(data) || 0
+
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, '取消訂單：'),
+  })
+
+  return count
 }

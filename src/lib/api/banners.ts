@@ -1,3 +1,4 @@
+import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
 import type { AnnouncementBanner } from '../types'
@@ -109,7 +110,15 @@ export async function createBanner(
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeBanner(data as Record<string, unknown>)
+  const banner = normalizeBanner(data as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'create',
+    entityType: 'banner',
+    entityId: banner.id,
+    entityLabel: banner.name,
+    summary: `新增公告橫幅「${banner.name}」`,
+  })
+  return banner
 }
 
 /** 後台：更新橫幅名稱、連結、圖片或啟用狀態 */
@@ -148,7 +157,15 @@ export async function updateBanner(
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeBanner(data as Record<string, unknown>)
+  const banner = normalizeBanner(data as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'banner',
+    entityId: banner.id,
+    entityLabel: banner.name,
+    summary: `修改公告橫幅「${banner.name}」`,
+  })
+  return banner
 }
 
 /** 後台：調整橫幅排序 */
@@ -179,14 +196,38 @@ export async function swapBannerOrder(
     .eq('id', target.id)
 
   if (errorB) throw new Error(formatErrorMessage(errorB))
+
+  const dirLabel = direction === 'up' ? '上移' : '下移'
+  void recordAdminActivity({
+    action: 'sort',
+    entityType: 'banner',
+    entityId: current.id,
+    entityLabel: current.name,
+    summary: `調整橫幅排序：「${current.name}」${dirLabel}`,
+  })
 }
 
 /** 後台：刪除公告橫幅 */
 export async function deleteBanner(id: string): Promise<void> {
+  const { data: row } = await supabase
+    .from('announcement_banners')
+    .select('name')
+    .eq('id', id)
+    .single()
+
   const { error } = await supabase
     .from('announcement_banners')
     .delete()
     .eq('id', id)
 
   if (error) throw new Error(formatErrorMessage(error))
+
+  const name = row?.name ? String(row.name) : id
+  void recordAdminActivity({
+    action: 'delete',
+    entityType: 'banner',
+    entityId: id,
+    entityLabel: name,
+    summary: `刪除公告橫幅「${name}」`,
+  })
 }

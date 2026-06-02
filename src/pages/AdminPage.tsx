@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AdminActivityLogPanel } from '../components/admin/AdminActivityLogPanel'
 import { AdminLogin } from '../components/admin/AdminLogin'
 import { BannerAdmin } from '../components/admin/BannerAdmin'
 import { DeletedProductsModal } from '../components/admin/DeletedProductsModal'
@@ -10,23 +11,32 @@ import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
 import { usePageViewStats } from '../hooks/usePageViewStats'
 import { useProductViewStats } from '../hooks/useProductViewStats'
+import { useAdminActivityLogs } from '../hooks/useAdminActivityLogs'
 import { useProducts } from '../hooks/useProducts'
-import { isAdminAuthenticated, logoutAdmin } from '../lib/adminAuth'
+import {
+  getAdminDisplayName,
+  isAdminAuthenticated,
+  logoutAdmin,
+} from '../lib/adminAuth'
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 import { Archive } from 'lucide-react'
 
-type AdminTab = 'products' | 'orders' | 'banners' | 'analytics'
+type AdminTab = 'products' | 'orders' | 'banners' | 'analytics' | 'logs'
 
 const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'products', label: '商品管理' },
   { id: 'orders', label: '訂單明細' },
   { id: 'banners', label: '公告橫幅' },
   { id: 'analytics', label: '瀏覽統計' },
+  { id: 'logs', label: '後台日誌' },
 ]
 
 /** 賣家後台管理頁 */
 export function AdminPage() {
   const [authed, setAuthed] = useState(isAdminAuthenticated)
+  const [adminName, setAdminName] = useState<string | null>(() =>
+    isAdminAuthenticated() ? getAdminDisplayName() : null
+  )
   const [activeTab, setActiveTab] = useState<AdminTab>('products')
   const [showDeleted, setShowDeleted] = useState(false)
   const { products, reload: reloadProducts } = useProducts()
@@ -47,6 +57,12 @@ export function AdminPage() {
     error: bannerError,
     reload: reloadBanners,
   } = useBanners({ admin: true, enabled: authed })
+  const {
+    logs: activityLogs,
+    loading: activityLogsLoading,
+    error: activityLogsError,
+    reload: reloadActivityLogs,
+  } = useAdminActivityLogs(authed && activeTab === 'logs')
 
   const reloadAnalytics = () => {
     reloadPageViewStats()
@@ -62,7 +78,14 @@ export function AdminPage() {
   }, [activeTab])
 
   if (!authed) {
-    return <AdminLogin onSuccess={() => setAuthed(true)} />
+    return (
+      <AdminLogin
+        onSuccess={() => {
+          setAuthed(true)
+          setAdminName(getAdminDisplayName())
+        }}
+      />
+    )
   }
 
   return (
@@ -70,6 +93,11 @@ export function AdminPage() {
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl text-amber-glow">晶刻 · 管理後台</h1>
+          {adminName && (
+            <p className="mt-2 text-base text-amber-glow/90">
+              Hi，{adminName}
+            </p>
+          )}
           <p className="mt-1 text-sm text-white/50">Crystomade · 訂單與商品管理</p>
         </div>
         <button
@@ -77,6 +105,7 @@ export function AdminPage() {
           onClick={() => {
             logoutAdmin()
             setAuthed(false)
+            setAdminName(null)
           }}
           className="text-sm text-white/40 hover:text-white/70"
         >
@@ -168,6 +197,15 @@ export function AdminPage() {
             loading={pageViewLoading}
             error={pageViewError}
             onReload={reloadAnalytics}
+          />
+        )}
+
+        {activeTab === 'logs' && (
+          <AdminActivityLogPanel
+            logs={activityLogs}
+            loading={activityLogsLoading}
+            error={activityLogsError}
+            onReload={reloadActivityLogs}
           />
         )}
       </div>
