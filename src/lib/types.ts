@@ -34,6 +34,8 @@ export interface Product {
   deleted_at?: string | null
   /** 後台標記熱門商品 */
   is_hot: boolean
+  /** 購物車快捷加購推薦 */
+  is_quick_add: boolean
   /** 排序：數字越小越前面（熱門商品仍置頂） */
   sort_order: number
 }
@@ -107,6 +109,8 @@ export interface ProductFormData {
   stock: number
   /** 標記為熱門商品 */
   is_hot: boolean
+  /** 推薦加購（購物車快捷區） */
+  is_quick_add: boolean
   /** 封面圖 */
   coverFile: File | null
   /** 詳情頁額外圖片 */
@@ -150,6 +154,8 @@ export interface ProductEditData {
   stock: number
   /** 標記為熱門商品 */
   is_hot: boolean
+  /** 推薦加購（購物車快捷區） */
+  is_quick_add: boolean
   /** 新封面；null 表示沿用原圖 */
   coverFile: File | null
   /** 詳情相簿（封面之後的順序） */

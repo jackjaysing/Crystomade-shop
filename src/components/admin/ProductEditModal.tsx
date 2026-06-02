@@ -30,6 +30,7 @@ function toEditForm(product: Product): ProductEditData {
     description: product.description,
     stock: product.stock,
     is_hot: product.is_hot,
+    is_quick_add: product.is_quick_add,
     coverFile: null,
     galleryItems: product.gallery_urls.map((url) => ({
       kind: 'existing' as const,
@@ -302,6 +303,18 @@ export function ProductEditModal({
               className="rounded border-white/20 bg-void"
             />
             標記為熱門商品（前台右上角顯示「熱門」）
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={form.is_quick_add}
+              onChange={(e) =>
+                setForm({ ...form, is_quick_add: e.target.checked })
+              }
+              className="rounded border-white/20 bg-void"
+            />
+            推薦加購（顯示於購物車快捷推薦區）
           </label>
 
           <div>

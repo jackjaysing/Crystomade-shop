@@ -1,8 +1,11 @@
+import { useMemo } from 'react'
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
 import { FreeShippingProgress } from './FreeShippingProgress'
+import { CartQuickAddSection } from './CartQuickAddSection'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
+import { useQuickAddProducts } from '../../hooks/useQuickAddProducts'
 
 /** 側邊滑出購物車 Drawer */
 export function CartDrawer() {
@@ -14,6 +17,7 @@ export function CartDrawer() {
     closeCart,
     removeItem,
     updateQuantity,
+    addItem,
   } = useCart()
 
   const {
@@ -26,6 +30,16 @@ export function CartDrawer() {
     loading,
     refresh,
   } = useCartAvailability({ enabled: isOpen })
+
+  const {
+    products: quickAddProducts,
+    loading: quickAddLoading,
+  } = useQuickAddProducts(isOpen)
+
+  const cartProductIds = useMemo(
+    () => new Set(items.map((item) => item.productId)),
+    [items]
+  )
 
   if (!isOpen) return null
 
@@ -190,6 +204,12 @@ export function CartDrawer() {
                 }}
               />
             )}
+            <CartQuickAddSection
+              products={quickAddProducts}
+              cartProductIds={cartProductIds}
+              loading={quickAddLoading}
+              onAdd={(product) => addItem(product, 1)}
+            />
             {!canCheckout && (
               <p className="mb-3 text-center text-xs text-red-300/80">
                 購物車內商品皆已被搶先收藏，請移除後再選購其他典藏。

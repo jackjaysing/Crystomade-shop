@@ -80,6 +80,33 @@ export async function fetchProducts(): Promise<Product[]> {
   return mapActiveProducts((data ?? []) as Record<string, unknown>[])
 }
 
+/** 購物車快捷加購推薦商品（與全站同價） */
+export async function fetchQuickAddProducts(): Promise<Product[]> {
+  if (!isSupabaseConfigured) return []
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .is('deleted_at', null)
+    .eq('is_quick_add', true)
+    .gt('stock', 0)
+    .eq('status', 'available')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/is_quick_add|42703|column/i.test(msg)) {
+      return []
+    }
+    throw new Error(msg)
+  }
+
+  return sortProducts(
+    (data ?? []).map((row) => normalizeProduct(row as Record<string, unknown>))
+  )
+}
+
 /** 上傳單張圖片至 Storage，回傳公開 URL */
 async function uploadProductImage(file: File): Promise<string> {
   const watermarked = await applyCrystomadeWatermark(file)
@@ -148,6 +175,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       stock: form.stock,
       status: 'available',
       is_hot: form.is_hot,
+      is_quick_add: form.is_quick_add,
       sort_order,
     })
     .select()
@@ -194,6 +222,7 @@ export async function updateProduct(
       stock,
       status,
       is_hot: form.is_hot,
+      is_quick_add: form.is_quick_add,
     })
     .eq('id', productId)
     .select()
