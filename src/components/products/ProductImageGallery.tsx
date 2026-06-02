@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getProductImages } from '../../lib/productImages'
 import type { Product } from '../../lib/types'
 import { ProductImageBadges } from './ProductImageBadges'
+import { ProductImageMagnifier } from './ProductImageMagnifier'
 import {
   SoldOutImageOverlay,
   useSoldOutImagePeek,
@@ -38,16 +39,16 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
   }
 
   return (
-    <div className="relative w-full rounded-t-2xl bg-graphite">
+    <div className="relative w-full overflow-hidden rounded-t-2xl bg-graphite">
       <div
-        className="relative flex min-h-[240px] max-h-[min(55vh,520px)] w-full items-center justify-center px-2 py-3"
+        className="relative flex min-h-[240px] max-h-[min(55vh,520px)] w-full items-center justify-center overflow-hidden px-2 py-3"
         {...peekHandlers}
       >
-        <img
+        <ProductImageMagnifier
           src={activeSrc}
           alt={`${product.name} ${activeIndex + 1}`}
-          className={`max-h-[min(55vh,520px)] max-w-full object-contain transition duration-300 ${imageClassName}`}
-          draggable={false}
+          className={imageClassName}
+          enabled={!isSold || peeking}
         />
 
         {hasMultiple && (

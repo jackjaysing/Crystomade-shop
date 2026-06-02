@@ -21,9 +21,9 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className={`group relative flex h-full cursor-pointer flex-col overflow-hidden bg-graphite transition ${
+      className={`group relative flex h-full w-full cursor-pointer flex-col overflow-hidden bg-graphite transition ${
         isHot
-          ? 'rounded-[11px] hover:shadow-[0_0_24px_rgba(212,165,116,0.15)]'
+          ? 'rounded-[12px] hover:shadow-[0_0_24px_rgba(212,165,116,0.15)]'
           : 'rounded-xl border border-white/5 hover:border-amber-glow/30 hover:shadow-gold'
       }`}
     >

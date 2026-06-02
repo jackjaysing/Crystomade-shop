@@ -75,7 +75,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         aria-label="關閉"
       />
 
-      <GlassPanel className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto p-0">
+      <GlassPanel className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-x-hidden overflow-y-auto p-0">
         <button
           type="button"
           onClick={onClose}
