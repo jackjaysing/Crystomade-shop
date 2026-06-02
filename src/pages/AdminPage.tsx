@@ -70,7 +70,9 @@ export function AdminPage() {
   }
 
   useEffect(() => {
-    setAuthed(isAdminAuthenticated())
+    const ok = isAdminAuthenticated()
+    setAuthed(ok)
+    if (ok) setAdminName(getAdminDisplayName())
   }, [])
 
   useEffect(() => {
@@ -93,11 +95,9 @@ export function AdminPage() {
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl text-amber-glow">晶刻 · 管理後台</h1>
-          {adminName && (
-            <p className="mt-2 text-base text-amber-glow/90">
-              Hi，{adminName}
-            </p>
-          )}
+          <p className="mt-2 text-base text-amber-glow/90">
+            Hi，{adminName ?? getAdminDisplayName() ?? '管理者'}
+          </p>
           <p className="mt-1 text-sm text-white/50">Crystomade · 訂單與商品管理</p>
         </div>
         <button
