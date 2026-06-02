@@ -1,30 +1,13 @@
-import type { ReactNode } from 'react'
 import { getCategoryLabel } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
+import { HotProductFrame } from './HotProductFrame'
 import { ProductImageBadges } from './ProductImageBadges'
 import { ProductPriceDisplay } from './ProductPriceDisplay'
 
 interface ProductCardProps {
   product: Product
   onClick: () => void
-}
-
-/** 熱門商品：金屬漸層外框 */
-function HotProductFrame({ children }: { children: ReactNode }) {
-  return (
-    <div className="relative h-full rounded-[14px] bg-gradient-to-br from-amber-glow/90 via-orange-400/55 to-amber-deep/75 p-[2px] shadow-[0_0_28px_rgba(212,165,116,0.22)]">
-      <div
-        className="pointer-events-none absolute inset-[2px] rounded-[12px] border border-white/10"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 rounded-[14px] bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.12)_0%,_transparent_55%)]"
-        aria-hidden
-      />
-      {children}
-    </div>
-  )
 }
 
 /** 單一商品卡片（瀑布流格內） */
@@ -99,7 +82,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
   )
 
   if (isHot) {
-    return <HotProductFrame>{card}</HotProductFrame>
+    return <HotProductFrame className="h-full">{card}</HotProductFrame>
   }
 
   return card

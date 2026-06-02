@@ -5,6 +5,7 @@ import { useCart } from '../../contexts/CartContext'
 import { useProductViewTracker } from '../../hooks/useProductViewTracker'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
+import { HotProductFrame } from './HotProductFrame'
 import { ProductImageGallery } from './ProductImageGallery'
 import { ProductPriceDisplay } from './ProductPriceDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -75,7 +76,13 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           <span className="text-xs font-medium tracking-widest">關閉</span>
         </button>
 
-        <ProductImageGallery product={product} isSold={isSold} />
+        {product.is_hot ? (
+          <HotProductFrame topOnly>
+            <ProductImageGallery product={product} isSold={isSold} />
+          </HotProductFrame>
+        ) : (
+          <ProductImageGallery product={product} isSold={isSold} />
+        )}
 
         <div className="p-8">
           <p className="text-xs tracking-[0.25em] text-amber-glow/70">

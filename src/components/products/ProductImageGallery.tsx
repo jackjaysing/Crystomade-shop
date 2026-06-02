@@ -80,7 +80,7 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
           </span>
         )}
 
-        <ProductImageBadges product={product} />
+        <ProductImageBadges product={product} surface="detail" />
 
         {isSold && (
           <SoldOutImageOverlay visible={!peeking} variant="detail" />

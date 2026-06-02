@@ -99,7 +99,7 @@ export function SoldOutImageOverlay({
 }: SoldOutImageOverlayProps) {
   return (
     <div
-      className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+      className={`absolute inset-0 z-[5] flex items-center justify-center transition-opacity duration-300 ${
         variant === 'card' ? 'bg-void/55 backdrop-blur-[2px]' : 'bg-void/50'
       } ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       aria-hidden={!visible}
