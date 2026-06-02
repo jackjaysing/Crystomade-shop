@@ -1,4 +1,6 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 import { updateProduct, deleteProduct } from '../../lib/api/products'
 import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
@@ -39,12 +41,22 @@ export function ProductEditModal({
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prevOverflow
+    }
+  }, [])
 
   useEffect(() => {
     setForm(toEditForm(product))
     setCoverPreview(null)
     setNewGalleryPreviews([])
     setMessage('')
+    scrollRef.current?.scrollTo({ top: 0 })
   }, [product])
 
   useEffect(() => {
@@ -147,9 +159,9 @@ export function ProductEditModal({
 
   const coverDisplay = coverPreview ?? product.image_url
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn"
+      className="fixed inset-0 z-50 flex animate-fadeIn sm:items-center sm:justify-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="product-edit-title"
@@ -161,22 +173,34 @@ export function ProductEditModal({
         aria-label="關閉"
       />
 
-      <GlassPanel className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full border border-white/10 p-2 text-white/60 transition hover:text-white"
-          aria-label="關閉視窗"
+      <GlassPanel className="relative z-10 flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden rounded-none sm:h-auto sm:max-h-[90vh] sm:rounded-2xl">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-6">
+          <div className="min-w-0 pr-2">
+            <h3 id="product-edit-title" className="font-display text-xl text-amber-glow">
+              編輯商品
+            </h3>
+            <p className="mt-1 truncate text-xs text-white/40">{product.name}</p>
+            <p className="mt-0.5 text-xs text-white/35">修改後前台會立即同步</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-full border border-white/10 p-2 text-white/60 transition hover:text-white"
+            aria-label="關閉視窗"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form
+          id="product-edit-form"
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-1 flex-col"
         >
-          ✕
-        </button>
-
-        <h3 id="product-edit-title" className="font-display text-xl text-amber-glow">
-          編輯商品
-        </h3>
-        <p className="mt-1 text-xs text-white/40">修改後前台會立即同步</p>
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div
+            ref={scrollRef}
+            className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
+          >
           <input
             placeholder="水晶名稱"
             value={form.name}
@@ -379,31 +403,34 @@ export function ProductEditModal({
             </label>
           </div>
 
-          {message && (
-            <p
-              className={`text-sm ${
-                message.includes('成功') ? 'text-emerald-400' : 'text-red-400'
-              }`}
-            >
-              {message}
-            </p>
-          )}
+            {message && (
+              <p
+                className={`text-sm ${
+                  message.includes('成功') ? 'text-emerald-400' : 'text-red-400'
+                }`}
+              >
+                {message}
+              </p>
+            )}
 
-          <div className="border-t border-white/10 pt-4">
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={busy}
-              className="w-full rounded-lg border border-red-400/40 py-3 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
-            >
-              {deleting ? '刪除中…' : '刪除此商品'}
-            </button>
-            <p className="mt-2 text-center text-[11px] text-white/35">
-              若已有訂單紀錄則無法刪除
-            </p>
+            <div className="border-t border-white/10 pt-4">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={busy}
+                className="w-full rounded-lg border border-red-400/40 py-3 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+              >
+                {deleting ? '刪除中…' : '刪除此商品'}
+              </button>
+              <p className="mt-2 text-center text-[11px] text-white/35">
+                若已有訂單紀錄則無法刪除
+              </p>
+            </div>
           </div>
+        </form>
 
-          <div className="flex gap-3 pt-2">
+        <div className="shrink-0 border-t border-white/10 bg-black/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:px-6">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -414,14 +441,16 @@ export function ProductEditModal({
             </button>
             <button
               type="submit"
+              form="product-edit-form"
               disabled={busy}
               className="flex-1 rounded-lg bg-amber-glow/90 py-3 text-sm tracking-widest text-void disabled:opacity-50"
             >
               {submitting ? '儲存中…' : '儲存更新'}
             </button>
           </div>
-        </form>
+        </div>
       </GlassPanel>
-    </div>
+    </div>,
+    document.body
   )
 }
