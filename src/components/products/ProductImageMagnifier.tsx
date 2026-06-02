@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 
 const ZOOM_LEVEL = 2
-const LENS_DIAMETER = 240
+const LENS_DIAMETER = 180
 
 interface ProductImageMagnifierProps {
   src: string
