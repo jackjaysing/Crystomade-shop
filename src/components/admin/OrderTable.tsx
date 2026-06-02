@@ -16,6 +16,7 @@ import {
   unshipOrderGroup,
 } from '../../lib/api/orders'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
+import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
 import {
   countOrderGroupsByFilter,
   formatOrderGroupStatus,
@@ -408,29 +409,35 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35"
-          strokeWidth={1.5}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
+        <div className="relative min-w-0 flex-1">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35"
+            strokeWidth={1.5}
+          />
+          <input
+            type="search"
+            value={orderNumberSearch}
+            onChange={(e) => setOrderNumberSearch(e.target.value)}
+            placeholder="搜尋訂單編號…"
+            className="input-field w-full pl-10 pr-10 text-sm"
+            autoComplete="off"
+          />
+          {orderNumberSearch.trim() && (
+            <button
+              type="button"
+              onClick={() => setOrderNumberSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-white/40 transition hover:text-white/70"
+              aria-label="清除搜尋"
+            >
+              <X className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
+        </div>
+        <ExportOrdersExcelButton
+          groups={filteredGroups}
+          disabled={loading || filteredGroups.length === 0}
         />
-        <input
-          type="search"
-          value={orderNumberSearch}
-          onChange={(e) => setOrderNumberSearch(e.target.value)}
-          placeholder="搜尋訂單編號…"
-          className="input-field w-full pl-10 pr-10 text-sm"
-          autoComplete="off"
-        />
-        {orderNumberSearch.trim() && (
-          <button
-            type="button"
-            onClick={() => setOrderNumberSearch('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-white/40 transition hover:text-white/70"
-            aria-label="清除搜尋"
-          >
-            <X className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-        )}
       </div>
 
       {monthKeys.length > 0 && (
