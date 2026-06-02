@@ -76,45 +76,34 @@ export function RevenueCategoryPieChart({ slices }: RevenueCategoryPieChartProps
   })
 
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-center">
-      <svg
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="h-48 w-48 shrink-0"
-        role="img"
-        aria-label="手串、擺件、礦石收入比例圓餅圖"
-      >
-        {segments.map(({ slice, start, end }) => (
-          <path
-            key={slice.category}
-            d={describeDonutSlice(start, end, RADIUS, INNER_RADIUS)}
-            fill={REVENUE_CATEGORY_COLORS[slice.category]}
-            opacity={0.92}
-          >
-            <title>
-              {slice.label}：{formatRevenueAmount(slice.revenue)}（{slice.percent}%）
-            </title>
-          </path>
-        ))}
-        <circle cx={CX} cy={CY} r={INNER_RADIUS - 2} className="fill-void/90" />
-        <text
-          x={CX}
-          y={CY - 4}
-          textAnchor="middle"
-          className="fill-white/45 text-[9px]"
+    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-center">
+      <div className="flex flex-col items-center">
+        <svg
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          className="h-48 w-48 shrink-0"
+          role="img"
+          aria-label="手串、擺件、礦石收入比例圓餅圖"
         >
-          已結帳
-        </text>
-        <text
-          x={CX}
-          y={CY + 12}
-          textAnchor="middle"
-          className="fill-amber-glow text-[11px] font-medium"
-        >
-          {formatRevenueAmount(total).replace('NT$ ', '')}
-        </text>
-      </svg>
+          {segments.map(({ slice, start, end }) => (
+            <path
+              key={slice.category}
+              d={describeDonutSlice(start, end, RADIUS, INNER_RADIUS)}
+              fill={REVENUE_CATEGORY_COLORS[slice.category]}
+              opacity={0.92}
+            >
+              <title>
+                {slice.label}：{formatRevenueAmount(slice.revenue)}（{slice.percent}%）
+              </title>
+            </path>
+          ))}
+          <circle cx={CX} cy={CY} r={INNER_RADIUS - 2} className="fill-void/90" />
+        </svg>
+        <p className="mt-3 text-center text-lg font-medium tabular-nums tracking-wide text-amber-glow">
+          總計 {formatRevenueAmount(total)}
+        </p>
+      </div>
 
-      <ul className="w-full max-w-xs space-y-3">
+      <ul className="w-full max-w-xs space-y-3 sm:pt-4">
         {slices.map((slice) => (
           <li key={slice.category} className="flex items-center gap-3 text-sm">
             <span
