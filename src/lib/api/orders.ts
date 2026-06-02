@@ -86,22 +86,60 @@ export async function createOrdersFromCart(
   return orders
 }
 
-/** 後台：取得所有訂單（最新優先，含商品名稱） */
-export async function fetchOrders(): Promise<Order[]> {
-  const { data, error } = await supabase
-    .from('orders')
-    .select(
-      `
-      *,
-      products ( name, image_url )
-    `
-    )
-    .order('created_at', { ascending: false })
+const ORDER_SELECT = `
+  *,
+  products ( name, image_url, category )
+`
 
-  if (error) throw new Error(formatErrorMessage(error))
+function mapOrderRows(data: unknown[] | null): Order[] {
   return (data ?? []).map((row) =>
     normalizeOrder(row as Record<string, unknown>)
   )
+}
+
+function isMissingOrderSoftDeleteColumn(message: string): boolean {
+  return /deleted_at|deleted_from_status|column/i.test(message)
+}
+
+/** 後台：取得未刪除訂單（最新優先） */
+export async function fetchOrders(): Promise<Order[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(ORDER_SELECT)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (isMissingOrderSoftDeleteColumn(msg)) {
+      const fallback = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .order('created_at', { ascending: false })
+      if (fallback.error) throw new Error(formatErrorMessage(fallback.error))
+      return mapOrderRows(fallback.data)
+    }
+    throw new Error(msg)
+  }
+  return mapOrderRows(data)
+}
+
+/** 後台：取得已軟刪除訂單 */
+export async function fetchDeletedOrders(): Promise<Order[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(ORDER_SELECT)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (isMissingOrderSoftDeleteColumn(msg)) {
+      return []
+    }
+    throw new Error(msg)
+  }
+  return mapOrderRows(data)
 }
 
 /** 後台：一鍵出貨 */
@@ -225,6 +263,66 @@ export async function updateOrderGroupTrackingNumber(
     entityType: 'order',
     summary: value ? `${summary} ${value}` : `${summary}（已清除）`,
   })
+}
+
+/** 後台：軟刪除訂單群組（需先通過驗證碼確認） */
+export async function softDeleteOrderGroup(
+  orderIds: string[]
+): Promise<number> {
+  if (orderIds.length === 0) return 0
+
+  const { data, error } = await supabase.rpc('soft_delete_order_group', {
+    p_order_ids: orderIds,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (msg.includes('soft_delete_order_group') || msg.includes('function')) {
+      throw new Error(
+        '資料庫尚未啟用訂單刪除功能，請在 Supabase SQL Editor 執行 supabase/migration-add-order-soft-delete.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  const count = typeof data === 'number' ? data : Number(data) || 0
+
+  void recordAdminActivity({
+    action: 'delete',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, '刪除訂單：'),
+  })
+
+  return count
+}
+
+/** 後台：恢復已軟刪除訂單群組 */
+export async function restoreOrderGroup(orderIds: string[]): Promise<number> {
+  if (orderIds.length === 0) return 0
+
+  const { data, error } = await supabase.rpc('restore_order_group', {
+    p_order_ids: orderIds,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (msg.includes('restore_order_group') || msg.includes('function')) {
+      throw new Error(
+        '資料庫尚未啟用訂單恢復功能，請在 Supabase SQL Editor 執行 supabase/migration-add-order-soft-delete.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  const count = typeof data === 'number' ? data : Number(data) || 0
+
+  void recordAdminActivity({
+    action: 'restore',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, '恢復訂單：'),
+  })
+
+  return count
 }
 
 /** 後台：取消訂單群組（還原庫存） */

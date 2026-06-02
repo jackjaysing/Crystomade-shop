@@ -7,6 +7,7 @@ export interface AdminAccount {
 export const ADMIN_ACCOUNTS: AdminAccount[] = [
   { password: 'su3g42841u04', displayName: 'RjGe阿杰哥' },
   { password: 'sakmjkmj781211', displayName: 'Shan' },
+  { password: 'ken111009', displayName: 'Ken' },
 ]
 
 export function findAdminByPassword(password: string): AdminAccount | undefined {

@@ -337,7 +337,7 @@ export function ProductEditModal({
               {ALL_PRODUCT_TAGS.map((tag) => (
                 <label
                   key={tag}
-                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs transition ${
+                  className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
                     form.tags.includes(tag)
                       ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                       : 'border-white/10 text-white/50'
@@ -361,7 +361,7 @@ export function ProductEditModal({
               {CRYSTAL_COLOR_FILTERS.map((color) => (
                 <label
                   key={color.id}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
                     form.tags.includes(color.label)
                       ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                       : 'border-white/10 text-white/50'
@@ -374,7 +374,7 @@ export function ProductEditModal({
                     onChange={() => toggleTag(color.label)}
                   />
                   <span
-                    className="h-3 w-3 rounded-full"
+                    className="h-3.5 w-3.5 shrink-0 rounded-full"
                     style={{ backgroundColor: color.hex }}
                   />
                   {color.label}

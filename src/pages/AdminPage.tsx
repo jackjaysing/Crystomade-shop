@@ -4,6 +4,8 @@ import { AdminLogin } from '../components/admin/AdminLogin'
 import { BannerAdmin } from '../components/admin/BannerAdmin'
 import { DeletedProductsModal } from '../components/admin/DeletedProductsModal'
 import { PageViewStats } from '../components/admin/PageViewStats'
+import { RevenueStatsPanel } from '../components/admin/RevenueStatsPanel'
+import { DeletedOrdersPanel } from '../components/admin/DeletedOrdersPanel'
 import { OrderTable } from '../components/admin/OrderTable'
 import { ProductForm } from '../components/admin/ProductForm'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
@@ -21,13 +23,14 @@ import {
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 import { Archive } from 'lucide-react'
 
-type AdminTab = 'products' | 'orders' | 'banners' | 'analytics' | 'logs'
+type AdminTab = 'products' | 'orders' | 'revenue' | 'banners' | 'analytics' | 'logs'
 
 const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'products', label: '商品管理' },
-  { id: 'orders', label: '訂單明細' },
+  { id: 'orders', label: '訂單管理' },
   { id: 'banners', label: '公告橫幅' },
   { id: 'analytics', label: '瀏覽統計' },
+  { id: 'revenue', label: '收入統計' },
   { id: 'logs', label: '後台日誌' },
 ]
 
@@ -38,6 +41,7 @@ export function AdminPage() {
     isAdminAuthenticated() ? getAdminDisplayName() : null
   )
   const [activeTab, setActiveTab] = useState<AdminTab>('products')
+  const [orderListView, setOrderListView] = useState<'active' | 'deleted'>('active')
   const [showDeleted, setShowDeleted] = useState(false)
   const { products, reload: reloadProducts } = useProducts()
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(authed)
@@ -169,12 +173,47 @@ export function AdminPage() {
 
         {activeTab === 'orders' && (
           <section>
-            <h2 className="mb-4 text-lg tracking-wide text-white/80">訂單明細</h2>
-            <OrderTable
-              orders={orders}
-              loading={ordersLoading}
-              onUpdated={reloadOrders}
-            />
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg tracking-wide text-white/80">訂單管理</h2>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderListView('active')}
+                  className={`rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+                    orderListView === 'active'
+                      ? 'border-amber-glow/60 bg-amber-glow/15 text-amber-glow'
+                      : 'border-white/15 text-white/55 hover:border-amber-glow/40 hover:text-amber-glow'
+                  }`}
+                >
+                  訂單明細
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderListView('deleted')}
+                  className={`rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+                    orderListView === 'deleted'
+                      ? 'border-amber-glow/60 bg-amber-glow/15 text-amber-glow'
+                      : 'border-white/15 text-white/55 hover:border-amber-glow/40 hover:text-amber-glow'
+                  }`}
+                >
+                  已刪除訂單
+                </button>
+              </div>
+            </div>
+
+            {orderListView === 'active' ? (
+              <OrderTable
+                orders={orders}
+                loading={ordersLoading}
+                onUpdated={(options) => void reloadOrders(options)}
+                onDeleted={() => void reloadOrders({ silent: true })}
+              />
+            ) : (
+              <DeletedOrdersPanel
+                enabled={authed}
+                onRestored={() => void reloadOrders({ silent: true })}
+              />
+            )}
           </section>
         )}
 
@@ -197,6 +236,14 @@ export function AdminPage() {
             loading={pageViewLoading}
             error={pageViewError}
             onReload={reloadAnalytics}
+          />
+        )}
+
+        {activeTab === 'revenue' && (
+          <RevenueStatsPanel
+            orders={orders}
+            loading={ordersLoading}
+            onReload={() => void reloadOrders()}
           />
         )}
 

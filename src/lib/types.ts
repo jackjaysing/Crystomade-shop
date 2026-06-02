@@ -63,8 +63,14 @@ export interface Order {
   order_number?: string | null
   /** 物流寄件單號（後台填寫） */
   tracking_number?: string | null
+  /** 軟刪除時間 */
+  deleted_at?: string | null
+  /** 刪除當下狀態快照（恢復用） */
+  deleted_from_status?: OrderStatus | null
   /** 關聯查詢時帶入 */
-  products?: Pick<Product, 'name' | 'image_url'> | null
+  products?: (Pick<Product, 'name' | 'image_url'> & {
+    category?: ProductCategory
+  }) | null
 }
 
 /** 購物車品項（精簡快照，供 localStorage 暫存） */

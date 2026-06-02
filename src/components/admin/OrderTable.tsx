@@ -1,5 +1,5 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { ChevronDown, Copy, Package, Star } from 'lucide-react'
+import { ChevronDown, Copy, Package, Search, Star, Trash2, X } from 'lucide-react'
 import { CopyLineNotifyButton } from './CopyLineNotifyButton'
 import { CopyLineVerifyButton } from './CopyLineVerifyButton'
 import { OrderTrackingNumberEditor } from './OrderTrackingNumberEditor'
@@ -8,11 +8,12 @@ import {
   markOrderGroupPaid,
   markOrderGroupUnpaid,
   shipOrderGroup,
+  softDeleteOrderGroup,
   unshipOrderGroup,
 } from '../../lib/api/orders'
+import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import {
   countOrderGroupsByFilter,
-  filterOrderGroups,
   formatOrderGroupStatus,
   formatOrderPaymentStatus,
   groupOrders,
@@ -20,6 +21,14 @@ import {
   type OrderGroupFilter,
   type OrderGroupStatus,
 } from '../../lib/groupOrders'
+import {
+  applyOrderGroupListFilters,
+  countOrderGroupsInMonth,
+  filterOrderGroupsByMonth,
+  formatOrderGroupMonthLabel,
+  listOrderGroupMonthKeys,
+  ORDER_MONTH_ALL,
+} from '../../lib/orderGroupFilters'
 import type { Order, OrderPaymentStatus } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { Toast } from '../ui/Toast'
@@ -27,7 +36,8 @@ import { Toast } from '../ui/Toast'
 interface OrderTableProps {
   orders: Order[]
   loading: boolean
-  onUpdated: () => void
+  onUpdated: (options?: { silent?: boolean }) => void | Promise<void>
+  onDeleted?: () => void | Promise<void>
 }
 
 function shipStatusClassName(status: OrderGroupStatus): string {
@@ -93,24 +103,46 @@ function OrderNumberBlock({ orderNumber }: { orderNumber: string | null }) {
 }
 
 /** 訂單明細（同一結帳合併 · 點擊展開細項） */
-export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
+export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [shippingId, setShippingId] = useState<string | null>(null)
   const [unshippingId, setUnshippingId] = useState<string | null>(null)
   const [paymentUpdatingId, setPaymentUpdatingId] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<OrderGroupFilter>('all')
+  const [selectedMonth, setSelectedMonth] = useState(ORDER_MONTH_ALL)
+  const [orderNumberSearch, setOrderNumberSearch] = useState('')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<
+    ReturnType<typeof groupOrders>[number] | null
+  >(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const orderGroups = useMemo(() => groupOrders(orders), [orders])
-  const filterCounts = useMemo(
-    () => countOrderGroupsByFilter(orderGroups),
+  const monthKeys = useMemo(
+    () => listOrderGroupMonthKeys(orderGroups),
     [orderGroups]
   )
-  const filteredGroups = useMemo(
-    () => filterOrderGroups(orderGroups, activeFilter),
-    [orderGroups, activeFilter]
+  const groupsInSelectedMonth = useMemo(
+    () => filterOrderGroupsByMonth(orderGroups, selectedMonth),
+    [orderGroups, selectedMonth]
   )
+  const filterCounts = useMemo(
+    () => countOrderGroupsByFilter(groupsInSelectedMonth),
+    [groupsInSelectedMonth]
+  )
+  const filteredGroups = useMemo(
+    () =>
+      applyOrderGroupListFilters(orderGroups, {
+        monthKey: selectedMonth,
+        searchQuery: orderNumberSearch,
+        statusFilter: activeFilter,
+      }),
+    [orderGroups, selectedMonth, orderNumberSearch, activeFilter]
+  )
+
+  const hasSearchOrMonthFilter =
+    orderNumberSearch.trim().length > 0 || selectedMonth !== ORDER_MONTH_ALL
 
   const toggleExpanded = (groupId: string) => {
     setExpandedIds((prev) => {
@@ -194,6 +226,61 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
     }
   }
 
+  const canDeleteGroup = (group: ReturnType<typeof groupOrders>[number]) =>
+    group.shippedOrderIds.length === 0
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeletingId(deleteTarget.id)
+    try {
+      await softDeleteOrderGroup(deleteTarget.orderIds)
+      setDeleteTarget(null)
+      await onUpdated({ silent: true })
+      await onDeleted?.()
+      setToastMessage('已刪除訂單')
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '刪除失敗')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const renderCopyButtons = (group: ReturnType<typeof groupOrders>[number]) => (
+    <>
+      <CopyLineVerifyButton
+        group={group}
+        onCopied={() => setToastMessage('已複製核對訊息！')}
+        onCopyFailed={() =>
+          alert('無法複製，請確認瀏覽器已允許剪貼簿權限')
+        }
+      />
+      <CopyLineNotifyButton
+        group={group}
+        onCopied={() => setToastMessage('已複製出貨通知訊息！')}
+        onCopyFailed={() =>
+          alert('無法複製，請確認瀏覽器已允許剪貼簿權限')
+        }
+      />
+    </>
+  )
+
+  const renderDeleteButton = (group: ReturnType<typeof groupOrders>[number]) => {
+    if (!canDeleteGroup(group)) return null
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          setDeleteTarget(group)
+        }}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/35 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/20"
+      >
+        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+        刪除訂單
+      </button>
+    )
+  }
+
   const renderActionButtons = (group: ReturnType<typeof groupOrders>[number]) => {
     const isUpdatingPayment = paymentUpdatingId === group.id
     const isShipping = shippingId === group.id
@@ -201,31 +288,27 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
     const isCancelling = cancellingId === group.id
     const isCancelled = group.status === 'cancelled'
 
-    if (isCancelled) return null
+    if (isCancelled) {
+      return (
+        <div className="w-full">
+          <div className="flex flex-wrap gap-2">
+            {renderCopyButtons(group)}
+            {renderDeleteButton(group)}
+          </div>
+        </div>
+      )
+    }
 
     return (
       <div className="w-full">
         <OrderTrackingNumberEditor
           orderIds={group.orderIds}
           savedTrackingNumber={group.trackingNumber}
-          onSaved={onUpdated}
+          onSaved={() => void onUpdated({ silent: true })}
           onToast={setToastMessage}
         />
         <div className="flex flex-wrap gap-2">
-        <CopyLineVerifyButton
-          group={group}
-          onCopied={() => setToastMessage('已複製核對訊息！')}
-          onCopyFailed={() =>
-            alert('無法複製，請確認瀏覽器已允許剪貼簿權限')
-          }
-        />
-        <CopyLineNotifyButton
-          group={group}
-          onCopied={() => setToastMessage('已複製出貨通知訊息！')}
-          onCopyFailed={() =>
-            alert('無法複製，請確認瀏覽器已允許剪貼簿權限')
-          }
-        />
+        {renderCopyButtons(group)}
         {group.paymentStatus !== 'paid' && (
           <button
             type="button"
@@ -291,17 +374,117 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
             {isCancelling ? '處理中…' : '取消訂單'}
           </button>
         )}
+        {renderDeleteButton(group)}
         </div>
       </div>
     )
   }
 
-  if (loading) {
+  if (loading && orders.length === 0) {
     return <p className="text-white/50">載入訂單中…</p>
   }
 
+  const emptyFilterHint = (() => {
+    if (orderNumberSearch.trim()) {
+      return `找不到符合「${orderNumberSearch.trim()}」的訂單編號`
+    }
+    if (selectedMonth !== ORDER_MONTH_ALL) {
+      const statusLabel =
+        ORDER_GROUP_FILTERS.find((filter) => filter.id === activeFilter)?.label ??
+        ''
+      if (activeFilter === 'all') {
+        return `${formatOrderGroupMonthLabel(selectedMonth)}目前沒有訂單`
+      }
+      return `${formatOrderGroupMonthLabel(selectedMonth)}的「${statusLabel}」目前沒有訂單`
+    }
+    return `${
+      ORDER_GROUP_FILTERS.find((filter) => filter.id === activeFilter)?.label ?? ''
+    }分類目前沒有訂單`
+  })()
+
   return (
     <div className="space-y-4">
+      <div className="relative">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35"
+          strokeWidth={1.5}
+        />
+        <input
+          type="search"
+          value={orderNumberSearch}
+          onChange={(e) => setOrderNumberSearch(e.target.value)}
+          placeholder="搜尋訂單編號…"
+          className="input-field w-full pl-10 pr-10 text-sm"
+          autoComplete="off"
+        />
+        {orderNumberSearch.trim() && (
+          <button
+            type="button"
+            onClick={() => setOrderNumberSearch('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-white/40 transition hover:text-white/70"
+            aria-label="清除搜尋"
+          >
+            <X className="h-4 w-4" strokeWidth={1.5} />
+          </button>
+        )}
+      </div>
+
+      {monthKeys.length > 0 && (
+        <div className="-mx-1 overflow-x-auto px-1 pb-1">
+          <p className="mb-2 text-xs text-white/45">依下單月份</p>
+          <div className="flex min-w-max flex-nowrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedMonth(ORDER_MONTH_ALL)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+                selectedMonth === ORDER_MONTH_ALL
+                  ? 'border-amber-glow/60 bg-amber-glow/10 text-amber-glow'
+                  : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white/80'
+              }`}
+            >
+              {formatOrderGroupMonthLabel(ORDER_MONTH_ALL)}
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                  selectedMonth === ORDER_MONTH_ALL
+                    ? 'bg-amber-glow/20 text-amber-glow'
+                    : 'bg-white/5 text-white/40'
+                }`}
+              >
+                {orderGroups.length}
+              </span>
+            </button>
+            {monthKeys.map((monthKey) => {
+              const isActive = selectedMonth === monthKey
+              const count = countOrderGroupsInMonth(orderGroups, monthKey)
+
+              return (
+                <button
+                  key={monthKey}
+                  type="button"
+                  onClick={() => setSelectedMonth(monthKey)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+                    isActive
+                      ? 'border-amber-glow/60 bg-amber-glow/10 text-amber-glow'
+                      : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white/80'
+                  }`}
+                >
+                  {formatOrderGroupMonthLabel(monthKey)}
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                      isActive
+                        ? 'bg-amber-glow/20 text-amber-glow'
+                        : 'bg-white/5 text-white/40'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
         <div className="flex min-w-max flex-nowrap items-center gap-2">
           {ORDER_GROUP_FILTERS.map((filter) => {
@@ -340,9 +523,16 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
       {orderGroups.length === 0 && <p className="text-white/50">尚無訂單</p>}
 
       {orderGroups.length > 0 && filteredGroups.length === 0 && (
-        <p className="text-white/50">
-          {ORDER_GROUP_FILTERS.find((filter) => filter.id === activeFilter)?.label}
-          分類目前沒有訂單
+        <p className="text-white/50">{emptyFilterHint}</p>
+      )}
+
+      {filteredGroups.length > 0 && hasSearchOrMonthFilter && (
+        <p className="text-xs text-white/40">
+          顯示 {filteredGroups.length} 筆訂單
+          {orderNumberSearch.trim() ? ` · 編號含「${orderNumberSearch.trim()}」` : ''}
+          {selectedMonth !== ORDER_MONTH_ALL
+            ? ` · ${formatOrderGroupMonthLabel(selectedMonth)}`
+            : ''}
         </p>
       )}
 
@@ -481,6 +671,15 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
         )
       })}
       </div>
+
+      {deleteTarget && (
+        <DeleteOrderConfirmModal
+          group={deleteTarget}
+          deleting={deletingId === deleteTarget.id}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
 
       <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
     </div>

@@ -26,6 +26,7 @@ export function OrderTrackingNumberEditor({
   }, [savedTrackingNumber])
 
   const handleSave = async (e: FormEvent | MouseEvent) => {
+    e.preventDefault()
     e.stopPropagation()
     if (disabled || saving) return
 

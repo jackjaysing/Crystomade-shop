@@ -8,9 +8,9 @@ export function useOrders(enabled: boolean) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (options?: { silent?: boolean }) => {
     if (!enabled) return
-    setLoading(true)
+    if (!options?.silent) setLoading(true)
     setError(null)
     try {
       const data = await fetchOrders()
@@ -18,7 +18,7 @@ export function useOrders(enabled: boolean) {
     } catch (e) {
       setError(e instanceof Error ? e.message : '載入訂單失敗')
     } finally {
-      setLoading(false)
+      if (!options?.silent) setLoading(false)
     }
   }, [enabled])
 
