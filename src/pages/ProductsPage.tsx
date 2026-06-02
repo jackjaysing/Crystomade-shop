@@ -42,7 +42,7 @@ export function ProductsPage() {
     })
   }
 
-  /** 依關鍵字 + 品類 + 水晶色 + 功效標籤篩選，再套用排序 */
+  /** 依關鍵字 + 品類 + 顏色 + 功效標籤篩選，再套用排序 */
   const filteredProducts = useMemo(() => {
     let list = products
 
@@ -104,10 +104,12 @@ export function ProductsPage() {
               <ProductSearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
             
-            {/* 第一排：品類 */}
-            <div className="flex min-h-11 items-center gap-2 overflow-x-auto py-1.5 no-scrollbar">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">品類</span>
-              <div className="flex min-w-0 items-center">
+            {/* 第一排：品類（標籤固定，僅右側可橫滑） */}
+            <div className="flex min-h-11 items-center gap-2 py-1.5">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+                品類
+              </span>
+              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
                 <CategoryFilter
                   activeCategory={activeCategory}
                   onSelect={setActiveCategory}
@@ -115,10 +117,12 @@ export function ProductsPage() {
               </div>
             </div>
 
-            {/* 第二排：水晶色 */}
-            <div className="flex min-h-11 items-center gap-2 overflow-x-auto border-t border-white/5 py-1.5 no-scrollbar">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">水晶</span>
-              <div className="flex min-w-0 items-center">
+            {/* 第二排：顏色 */}
+            <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+                顏色
+              </span>
+              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar py-0.5 pl-2.5 pr-1">
                 <CrystalColorFilter
                   activeColorId={activeCrystalColorId}
                   onSelect={setActiveCrystalColorId}
@@ -127,9 +131,11 @@ export function ProductsPage() {
             </div>
 
             {/* 第三排：功效 */}
-            <div className="flex min-h-11 items-center gap-2 overflow-x-auto border-t border-white/5 py-1.5 no-scrollbar">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">功效</span>
-              <div className="flex min-w-0 items-center">
+            <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+                功效
+              </span>
+              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
                 <TagFilter
                   activeFilterId={activeFilterId}
                   onSelect={setActiveFilterId}
@@ -138,9 +144,11 @@ export function ProductsPage() {
             </div>
 
             {/* 第四排：排序 */}
-            <div className="flex min-h-11 items-center gap-2 overflow-x-auto border-t border-white/5 py-1.5 no-scrollbar">
-              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">排序</span>
-              <div className="flex min-w-0 items-center">
+            <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+              <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+                排序
+              </span>
+              <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
                 <ProductSortFilter activeSort={sortMode} onSelect={handleSortChange} />
               </div>
             </div>
