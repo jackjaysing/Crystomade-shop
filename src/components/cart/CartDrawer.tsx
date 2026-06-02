@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
@@ -36,11 +35,6 @@ export function CartDrawer() {
     loading: quickAddLoading,
   } = useQuickAddProducts(isOpen)
 
-  const cartProductIds = useMemo(
-    () => new Set(items.map((item) => item.productId)),
-    [items]
-  )
-
   if (!isOpen) return null
 
   const canCheckout = checkoutItemCount > 0
@@ -76,20 +70,20 @@ export function CartDrawer() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {items.length === 0 ? (
             <p className="py-12 text-center text-sm text-white/40">購物車是空的</p>
           ) : (
             <>
               {loading && (
-                <p className="mb-3 text-center text-xs text-white/40">更新庫存中…</p>
+                <p className="mb-4 text-center text-xs text-white/40">更新庫存中…</p>
               )}
               {hasSnatchedItems && !loading && (
-                <p className="mb-3 rounded-lg border border-red-400/20 bg-red-950/20 px-3 py-2 text-xs text-red-300/90">
+                <p className="mb-4 rounded-lg border border-red-400/20 bg-red-950/20 px-3 py-2 text-xs text-red-300/90">
                   部分商品已被他人搶先收藏，已自動排除於結帳金額之外。
                 </p>
               )}
-              <ul className="space-y-4">
+              <ul className="space-y-5">
                 {resolvedItems.map(
                   ({ item, currentStock, isFullySnatched, snatchedQuantity }) => (
                     <li
@@ -188,34 +182,38 @@ export function CartDrawer() {
                   )
                 )}
               </ul>
+
+              <div className="mt-8 border-t border-white/10 pt-6">
+                <CartQuickAddSection
+                  products={quickAddProducts}
+                  loading={quickAddLoading}
+                  onAdd={(product) => {
+                    addItem(product, 1)
+                    void refresh()
+                  }}
+                />
+              </div>
             </>
           )}
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-white/10 px-6 py-5">
+          <div className="shrink-0 space-y-5 border-t border-white/10 bg-graphite px-6 py-5">
             {showFreeShippingProgress && (
               <FreeShippingProgress
                 subtotal={subtotal}
-                className="mb-4"
                 onShopMore={() => {
                   closeCart()
                   navigate('/products')
                 }}
               />
             )}
-            <CartQuickAddSection
-              products={quickAddProducts}
-              cartProductIds={cartProductIds}
-              loading={quickAddLoading}
-              onAdd={(product) => addItem(product, 1)}
-            />
             {!canCheckout && (
-              <p className="mb-3 text-center text-xs text-red-300/80">
+              <p className="text-center text-xs text-red-300/80">
                 購物車內商品皆已被搶先收藏，請移除後再選購其他典藏。
               </p>
             )}
-            <div className="space-y-1 text-sm">
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between text-white/60">
                 <span>商品小計</span>
                 <span>NT$ {subtotal.toLocaleString()}</span>
@@ -246,7 +244,7 @@ export function CartDrawer() {
                   refresh()
                   closeCart()
                 }}
-                className="mt-4 block w-full rounded-lg bg-amber-glow/90 py-3.5 text-center text-sm font-medium tracking-widest text-void transition hover:bg-amber-glow"
+                className="block w-full rounded-lg bg-amber-glow/90 py-3.5 text-center text-sm font-medium tracking-widest text-void transition hover:bg-amber-glow"
               >
                 前往結帳
               </Link>
@@ -254,7 +252,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 disabled
-                className="mt-4 w-full cursor-not-allowed rounded-lg bg-white/10 py-3.5 text-center text-sm tracking-widest text-white/30"
+                className="w-full cursor-not-allowed rounded-lg bg-white/10 py-3.5 text-center text-sm tracking-widest text-white/30"
               >
                 無可結帳商品
               </button>
