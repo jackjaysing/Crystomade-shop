@@ -3,6 +3,7 @@ import { getCategoryLabel } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { HotProductBadge } from './HotProductBadge'
+import { ProductPriceDisplay } from './ProductPriceDisplay'
 
 interface ProductCardProps {
   product: Product
@@ -77,9 +78,9 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
 
       <div className="p-4">
         <h3 className="font-display text-lg text-white/90">{product.name}</h3>
-        <p className="mt-1 text-sm text-amber-glow">
-          NT$ {product.price.toLocaleString()}
-        </p>
+        <div className="mt-1">
+          <ProductPriceDisplay product={product} variant="card" />
+        </div>
         {!isSold && (
           <p className="mt-1 text-xs text-white/45">
             庫存 {product.stock} 件

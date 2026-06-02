@@ -6,14 +6,21 @@ interface BannerCarouselProps {
 }
 
 const SWIPE_THRESHOLD = 48
+const AUTO_INTERVAL_MS = 5000
 
 /** 前台公告橫幅輪播（CSS 位移，避免手機整頁跳動） */
 export function BannerCarousel({ banners }: BannerCarouselProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
-  const pauseUntilRef = useRef(0)
+  const pauseRef = useRef({ hover: false, touch: false })
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const didSwipeRef = useRef(false)
+
+  const isAutoPlayPaused = () => pauseRef.current.hover || pauseRef.current.touch
+
+  const setAutoPause = (key: 'hover' | 'touch', paused: boolean) => {
+    pauseRef.current[key] = paused
+  }
 
   const goTo = useCallback(
     (index: number) => {
@@ -31,9 +38,9 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     if (banners.length <= 1) return
 
     const timer = window.setInterval(() => {
-      if (Date.now() < pauseUntilRef.current) return
+      if (isAutoPlayPaused()) return
       setActiveIndex((i) => (i + 1) % banners.length)
-    }, 8000)
+    }, AUTO_INTERVAL_MS)
 
     return () => window.clearInterval(timer)
   }, [banners.length])
@@ -64,10 +71,11 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
       y: e.touches[0].clientY,
     }
     didSwipeRef.current = false
-    pauseUntilRef.current = Date.now() + 8000
+    setAutoPause('touch', true)
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    setAutoPause('touch', false)
     const start = touchStartRef.current
     if (!start || banners.length <= 1) {
       touchStartRef.current = null
@@ -104,10 +112,13 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
     <div
       ref={rootRef}
       className="relative mx-auto max-w-4xl touch-pan-y overflow-hidden rounded-lg border border-white/10 bg-graphite/40"
+      onMouseEnter={() => setAutoPause('hover', true)}
+      onMouseLeave={() => setAutoPause('hover', false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={() => {
         touchStartRef.current = null
+        setAutoPause('touch', false)
       }}
     >
       <div

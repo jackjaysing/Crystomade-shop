@@ -17,7 +17,10 @@ export interface Product {
   id: string
   name: string
   category: ProductCategory
+  /** 原價（NT$） */
   price: number
+  /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
+  discount_zhe: number | null
   tags: string[]
   image_url: string
   /** 詳情頁額外圖片（不含封面） */
@@ -86,7 +89,10 @@ export interface OrderFormData {
 export interface ProductFormData {
   name: string
   category: ProductCategory
+  /** 原價（NT$） */
   price: number
+  /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
+  discount_zhe: number | null
   tags: string[]
   description: string
   /** 上架庫存件數 */
@@ -122,7 +128,10 @@ export interface BannerEditData {
 export interface ProductEditData {
   name: string
   category: ProductCategory
+  /** 原價（NT$） */
   price: number
+  /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
+  discount_zhe: number | null
   tags: string[]
   description: string
   stock: number

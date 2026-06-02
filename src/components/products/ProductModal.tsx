@@ -6,6 +6,7 @@ import { useProductViewTracker } from '../../hooks/useProductViewTracker'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { ProductImageGallery } from './ProductImageGallery'
+import { ProductPriceDisplay } from './ProductPriceDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
 import { MetalDivider } from '../ui/MetalDivider'
 
@@ -87,9 +88,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           >
             {product.name}
           </h2>
-          <p className="mt-2 text-xl text-amber-glow">
-            NT$ {product.price.toLocaleString()}
-          </p>
+          <div className="mt-2">
+            <ProductPriceDisplay product={product} variant="detail" />
+          </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {product.tags.map((tag) => (

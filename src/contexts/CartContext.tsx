@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { calcGrandTotal, calcShippingFee, calcSubtotal } from '../lib/cartShipping'
+import { getProductSalePrice } from '../lib/productPricing'
 import type { CartItem, Product } from '../lib/types'
 
 const STORAGE_KEY = 'crystomade-cart'
@@ -51,7 +52,7 @@ function productToCartItem(product: Product, quantity: number): CartItem {
   return {
     productId: product.id,
     name: product.name,
-    price: product.price,
+    price: getProductSalePrice(product),
     image_url: product.image_url,
     quantity,
     maxStock: Math.max(product.stock, 0),
@@ -91,7 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             ? {
                 ...item,
                 name: product.name,
-                price: product.price,
+                price: getProductSalePrice(product),
                 image_url: product.image_url,
                 maxStock: product.stock,
                 quantity: nextQty,

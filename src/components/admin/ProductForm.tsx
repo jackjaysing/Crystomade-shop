@@ -4,6 +4,7 @@ import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
 import type { ProductCategory, ProductFormData } from '../../lib/types'
+import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface ProductFormProps {
@@ -14,6 +15,7 @@ const initialForm: ProductFormData = {
   name: '',
   category: '手串',
   price: 0,
+  discount_zhe: null,
   stock: 1,
   is_hot: false,
   tags: [],
@@ -121,15 +123,13 @@ export function ProductForm({ onCreated }: ProductFormProps) {
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="input-field"
         />
-        <input
-          type="number"
-          min={0}
-          placeholder="價格 (NT$)"
-          value={form.price || ''}
-          onChange={(e) =>
-            setForm({ ...form, price: Number(e.target.value) })
+        <AdminProductPricingFields
+          price={form.price}
+          discountZhe={form.discount_zhe}
+          onPriceChange={(price) => setForm({ ...form, price })}
+          onDiscountChange={(discount_zhe) =>
+            setForm({ ...form, discount_zhe })
           }
-          className="input-field"
         />
         <input
           type="number"

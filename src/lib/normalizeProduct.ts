@@ -1,4 +1,5 @@
 import type { Product, ProductCategory } from './types'
+import { parseDiscountZhe } from './productPricing'
 import { sanitizeProductTags } from './productTags'
 
 const VALID_CATEGORIES: ProductCategory[] = ['手串', '擺件', '礦石']
@@ -31,6 +32,7 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     name: String(row.name ?? ''),
     category: parseCategory(row.category),
     price: typeof price === 'number' ? price : Number(price) || 0,
+    discount_zhe: parseDiscountZhe(row.discount_zhe),
     tags: sanitizeProductTags(Array.isArray(tags) ? tags.map(String) : []),
     image_url: String(row.image_url ?? ''),
     gallery_urls: Array.isArray(row.gallery_urls)

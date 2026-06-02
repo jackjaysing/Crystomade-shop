@@ -1,11 +1,12 @@
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { FREE_SHIPPING_THRESHOLD } from '../../constants/shipping'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
+import { FreeShippingProgress } from './FreeShippingProgress'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 
 /** 側邊滑出購物車 Drawer */
 export function CartDrawer() {
+  const navigate = useNavigate()
   const {
     items,
     itemCount,
@@ -28,8 +29,8 @@ export function CartDrawer() {
 
   if (!isOpen) return null
 
-  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
   const canCheckout = checkoutItemCount > 0
+  const showFreeShippingProgress = subtotal > 0
 
   return (
     <div className="fixed inset-0 z-50 animate-fadeIn" role="dialog" aria-modal="true">
@@ -179,10 +180,15 @@ export function CartDrawer() {
 
         {items.length > 0 && (
           <div className="border-t border-white/10 px-6 py-5">
-            {canCheckout && shippingFee > 0 && amountToFreeShipping > 0 && (
-              <p className="mb-3 text-center text-xs text-amber-glow/70">
-                再消費 NT$ {amountToFreeShipping.toLocaleString()} 即可免運
-              </p>
+            {showFreeShippingProgress && (
+              <FreeShippingProgress
+                subtotal={subtotal}
+                className="mb-4"
+                onShopMore={() => {
+                  closeCart()
+                  navigate('/products')
+                }}
+              />
             )}
             {!canCheckout && (
               <p className="mb-3 text-center text-xs text-red-300/80">

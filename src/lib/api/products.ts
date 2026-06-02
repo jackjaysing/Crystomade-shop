@@ -12,19 +12,37 @@ function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
   )
 }
 
-async function getNextProductSortOrder(): Promise<number> {
+/** 新商品排在同區塊最前（sort_order 小於現有最小值） */
+async function getSortOrderForNewProduct(isHot: boolean): Promise<number> {
   const { data, error } = await supabase
     .from('products')
     .select('sort_order')
-    .order('sort_order', { ascending: false })
+    .is('deleted_at', null)
+    .eq('is_hot', isHot)
+    .order('sort_order', { ascending: true })
     .limit(1)
 
-  if (error) throw new Error(formatErrorMessage(error))
-  const max = data?.[0]?.sort_order
-  return typeof max === 'number' ? max + 1 : 0
+  if (error) {
+    if (/is_hot|42703|column/i.test(formatErrorMessage(error))) {
+      const { data: fallback, error: fallbackError } = await supabase
+        .from('products')
+        .select('sort_order')
+        .is('deleted_at', null)
+        .order('sort_order', { ascending: true })
+        .limit(1)
+
+      if (fallbackError) throw new Error(formatErrorMessage(fallbackError))
+      const min = fallback?.[0]?.sort_order
+      return typeof min === 'number' ? min - 1 : 0
+    }
+    throw new Error(formatErrorMessage(error))
+  }
+
+  const min = data?.[0]?.sort_order
+  return typeof min === 'number' ? min - 1 : 0
 }
 
-/** 取得上架中商品（排除已軟刪除，熱門置頂 + 自訂排序） */
+/** 取得上架中商品（排除已軟刪除；排序由 sortProducts 處理） */
 export async function fetchProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured) {
     throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
@@ -43,7 +61,8 @@ export async function fetchProducts(): Promise<Product[]> {
       const { data: fallback, error: fallbackError } = await supabase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
 
       if (fallbackError) throw new Error(formatErrorMessage(fallbackError))
       return mapActiveProducts((fallback ?? []) as Record<string, unknown>[])
@@ -90,7 +109,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       ? await uploadGalleryImages(form.galleryFiles)
       : []
 
-  const sort_order = await getNextProductSortOrder()
+  const sort_order = await getSortOrderForNewProduct(form.is_hot)
 
   const { data, error } = await supabase
     .from('products')
@@ -98,6 +117,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       name: form.name,
       category: form.category,
       price: form.price,
+      discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),
       image_url,
       gallery_urls,
@@ -138,6 +158,7 @@ export async function updateProduct(
       name: form.name.trim(),
       category: form.category,
       price: form.price,
+      discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),
       image_url,
       gallery_urls: [...form.existingGalleryUrls, ...newGalleryUrls],
@@ -194,6 +215,8 @@ export async function swapProductOrder(
 
   const current = products[index]
   const target = products[swapIndex]
+
+  if (current.is_hot !== target.is_hot) return
 
   const { error: errorA } = await supabase
     .from('products')

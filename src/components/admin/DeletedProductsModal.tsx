@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Archive, RotateCcw, X } from 'lucide-react'
 import { getCategoryLabel } from '../../constants/categories'
 import { restoreProduct } from '../../lib/api/products'
+import { getProductSalePrice, hasProductDiscount } from '../../lib/productPricing'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { useDeletedProducts } from '../../hooks/useDeletedProducts'
@@ -96,7 +97,16 @@ export function DeletedProductsModal({
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-white/80">{product.name}</p>
                     <p className="text-sm text-amber-glow/80">
-                      NT$ {product.price.toLocaleString()}
+                      {hasProductDiscount(product) ? (
+                        <>
+                          特價 NT$ {getProductSalePrice(product).toLocaleString()}
+                          <span className="ml-1 text-xs text-white/40 line-through">
+                            {product.price.toLocaleString()}
+                          </span>
+                        </>
+                      ) : (
+                        <>NT$ {product.price.toLocaleString()}</>
+                      )}
                     </p>
                     <p className="text-xs text-white/40">
                       {getCategoryLabel(product.category)} ·{' '}

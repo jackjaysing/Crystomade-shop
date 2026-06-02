@@ -16,3 +16,19 @@ export function calcGrandTotal(items: CartItem[]): number {
   const subtotal = calcSubtotal(items)
   return subtotal + calcShippingFee(subtotal)
 }
+
+/** 免運進度 0–100 */
+export function getFreeShippingProgressPercent(subtotal: number): number {
+  if (subtotal <= 0) return 0
+  return Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)
+}
+
+/** 距離免運還差多少（已達標則 0） */
+export function getAmountToFreeShipping(subtotal: number): number {
+  return Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
+}
+
+/** 是否已達免運門檻 */
+export function hasFreeShipping(subtotal: number): boolean {
+  return subtotal >= FREE_SHIPPING_THRESHOLD
+}

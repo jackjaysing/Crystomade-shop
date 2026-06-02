@@ -10,12 +10,19 @@ import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
 import { ProductMasonry } from '../components/products/ProductMasonry'
 import { ProductModal } from '../components/products/ProductModal'
 import { ProductSearchBar } from '../components/products/ProductSearchBar'
+import { SoldOutToggle } from '../components/products/SoldOutToggle'
 import { ProductSortFilter } from '../components/products/ProductSortFilter'
 import { TagFilter } from '../components/products/TagFilter'
 import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
+import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
 import { useBanners } from '../hooks/useBanners'
+import { isProductSoldOut } from '../lib/productStock'
 import { productMatchesSearchQuery } from '../lib/productSearch'
+import {
+  loadShowSoldOutProducts,
+  saveShowSoldOutProducts,
+} from '../lib/soldOutVisibility'
 import { sortProductsByMode, type ProductSortMode } from '../lib/sortProducts'
 import type { Product, ProductCategory } from '../lib/types'
 
@@ -32,6 +39,7 @@ export function ProductsPage() {
   )
   const [searchQuery, setSearchQuery] = useState('')
   const [sortMode, setSortMode] = useState<ProductSortMode>('default')
+  const [showSoldOut, setShowSoldOut] = useState(loadShowSoldOutProducts)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const productSectionRef = useRef<HTMLElement>(null)
 
@@ -42,9 +50,18 @@ export function ProductsPage() {
     })
   }
 
+  const handleSoldOutVisibilityChange = (show: boolean) => {
+    setShowSoldOut(show)
+    saveShowSoldOutProducts(show)
+  }
+
   /** 依關鍵字 + 品類 + 顏色 + 功效標籤篩選，再套用排序 */
   const filteredProducts = useMemo(() => {
     let list = products
+
+    if (!showSoldOut) {
+      list = list.filter((p) => !isProductSoldOut(p))
+    }
 
     if (searchQuery.trim()) {
       list = list.filter((p) => productMatchesSearchQuery(p, searchQuery))
@@ -71,7 +88,15 @@ export function ProductsPage() {
     }
 
     return sortProductsByMode(list, sortMode)
-  }, [products, searchQuery, activeCategory, activeCrystalColorId, activeFilterId, sortMode])
+  }, [
+    products,
+    showSoldOut,
+    searchQuery,
+    activeCategory,
+    activeCrystalColorId,
+    activeFilterId,
+    sortMode,
+  ])
 
   return (
     <div className="min-h-screen">
@@ -100,8 +125,14 @@ export function ProductsPage() {
       {/* 品類與功效篩選（手機極簡固定版） */}
         <section className="sticky top-[73px] z-30 border-y border-white/5 bg-neutral-950/90 backdrop-blur-md py-2">
           <div className="mx-auto max-w-7xl px-4">
-            <div className="pb-2">
-              <ProductSearchBar value={searchQuery} onChange={setSearchQuery} />
+            <div className="flex items-center gap-2 pb-2">
+              <div className="min-w-0 flex-1">
+                <ProductSearchBar value={searchQuery} onChange={setSearchQuery} />
+              </div>
+              <SoldOutToggle
+                showSoldOut={showSoldOut}
+                onChange={handleSoldOutVisibilityChange}
+              />
             </div>
             
             {/* 第一排：品類（標籤固定，僅右側可橫滑） */}
@@ -184,7 +215,11 @@ export function ProductsPage() {
         )}
         {!loading && !error && filteredProducts.length === 0 && (
           <p className="text-center text-white/40">
-            {searchQuery.trim() ? '找不到符合搜尋的商品' : '此分類暫無商品'}
+            {searchQuery.trim()
+              ? '找不到符合搜尋的商品'
+              : !showSoldOut
+                ? '已隱藏完售商品，目前沒有其他符合條件的商品'
+                : '此分類暫無商品'}
           </p>
         )}
         {!loading && filteredProducts.length > 0 && (
@@ -199,6 +234,8 @@ export function ProductsPage() {
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
+
+      <ScrollToTopFab targetRef={productSectionRef} />
     </div>
   )
 }

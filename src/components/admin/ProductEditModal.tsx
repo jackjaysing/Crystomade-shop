@@ -6,6 +6,7 @@ import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
 import type { Product, ProductCategory, ProductEditData } from '../../lib/types'
+import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface ProductEditModalProps {
@@ -19,6 +20,7 @@ function toEditForm(product: Product): ProductEditData {
     name: product.name,
     category: product.category,
     price: product.price,
+    discount_zhe: product.discount_zhe,
     tags: [...product.tags],
     description: product.description,
     stock: product.stock,
@@ -207,15 +209,13 @@ export function ProductEditModal({
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="input-field"
           />
-          <input
-            type="number"
-            min={0}
-            placeholder="價格 (NT$)"
-            value={form.price || ''}
-            onChange={(e) =>
-              setForm({ ...form, price: Number(e.target.value) })
+          <AdminProductPricingFields
+            price={form.price}
+            discountZhe={form.discount_zhe}
+            onPriceChange={(price) => setForm({ ...form, price })}
+            onDiscountChange={(discount_zhe) =>
+              setForm({ ...form, discount_zhe })
             }
-            className="input-field"
           />
           <input
             type="number"

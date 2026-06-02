@@ -7,7 +7,8 @@ import {
   swapProductOrder,
 } from '../../lib/api/products'
 import type { ProductViewStats } from '../../lib/api/analytics'
-import { sortProducts } from '../../lib/sortProducts'
+import { getProductSalePrice, hasProductDiscount } from '../../lib/productPricing'
+import { canSwapProductWithNeighbor, sortProducts } from '../../lib/sortProducts'
 import type { Product } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { HotProductBadge } from '../products/HotProductBadge'
@@ -71,7 +72,7 @@ export function ProductListAdmin({
     <GlassPanel className="p-6">
       <h3 className="font-display text-xl text-amber-glow">現有商品</h3>
       <p className="mt-1 text-xs text-white/40">
-        熱門商品固定置頂 · 上移／下移調整同區塊內排序（與前台一致）
+        熱門商品固定置頂 · 熱門／一般商品皆可上移／下移（新上架預設排在該區塊最前）
       </p>
       {viewStatsError && (
         <p className="mt-2 text-xs text-amber-glow/80">
@@ -101,7 +102,16 @@ export function ProductListAdmin({
                 {p.is_hot && <HotProductBadge variant="inline" />}
               </div>
               <p className="text-sm text-amber-glow">
-                NT$ {p.price.toLocaleString()}
+                {hasProductDiscount(p) ? (
+                  <>
+                    特價 NT$ {getProductSalePrice(p).toLocaleString()}
+                    <span className="ml-2 text-xs text-white/40 line-through">
+                      原價 {p.price.toLocaleString()}
+                    </span>
+                  </>
+                ) : (
+                  <>NT$ {p.price.toLocaleString()}</>
+                )}
               </p>
               <p className="text-xs text-white/40">
                 前台排序 {index + 1} · {getCategoryLabel(p.category)} ·{' '}
@@ -127,7 +137,10 @@ export function ProductListAdmin({
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  disabled={movingId === p.id || index === 0}
+                  disabled={
+                    movingId === p.id ||
+                    !canSwapProductWithNeighbor(sortedProducts, index, 'up')
+                  }
                   onClick={() => void handleMove(p.id, 'up')}
                   className="rounded border border-white/15 px-3 py-1.5 text-xs text-white/60 disabled:opacity-30"
                 >
@@ -135,7 +148,10 @@ export function ProductListAdmin({
                 </button>
                 <button
                   type="button"
-                  disabled={movingId === p.id || index === sortedProducts.length - 1}
+                  disabled={
+                    movingId === p.id ||
+                    !canSwapProductWithNeighbor(sortedProducts, index, 'down')
+                  }
                   onClick={() => void handleMove(p.id, 'down')}
                   className="rounded border border-white/15 px-3 py-1.5 text-xs text-white/60 disabled:opacity-30"
                 >
