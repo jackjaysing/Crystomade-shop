@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { getProductImages } from '../../lib/productImages'
 import type { Product } from '../../lib/types'
-import { HotProductBadge } from './HotProductBadge'
+import { ProductImageBadges } from './ProductImageBadges'
+import {
+  SoldOutImageOverlay,
+  useSoldOutImagePeek,
+} from './SoldOutCollectible'
 
 interface ProductImageGalleryProps {
   product: Product
@@ -12,10 +16,15 @@ interface ProductImageGalleryProps {
 export function ProductImageGallery({ product, isSold }: ProductImageGalleryProps) {
   const images = getProductImages(product)
   const [activeIndex, setActiveIndex] = useState(0)
+  const { peeking, peekHandlers, imageClassName, endPeek } = useSoldOutImagePeek(
+    isSold,
+    { dimImage: false }
+  )
 
   useEffect(() => {
     setActiveIndex(0)
-  }, [product.id])
+    endPeek()
+  }, [product.id, endPeek])
 
   const hasMultiple = images.length > 1
   const activeSrc = images[activeIndex] ?? product.image_url
@@ -30,11 +39,15 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
 
   return (
     <div className="relative w-full rounded-t-2xl bg-graphite">
-      <div className="relative flex min-h-[240px] max-h-[min(55vh,520px)] w-full items-center justify-center px-2 py-3">
+      <div
+        className="relative flex min-h-[240px] max-h-[min(55vh,520px)] w-full items-center justify-center px-2 py-3"
+        {...peekHandlers}
+      >
         <img
           src={activeSrc}
           alt={`${product.name} ${activeIndex + 1}`}
-          className="max-h-[min(55vh,520px)] max-w-full object-contain"
+          className={`max-h-[min(55vh,520px)] max-w-full object-contain transition duration-300 ${imageClassName}`}
+          draggable={false}
         />
 
         {hasMultiple && (
@@ -67,16 +80,10 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
           </span>
         )}
 
-        {product.is_hot && (
-          <HotProductBadge className="absolute right-3 top-3 backdrop-blur-sm" />
-        )}
+        <ProductImageBadges product={product} />
 
         {isSold && (
-          <div className="absolute inset-0 flex items-center justify-center bg-void/50">
-            <span className="font-display text-2xl tracking-[0.3em] text-amber-glow/90">
-              已被收藏
-            </span>
-          </div>
+          <SoldOutImageOverlay visible={!peeking} variant="detail" />
         )}
       </div>
 

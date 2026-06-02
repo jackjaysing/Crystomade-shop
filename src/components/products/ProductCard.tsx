@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { getCategoryLabel } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
-import { HotProductBadge } from './HotProductBadge'
+import { ProductImageBadges } from './ProductImageBadges'
 import { ProductPriceDisplay } from './ProductPriceDisplay'
 
 interface ProductCardProps {
@@ -58,9 +58,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           {getCategoryLabel(product.category)}
         </span>
 
-        {product.is_hot && (
-          <HotProductBadge className="absolute right-3 top-3 backdrop-blur-sm" />
-        )}
+        <ProductImageBadges product={product} />
 
         {isSold && (
           <div className="absolute inset-0 flex items-center justify-center bg-void/60 backdrop-blur-[2px]">
