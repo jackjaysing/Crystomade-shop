@@ -69,36 +69,8 @@ export function AdminPage() {
         </button>
       </div>
 
-      <PageViewStats
-        stats={pageViewStats}
-        loading={pageViewLoading}
-        error={pageViewError}
-        onReload={reloadAnalytics}
-      />
-
-      {/* 公告橫幅管理 */}
+      {/* 商品管理 */}
       <section className="mb-16">
-        <h2 className="mb-4 text-lg tracking-wide text-white/80">公告橫幅</h2>
-        {bannerError && (
-          <p className="mb-3 text-sm text-amber-glow/90">
-            無法載入橫幅：{bannerError}（請執行 migration-add-announcement-banners.sql）
-          </p>
-        )}
-        <BannerAdmin banners={banners} onUpdated={reloadBanners} />
-      </section>
-
-      {/* 功能一：訂單明細 */}
-      <section className="mb-16">
-        <h2 className="mb-4 text-lg tracking-wide text-white/80">訂單明細</h2>
-        <OrderTable
-          orders={orders}
-          loading={ordersLoading}
-          onUpdated={reloadOrders}
-        />
-      </section>
-
-      {/* 功能二：商品管理 */}
-      <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg tracking-wide text-white/80">商品管理</h2>
           <button
@@ -123,6 +95,35 @@ export function AdminPage() {
           />
         </div>
       </section>
+
+      {/* 訂單明細 */}
+      <section className="mb-16">
+        <h2 className="mb-4 text-lg tracking-wide text-white/80">訂單明細</h2>
+        <OrderTable
+          orders={orders}
+          loading={ordersLoading}
+          onUpdated={reloadOrders}
+        />
+      </section>
+
+      {/* 公告橫幅 */}
+      <section className="mb-16">
+        <h2 className="mb-4 text-lg tracking-wide text-white/80">公告橫幅</h2>
+        {bannerError && (
+          <p className="mb-3 text-sm text-amber-glow/90">
+            無法載入橫幅：{bannerError}（請執行 migration-add-announcement-banners.sql）
+          </p>
+        )}
+        <BannerAdmin banners={banners} onUpdated={reloadBanners} />
+      </section>
+
+      {/* 瀏覽統計 */}
+      <PageViewStats
+        stats={pageViewStats}
+        loading={pageViewLoading}
+        error={pageViewError}
+        onReload={reloadAnalytics}
+      />
 
       {showDeleted && (
         <DeletedProductsModal

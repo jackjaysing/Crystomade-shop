@@ -1,4 +1,5 @@
 import { formatErrorMessage } from '../formatError'
+import { applyCrystomadeWatermark } from '../watermarkProductImage'
 import { normalizeProduct } from '../normalizeProduct'
 import { sanitizeProductTags } from '../productTags'
 import { isProductActive } from '../productStock'
@@ -75,12 +76,13 @@ export async function fetchProducts(): Promise<Product[]> {
 
 /** 上傳單張圖片至 Storage，回傳公開 URL */
 async function uploadProductImage(file: File): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'jpg'
+  const watermarked = await applyCrystomadeWatermark(file)
+  const ext = watermarked.name.split('.').pop() ?? 'jpg'
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   const { error: uploadError } = await supabase.storage
     .from(PRODUCT_IMAGE_BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false })
+    .upload(path, watermarked, { cacheControl: '3600', upsert: false })
 
   if (uploadError) throw uploadError
 
