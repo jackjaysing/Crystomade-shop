@@ -2,6 +2,26 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react
 
 const ZOOM_LEVEL = 2
 const LENS_DIAMETER = 180
+/** 僅滑鼠／精準指標裝置啟用；手機觸控不顯示放大鏡 */
+const MAGNIFIER_MEDIA = '(hover: hover) and (pointer: fine)'
+
+function useMagnifierSupported() {
+  const [supported, setSupported] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia(MAGNIFIER_MEDIA).matches
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia(MAGNIFIER_MEDIA)
+    const update = () => setSupported(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  return supported
+}
 
 interface ProductImageMagnifierProps {
   src: string
@@ -52,6 +72,8 @@ export function ProductImageMagnifier({
   className = '',
   enabled = true,
 }: ProductImageMagnifierProps) {
+  const magnifierSupported = useMagnifierSupported()
+  const magnifierActive = enabled && magnifierSupported
   const containerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
   const [hoverPoint, setHoverPoint] = useState<HoverPoint | null>(null)
@@ -100,7 +122,7 @@ export function ProductImageMagnifier({
   )
 
   const handleMouseMove = (event: MouseEvent<HTMLDivElement>) => {
-    if (!enabled) return
+    if (!magnifierActive) return
     setHoverPoint(resolveHoverPoint(event.clientX, event.clientY))
   }
 
@@ -108,7 +130,7 @@ export function ProductImageMagnifier({
     setHoverPoint(null)
   }
 
-  const showLens = enabled && imageReady && hoverPoint != null
+  const showLens = magnifierActive && imageReady && hoverPoint != null
 
   let lensPosition: { left: number; top: number } | undefined
   let zoomImage: { width: number; height: number; left: number; top: number } | undefined
@@ -136,8 +158,8 @@ export function ProductImageMagnifier({
     <div
       ref={containerRef}
       className="relative inline-block max-w-full"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={magnifierActive ? handleMouseMove : undefined}
+      onMouseLeave={magnifierActive ? handleMouseLeave : undefined}
     >
       <img
         ref={imageRef}
