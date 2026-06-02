@@ -323,11 +323,11 @@ export function ProductEditModal({
           </div>
 
           <textarea
-            rows={4}
+            rows={10}
             placeholder="詳細描述"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="input-field resize-none"
+            className="input-field min-h-[220px] resize-y"
           />
 
           <div>
