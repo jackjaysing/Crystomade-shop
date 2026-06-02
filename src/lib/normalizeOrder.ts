@@ -47,6 +47,8 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
     is_paid: Boolean(row.is_paid),
     checkout_id: row.checkout_id != null ? String(row.checkout_id) : null,
     order_number: row.order_number != null ? String(row.order_number) : null,
+    tracking_number:
+      row.tracking_number != null ? String(row.tracking_number) : null,
     products: resolveOrderProduct(row),
   }
 }

@@ -195,6 +195,38 @@ export async function markOrderGroupUnpaid(orderIds: string[]): Promise<void> {
   })
 }
 
+/** 後台：更新同一結帳批次的寄件單號（空字串則清除） */
+export async function updateOrderGroupTrackingNumber(
+  orderIds: string[],
+  trackingNumber: string
+): Promise<void> {
+  if (orderIds.length === 0) return
+
+  const value = trackingNumber.trim() || null
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ tracking_number: value })
+    .in('id', orderIds)
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (msg.includes('tracking_number') || msg.includes('column')) {
+      throw new Error(
+        '資料庫尚未啟用寄件單號欄位，請在 Supabase SQL Editor 執行 supabase/migration-add-order-tracking-number.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  const summary = await orderGroupSummary(orderIds, '更新寄件單號：')
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'order',
+    summary: value ? `${summary} ${value}` : `${summary}（已清除）`,
+  })
+}
+
 /** 後台：取消訂單群組（還原庫存） */
 export async function cancelOrderGroup(orderIds: string[]): Promise<number> {
   if (orderIds.length === 0) return 0

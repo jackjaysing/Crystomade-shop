@@ -35,6 +35,8 @@ export interface OrderGroup {
   unpaidDays: number
   /** 超過 7 天未結帳 */
   isOverdueUnpaid: boolean
+  /** 物流寄件單號（同一結帳批次） */
+  trackingNumber: string | null
 }
 
 const LEGACY_GROUP_WINDOW_MS = 2 * 60 * 1000
@@ -99,6 +101,14 @@ export function isOverdueUnpaidGroup(group: Pick<OrderGroup, 'paymentStatus' | '
   )
 }
 
+function resolveTrackingNumber(orders: Order[]): string | null {
+  for (const order of orders) {
+    const value = order.tracking_number?.trim()
+    if (value) return value
+  }
+  return null
+}
+
 function resolvePaymentStatus(orders: Order[]): OrderPaymentStatus {
   const paidCount = orders.filter((order) => order.is_paid).length
   if (paidCount === 0) return 'unpaid'
@@ -144,6 +154,7 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
       status !== 'cancelled' &&
       paymentStatus !== 'paid' &&
       unpaidDays > OVERDUE_UNPAID_DAYS,
+    trackingNumber: resolveTrackingNumber(sorted),
   }
 }
 

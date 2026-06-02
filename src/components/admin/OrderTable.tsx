@@ -1,5 +1,8 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { ChevronDown, Copy, Package, Star } from 'lucide-react'
+import { CopyLineNotifyButton } from './CopyLineNotifyButton'
+import { CopyLineVerifyButton } from './CopyLineVerifyButton'
+import { OrderTrackingNumberEditor } from './OrderTrackingNumberEditor'
 import {
   cancelOrderGroup,
   markOrderGroupPaid,
@@ -19,6 +22,7 @@ import {
 } from '../../lib/groupOrders'
 import type { Order, OrderPaymentStatus } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
+import { Toast } from '../ui/Toast'
 
 interface OrderTableProps {
   orders: Order[]
@@ -96,6 +100,7 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
   const [paymentUpdatingId, setPaymentUpdatingId] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<OrderGroupFilter>('all')
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const orderGroups = useMemo(() => groupOrders(orders), [orders])
   const filterCounts = useMemo(
@@ -199,7 +204,28 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
     if (isCancelled) return null
 
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className="w-full">
+        <OrderTrackingNumberEditor
+          orderIds={group.orderIds}
+          savedTrackingNumber={group.trackingNumber}
+          onSaved={onUpdated}
+          onToast={setToastMessage}
+        />
+        <div className="flex flex-wrap gap-2">
+        <CopyLineVerifyButton
+          group={group}
+          onCopied={() => setToastMessage('已複製核對訊息！')}
+          onCopyFailed={() =>
+            alert('無法複製，請確認瀏覽器已允許剪貼簿權限')
+          }
+        />
+        <CopyLineNotifyButton
+          group={group}
+          onCopied={() => setToastMessage('已複製出貨通知訊息！')}
+          onCopyFailed={() =>
+            alert('無法複製，請確認瀏覽器已允許剪貼簿權限')
+          }
+        />
         {group.paymentStatus !== 'paid' && (
           <button
             type="button"
@@ -265,6 +291,7 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
             {isCancelling ? '處理中…' : '取消訂單'}
           </button>
         )}
+        </div>
       </div>
     )
   }
@@ -454,6 +481,8 @@ export function OrderTable({ orders, loading, onUpdated }: OrderTableProps) {
         )
       })}
       </div>
+
+      <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
     </div>
   )
 }

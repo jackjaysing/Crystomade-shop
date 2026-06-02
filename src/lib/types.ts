@@ -61,6 +61,8 @@ export interface Order {
   checkout_id?: string | null
   /** 人類可讀訂單編號（同一結帳批次共用） */
   order_number?: string | null
+  /** 物流寄件單號（後台填寫） */
+  tracking_number?: string | null
   /** 關聯查詢時帶入 */
   products?: Pick<Product, 'name' | 'image_url'> | null
 }
