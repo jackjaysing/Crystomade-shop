@@ -83,6 +83,10 @@ export function SiteFooter() {
             如有任何身體、生理或心理疾病之不適，請務必尋求專業合格之醫療機構與醫師協助。
           </p>
         </section>
+
+        <p className="mt-8 text-center text-xs tracking-wide text-white/35">
+          晶刻Crystomade © Copyright 2026
+        </p>
       </div>
     </footer>
   )
