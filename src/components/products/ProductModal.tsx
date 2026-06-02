@@ -20,7 +20,7 @@ interface ProductModalProps {
 /** 商品詳情毛玻璃彈窗 */
 export function ProductModal({ product, onClose }: ProductModalProps) {
   const navigate = useNavigate()
-  const { addItem, openCart } = useCart()
+  const { addItem } = useCart()
   const [feedback, setFeedback] = useState<string | null>(null)
 
   useProductViewTracker(product?.id)
@@ -139,19 +139,6 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                 立即購買
               </button>
             </div>
-          )}
-
-          {!isSold && (
-            <button
-              type="button"
-              onClick={() => {
-                handleAddToCart()
-                openCart()
-              }}
-              className="mt-3 w-full text-center text-xs text-white/40 transition hover:text-amber-glow/70"
-            >
-              加入後查看購物車 →
-            </button>
           )}
 
           {isSold && (
