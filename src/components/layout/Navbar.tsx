@@ -45,7 +45,7 @@ export function Navbar() {
             <img
               src="/logoword.png"
               alt="晶刻 Crystomade"
-              className="block h-7 w-auto max-w-[5.5rem] flex-none object-contain object-left sm:h-9 sm:max-w-none md:h-10"
+              className="block h-8 w-auto max-w-[6.75rem] flex-none object-contain object-left sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
 
@@ -91,13 +91,23 @@ export function Navbar() {
             <div className="flex items-center gap-1 md:hidden">
               <Link
                 to="/point-shop"
-                className={navIconClass(isPointShop)}
-                aria-label="點數商城"
+                className={
+                  profile
+                    ? `flex shrink-0 items-center gap-1.5 rounded-full border py-1.5 pl-2 pr-2.5 transition ${
+                        isPointShop
+                          ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
+                          : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
+                      }`
+                    : navIconClass(isPointShop)
+                }
+                aria-label={
+                  profile ? `點數商城，可用 ${availablePoints} 點` : '點數商城'
+                }
               >
-                <Store className="h-5 w-5" strokeWidth={1.5} />
+                <Store className="h-5 w-5 shrink-0" strokeWidth={1.5} />
                 {profile && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-glow px-0.5 text-[9px] font-medium text-void">
-                    {availablePoints > 99 ? '99+' : availablePoints}
+                  <span className="text-xs font-medium tabular-nums">
+                    {availablePoints > 999 ? '999+' : availablePoints}
                   </span>
                 )}
               </Link>
