@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { POINTS_PER_NTD_EARN, WELCOME_BONUS_POINTS } from '../../constants/points'
 import { useAuth } from '../../contexts/AuthContext'
 import { GlassPanel } from '../ui/GlassPanel'
+import { PhoneNumberInput } from '../ui/PhoneNumberInput'
 
 type AuthMode = 'login' | 'register'
 
@@ -35,9 +36,38 @@ export function MemberAuthForm({
   const [loginForm, setLoginForm] = useState(emptyLogin)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** 輸入電話時先不掛密碼欄，避免 iOS 在數字鍵盤上方顯示會跳動的密碼工具列 */
+  const [showPasswordFields, setShowPasswordFields] = useState(false)
+  const loginPasswordRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setShowPasswordFields(false)
+  }, [mode])
+
+  const revealPasswordFields = () => {
+    setShowPasswordFields(true)
+  }
+
+  const handlePhoneKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      revealPasswordFields()
+    }
+  }
+
+  useEffect(() => {
+    if (showPasswordFields && mode === 'login') {
+      loginPasswordRef.current?.focus()
+    }
+  }, [showPasswordFields, mode])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (!showPasswordFields) {
+      revealPasswordFields()
+      setError(mode === 'login' ? '請輸入密碼' : '請設定密碼')
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
@@ -104,7 +134,11 @@ export function MemberAuthForm({
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+      <form
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="mt-4 space-y-3"
+      >
         {mode === 'register' ? (
           <>
             <input
@@ -129,11 +163,8 @@ export function MemberAuthForm({
                 className="input-field"
               />
             </div>
-            <input
+            <PhoneNumberInput
               required
-              type="tel"
-              inputMode="numeric"
-              autoComplete="tel-national"
               enterKeyHint="next"
               name="register-phone"
               placeholder="手機號碼 *（例：0912345678）"
@@ -141,41 +172,46 @@ export function MemberAuthForm({
               onChange={(e) =>
                 setRegisterForm({ ...registerForm, phone: e.target.value })
               }
+              onBlur={revealPasswordFields}
               className="input-field"
             />
-            <input
-              required
-              type="password"
-              placeholder="自設密碼 *（至少 6 碼）"
-              value={registerForm.password}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, password: e.target.value })
-              }
-              className="input-field"
-              autoComplete="new-password"
-            />
-            <input
-              required
-              type="password"
-              placeholder="確認密碼 *"
-              value={registerForm.confirmPassword}
-              onChange={(e) =>
-                setRegisterForm({
-                  ...registerForm,
-                  confirmPassword: e.target.value,
-                })
-              }
-              className="input-field"
-              autoComplete="new-password"
-            />
+            {showPasswordFields && (
+              <>
+                <input
+                  required
+                  type="password"
+                  placeholder="自設密碼 *（至少 6 碼）"
+                  value={registerForm.password}
+                  onChange={(e) =>
+                    setRegisterForm({
+                      ...registerForm,
+                      password: e.target.value,
+                    })
+                  }
+                  className="input-field"
+                  autoComplete="new-password"
+                />
+                <input
+                  required
+                  type="password"
+                  placeholder="確認密碼 *"
+                  value={registerForm.confirmPassword}
+                  onChange={(e) =>
+                    setRegisterForm({
+                      ...registerForm,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  className="input-field"
+                  autoComplete="new-password"
+                />
+              </>
+            )}
           </>
         ) : (
           <>
-            <input
+            <PhoneNumberInput
               required
-              type="tel"
-              inputMode="numeric"
-              autoComplete="tel-national"
               enterKeyHint="next"
               name="login-phone"
               placeholder="手機號碼 *"
@@ -183,19 +219,24 @@ export function MemberAuthForm({
               onChange={(e) =>
                 setLoginForm({ ...loginForm, phone: e.target.value })
               }
+              onBlur={revealPasswordFields}
+              onKeyDown={handlePhoneKeyDown}
               className="input-field"
             />
-            <input
-              required
-              type="password"
-              placeholder="密碼 *"
-              value={loginForm.password}
-              onChange={(e) =>
-                setLoginForm({ ...loginForm, password: e.target.value })
-              }
-              className="input-field"
-              autoComplete="current-password"
-            />
+            {showPasswordFields && (
+              <input
+                ref={loginPasswordRef}
+                required
+                type="password"
+                placeholder="密碼 *"
+                value={loginForm.password}
+                onChange={(e) =>
+                  setLoginForm({ ...loginForm, password: e.target.value })
+                }
+                className="input-field"
+                autoComplete="current-password"
+              />
+            )}
           </>
         )}
 

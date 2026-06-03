@@ -13,6 +13,8 @@ import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
 import type { ProductGalleryEditItem } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
+import { IntegerField } from '../ui/IntegerField'
+import { parseIntegerInput } from '../../lib/parseIntegerInput'
 
 interface ProductEditModalProps {
   product: Product
@@ -56,6 +58,7 @@ export function ProductEditModal({
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
+  const stockDraftRef = useRef(String(product.stock))
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -73,6 +76,7 @@ export function ProductEditModal({
     })
     setCoverPreview(null)
     setMessage('')
+    stockDraftRef.current = String(product.stock)
     scrollRef.current?.scrollTo({ top: 0 })
   }, [product])
 
@@ -179,7 +183,8 @@ export function ProductEditModal({
       setMessage('請至少勾選一個標籤')
       return
     }
-    if (form.stock < 0) {
+    const stock = parseIntegerInput(stockDraftRef.current, 0)
+    if (stock < 0) {
       setMessage('庫存不可為負數')
       return
     }
@@ -187,7 +192,11 @@ export function ProductEditModal({
     setSubmitting(true)
     setMessage('')
     try {
-      await updateProduct(product.id, form, product.image_url)
+      await updateProduct(
+        product.id,
+        { ...form, stock },
+        product.image_url
+      )
       onSaved()
       onClose()
     } catch (err) {
@@ -279,18 +288,14 @@ export function ProductEditModal({
               setForm({ ...form, discount_zhe })
             }
           />
-          <input
-            type="number"
+          <IntegerField
             min={0}
             placeholder="庫存件數（0 = 售罄）"
             value={form.stock}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                stock: Math.max(0, Number(e.target.value) || 0),
-              })
-            }
-            className="input-field"
+            onDraftChange={(text) => {
+              stockDraftRef.current = text
+            }}
+            onChange={(stock) => setForm({ ...form, stock })}
           />
 
           <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ChangeEvent } from 'react'
 import { createProduct } from '../../lib/api/products'
 import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
@@ -10,6 +10,8 @@ import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton
 import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
 import { GlassPanel } from '../ui/GlassPanel'
+import { IntegerField } from '../ui/IntegerField'
+import { parseIntegerInput } from '../../lib/parseIntegerInput'
 
 interface ProductFormProps {
   onCreated: () => void
@@ -36,6 +38,7 @@ export function ProductForm({ onCreated }: ProductFormProps) {
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
+  const stockDraftRef = useRef(String(initialForm.stock))
 
   useEffect(() => {
     return () => {
@@ -113,6 +116,7 @@ export function ProductForm({ onCreated }: ProductFormProps) {
     if (coverPreview) URL.revokeObjectURL(coverPreview)
     galleryPreviews.forEach((url) => URL.revokeObjectURL(url))
     setForm(initialForm)
+    stockDraftRef.current = String(initialForm.stock)
     setCoverPreview(null)
     setGalleryPreviews([])
   }
@@ -127,7 +131,8 @@ export function ProductForm({ onCreated }: ProductFormProps) {
       setMessage('請至少勾選一個標籤')
       return
     }
-    if (form.stock < 1) {
+    const stock = parseIntegerInput(stockDraftRef.current, 1)
+    if (stock < 1) {
       setMessage('庫存至少 1 件')
       return
     }
@@ -139,7 +144,7 @@ export function ProductForm({ onCreated }: ProductFormProps) {
     setSubmitting(true)
     setMessage('')
     try {
-      await createProduct(form)
+      await createProduct({ ...form, stock })
       resetForm()
       setMessage('上架成功！前台已同步')
       onCreated()
@@ -169,15 +174,14 @@ export function ProductForm({ onCreated }: ProductFormProps) {
             setForm({ ...form, discount_zhe })
           }
         />
-        <input
-          type="number"
+        <IntegerField
           min={1}
           placeholder="庫存件數"
-          value={form.stock || ''}
-          onChange={(e) =>
-            setForm({ ...form, stock: Math.max(1, Number(e.target.value) || 1) })
-          }
-          className="input-field"
+          value={form.stock}
+          onDraftChange={(text) => {
+            stockDraftRef.current = text
+          }}
+          onChange={(stock) => setForm({ ...form, stock })}
         />
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
