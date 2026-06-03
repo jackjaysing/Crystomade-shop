@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* 與 Navbar 實際高度對齊，避免 sticky 篩選列與標題列之間露縫 */
+    --site-header-height: 4rem;
+  }
+
+  @media (min-width: 640px) {
+    :root {
+      --site-header-height: 4.875rem;
+    }
+  }
+
   body {
     @apply bg-void font-sans antialiased text-white;
   }

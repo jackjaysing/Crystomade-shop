@@ -8,7 +8,7 @@ import { usePointRedeemState } from '../../hooks/usePointRedeemState'
 import { useAdminSession } from '../../hooks/useAdminSession'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 
-const NAV_ICON_GAP = 'gap-2'
+const NAV_ICON_GAP = 'gap-1.5'
 
 function navIconClass(active: boolean): string {
   return `relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
@@ -31,13 +31,20 @@ export function Navbar() {
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
 
+  /** 手機同時會員＋管理登入時空間不足，精簡右側圖示、保留購物車 */
+  const mobileCompact = Boolean(profile && adminAuthed)
+  const showMobileAdminIcon = adminAuthed && !profile
+
   return (
     <>
-      <header className="fixed top-0 z-40 w-full overflow-visible border-b border-white/[0.06] bg-black">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 overflow-visible px-3 py-3 sm:gap-3 sm:px-6 sm:py-4">
+      <header
+        id="site-header"
+        className="fixed top-0 z-40 flex h-[var(--site-header-height)] w-full items-center border-b border-white/[0.06] bg-black"
+      >
+        <div className="mx-auto flex h-full w-full min-w-0 max-w-7xl items-center gap-1.5 px-3 sm:gap-3 sm:px-6">
           <Link
             to="/products"
-            className="group flex shrink-0 items-center gap-1 overflow-visible transition hover:opacity-90 sm:gap-1.5"
+            className="group flex min-w-0 shrink items-center gap-1 transition hover:opacity-90 sm:gap-1.5"
             aria-label="晶刻 Crystomade"
           >
             <img
@@ -45,104 +52,131 @@ export function Navbar() {
               alt=""
               width={40}
               height={40}
-              className="block h-9 w-9 flex-none object-contain sm:h-11 sm:w-11"
+              className="block h-9 w-9 shrink-0 object-contain sm:h-11 sm:w-11"
             />
             <img
               src="/logoword.png"
               alt="晶刻 Crystomade"
-              className="block h-[2.125rem] w-auto max-w-[7.25rem] flex-none object-contain object-left sm:h-9 sm:max-w-none md:h-10"
+              className={`block h-[2.125rem] w-auto shrink-0 object-contain object-left sm:h-9 md:h-10 ${
+                mobileCompact
+                  ? 'max-w-[5.25rem] sm:max-w-[6.75rem]'
+                  : 'max-w-[6.75rem] sm:max-w-none'
+              }`}
             />
           </Link>
 
           <nav
-            className={`flex shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
+            className={`ml-auto flex min-w-0 shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
           >
-            <Link
-              to="/products"
-              className={`shrink-0 tracking-wide transition ${
-                isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+            <div
+              className={`flex min-w-0 items-center ${NAV_ICON_GAP} md:gap-6 ${
+                mobileCompact ? 'max-md:overflow-x-auto max-md:no-scrollbar' : ''
               }`}
             >
-              典藏
-            </Link>
-
-            <div className="hidden items-center gap-6 md:flex">
-              <Link
-                to="/point-shop"
-                className={`flex items-center gap-1 tracking-wide transition ${
-                  isPointShop ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-                }`}
-              >
-                <Store className="h-4 w-4" strokeWidth={1.5} />
-                點數商城
-              </Link>
-              <MemberPointsBadge />
-              <Link
-                to="/account"
-                className={`flex items-center gap-1 tracking-wide transition ${
-                  isAccount ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-                }`}
-                aria-label="會員中心"
-              >
-                <User className="h-4 w-4" strokeWidth={1.5} />
-                <span>{profile ? '會員' : '登入'}</span>
-              </Link>
-              {adminAuthed && (
+              {!mobileCompact && (
                 <Link
-                  to="/admin"
-                  className={`flex items-center gap-1 tracking-wide transition ${
-                    isAdmin ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  to="/products"
+                  className={`shrink-0 tracking-wide transition md:hidden ${
+                    isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
                 >
-                  <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
-                  後台
+                  典藏
                 </Link>
               )}
-            </div>
 
-            <div className={`flex items-center ${NAV_ICON_GAP} md:hidden`}>
-              <div className="flex items-center gap-1.5">
+              <div className="hidden items-center gap-6 md:flex">
                 <Link
                   to="/point-shop"
-                  className={navIconClass(isPointShop)}
-                  aria-label={
-                    profile ? `點數商城，可用 ${availablePoints} 點` : '點數商城'
-                  }
+                  className={`flex items-center gap-1 tracking-wide transition ${
+                    isPointShop ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  }`}
                 >
-                  <Store className="h-5 w-5" strokeWidth={1.5} />
+                  <Store className="h-4 w-4" strokeWidth={1.5} />
+                  點數商城
                 </Link>
-                {profile && (
-                  <span
-                    className={`whitespace-nowrap text-xs font-medium tabular-nums ${
-                      isPointShop ? 'text-amber-glow' : 'text-white/70'
+                <MemberPointsBadge />
+                <Link
+                  to="/account"
+                  className={`flex items-center gap-1 tracking-wide transition ${
+                    isAccount ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  }`}
+                  aria-label="會員中心"
+                >
+                  <User className="h-4 w-4" strokeWidth={1.5} />
+                  <span>{profile ? '會員' : '登入'}</span>
+                </Link>
+                {adminAuthed && (
+                  <Link
+                    to="/admin"
+                    className={`flex items-center gap-1 tracking-wide transition ${
+                      isAdmin ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                     }`}
                   >
-                    {availablePoints > 999 ? '999+' : availablePoints} 點
-                  </span>
+                    <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
+                    後台
+                  </Link>
                 )}
               </div>
-              <Link
-                to="/account"
-                className={navIconClass(isAccount)}
-                aria-label={profile ? '會員中心' : '會員登入'}
-              >
-                <User className="h-5 w-5" strokeWidth={1.5} />
-              </Link>
-              {adminAuthed && (
+
+              <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:hidden`}>
+                {mobileCompact ? (
+                  <Link
+                    to="/point-shop"
+                    className={navIconClass(isPointShop)}
+                    aria-label={`點數商城，可用 ${availablePoints} 點`}
+                  >
+                    <Store className="h-5 w-5" strokeWidth={1.5} />
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-glow px-0.5 text-[9px] font-medium text-void">
+                      {availablePoints > 99 ? '99+' : availablePoints}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Link
+                      to="/point-shop"
+                      className={navIconClass(isPointShop)}
+                      aria-label={
+                        profile
+                          ? `點數商城，可用 ${availablePoints} 點`
+                          : '點數商城'
+                      }
+                    >
+                      <Store className="h-5 w-5" strokeWidth={1.5} />
+                    </Link>
+                    {profile && (
+                      <span
+                        className={`whitespace-nowrap text-xs font-medium tabular-nums ${
+                          isPointShop ? 'text-amber-glow' : 'text-white/70'
+                        }`}
+                      >
+                        {availablePoints > 999 ? '999+' : availablePoints} 點
+                      </span>
+                    )}
+                  </div>
+                )}
                 <Link
-                  to="/admin"
-                  className={navIconClass(isAdmin)}
-                  aria-label="後台管理"
+                  to="/account"
+                  className={navIconClass(isAccount)}
+                  aria-label={profile ? '會員中心' : '會員登入'}
                 >
-                  <LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />
+                  <User className="h-5 w-5" strokeWidth={1.5} />
                 </Link>
-              )}
+                {showMobileAdminIcon && (
+                  <Link
+                    to="/admin"
+                    className={navIconClass(isAdmin)}
+                    aria-label="後台管理"
+                  >
+                    <LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />
+                  </Link>
+                )}
+              </div>
             </div>
 
             <button
               type="button"
               onClick={openCart}
-              className={navIconClass(false)}
+              className={`${navIconClass(false)} max-md:shadow-[4px_0_12px_rgba(0,0,0,0.45)]`}
               aria-label={`購物車，${checkoutItemCount} 件可結帳商品`}
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />

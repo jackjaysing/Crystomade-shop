@@ -19,16 +19,17 @@ export function StorefrontFilterBar({ children }: StorefrontFilterBarProps) {
   }
 
   return (
-    <section className="sticky top-[73px] z-30 border-y border-white/5 bg-neutral-950/90 backdrop-blur-md">
+    <section
+      className="sticky top-[var(--site-header-height)] z-30 border-b border-white/5 bg-void/95 backdrop-blur-md"
+      aria-label="商品篩選"
+    >
       <div className="mx-auto max-w-7xl px-4">
-        {expanded && <div className="pt-2">{children}</div>}
-        <div
-          className={`flex justify-center py-2 ${
-            expanded ? 'border-t border-white/5' : ''
-          }`}
-        >
+        <div className="flex justify-center py-2">
           <FilterBarToggle expanded={expanded} onChange={handleExpandedChange} />
         </div>
+        {expanded && (
+          <div className="border-t border-white/5 pb-2 pt-1">{children}</div>
+        )}
       </div>
     </section>
   )

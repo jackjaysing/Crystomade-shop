@@ -102,7 +102,7 @@ export function ProductsPage() {
   return (
     <div className="min-h-screen">
       {/* 英雄區 */}
-      <section className="relative overflow-hidden pb-8 pt-24">
+      <section className="relative overflow-hidden pb-0 pt-24 sm:pb-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#2a3a5c40_0%,_transparent_60%)]" />
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="text-xs tracking-[0.4em] text-amber-glow/60">CRYSTOMADE</p>
@@ -118,7 +118,7 @@ export function ProductsPage() {
 
       {/* 公告橫幅（搜尋列上方） */}
       {banners.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-2">
+        <section className="mx-auto max-w-7xl px-4 pb-2 pt-2 sm:pt-0">
           <BannerCarousel banners={banners} />
         </section>
       )}
