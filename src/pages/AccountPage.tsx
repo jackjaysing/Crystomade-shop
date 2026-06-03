@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LayoutDashboard } from 'lucide-react'
 import { AccountGate } from '../components/account/AccountGate'
+import { AdminAccessSection } from '../components/account/AdminAccessSection'
 import { GlassPanel } from '../components/ui/GlassPanel'
-import { useAdminSession } from '../hooks/useAdminSession'
 import { MetalDivider } from '../components/ui/MetalDivider'
 import { POINTS_PER_NTD_DISCOUNT, POINTS_PER_NTD_EARN } from '../constants/points'
 import { useAuth } from '../contexts/AuthContext'
@@ -23,7 +22,6 @@ import type { PointsHistoryEntry } from '../lib/types'
 /** 會員中心：點數、點數紀錄、訂單歷史 */
 export function AccountPage() {
   const { user, profile, loading, logout, refreshProfile } = useAuth()
-  const { authed: adminAuthed } = useAdminSession()
   const [orders, setOrders] = useState<Order[]>([])
   const [history, setHistory] = useState<PointsHistoryEntry[]>([])
   const [dataLoading, setDataLoading] = useState(false)
@@ -85,15 +83,6 @@ export function AccountPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {adminAuthed && (
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-glow/45 bg-amber-glow/15 px-3 py-2 text-sm tracking-wide text-amber-glow transition hover:bg-amber-glow/25"
-              >
-                <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
-                後台
-              </Link>
-            )}
             <button
               type="button"
               onClick={() => void logout()}
@@ -102,6 +91,10 @@ export function AccountPage() {
               登出
             </button>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <AdminAccessSection />
         </div>
 
         <GlassPanel className="mt-8 overflow-hidden p-0">
