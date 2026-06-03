@@ -23,13 +23,15 @@ export function Navbar() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <Link
             to="/products"
-            className="group flex min-w-0 shrink items-center gap-0.5 transition hover:opacity-90 sm:gap-1"
+            className="group flex shrink-0 items-center gap-0.5 transition hover:opacity-90 sm:gap-1"
             aria-label="晶刻 Crystomade"
           >
             <img
               src="/logomark.png"
               alt=""
-              className="h-9 w-auto shrink-0 object-contain sm:h-11"
+              width={44}
+              height={44}
+              className="h-9 w-9 object-contain sm:h-11 sm:w-11"
             />
             <img
               src="/logoword.png"
