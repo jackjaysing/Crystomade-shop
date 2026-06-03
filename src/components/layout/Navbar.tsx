@@ -7,8 +7,10 @@ import { useCart } from '../../contexts/CartContext'
 import { usePointRedeemState } from '../../hooks/usePointRedeemState'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 
+const NAV_ICON_GAP = 'gap-2'
+
 function navIconClass(active: boolean): string {
-  return `relative shrink-0 rounded-full border p-2.5 transition ${
+  return `relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
     active
       ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
       : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
@@ -45,11 +47,13 @@ export function Navbar() {
             <img
               src="/logoword.png"
               alt="晶刻 Crystomade"
-              className="block h-8 w-auto max-w-[6.75rem] flex-none object-contain object-left sm:h-9 sm:max-w-none md:h-10"
+              className="block h-[2.125rem] w-auto max-w-[7.25rem] flex-none object-contain object-left sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
 
-          <nav className="flex shrink-0 items-center gap-1 text-sm sm:gap-4 md:gap-6">
+          <nav
+            className={`flex shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
+          >
             <Link
               to="/products"
               className={`shrink-0 tracking-wide transition ${
@@ -59,7 +63,7 @@ export function Navbar() {
               典藏
             </Link>
 
-            <div className="hidden items-center gap-4 md:flex md:gap-6">
+            <div className="hidden items-center gap-6 md:flex">
               <Link
                 to="/point-shop"
                 className={`flex items-center gap-1 tracking-wide transition ${
@@ -88,29 +92,27 @@ export function Navbar() {
               </Link>
             </div>
 
-            <div className="flex items-center gap-1 md:hidden">
-              <Link
-                to="/point-shop"
-                className={
-                  profile
-                    ? `flex shrink-0 items-center gap-1.5 rounded-full border py-1.5 pl-2 pr-2.5 transition ${
-                        isPointShop
-                          ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
-                          : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
-                      }`
-                    : navIconClass(isPointShop)
-                }
-                aria-label={
-                  profile ? `點數商城，可用 ${availablePoints} 點` : '點數商城'
-                }
-              >
-                <Store className="h-5 w-5 shrink-0" strokeWidth={1.5} />
+            <div className={`flex items-center ${NAV_ICON_GAP} md:hidden`}>
+              <div className="flex items-center gap-1.5">
+                <Link
+                  to="/point-shop"
+                  className={navIconClass(isPointShop)}
+                  aria-label={
+                    profile ? `點數商城，可用 ${availablePoints} 點` : '點數商城'
+                  }
+                >
+                  <Store className="h-5 w-5" strokeWidth={1.5} />
+                </Link>
                 {profile && (
-                  <span className="text-xs font-medium tabular-nums">
-                    {availablePoints > 999 ? '999+' : availablePoints}
+                  <span
+                    className={`whitespace-nowrap text-xs font-medium tabular-nums ${
+                      isPointShop ? 'text-amber-glow' : 'text-white/70'
+                    }`}
+                  >
+                    {availablePoints > 999 ? '999+' : availablePoints} 點
                   </span>
                 )}
-              </Link>
+              </div>
               <Link
                 to="/account"
                 className={navIconClass(isAccount)}
