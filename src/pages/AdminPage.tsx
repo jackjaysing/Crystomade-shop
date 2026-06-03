@@ -125,7 +125,7 @@ export function AdminPage() {
           }}
           className="text-sm text-white/40 hover:text-white/70"
         >
-          登出
+          後台登出
         </button>
       </div>
 

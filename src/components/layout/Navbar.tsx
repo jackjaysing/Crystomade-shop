@@ -57,11 +57,7 @@ export function Navbar() {
             <img
               src="/logoword.png"
               alt="晶刻 Crystomade"
-              className={`block h-[2.125rem] w-auto shrink-0 object-contain object-left sm:h-9 md:h-10 ${
-                mobileCompact
-                  ? 'max-w-[5.25rem] sm:max-w-[6.75rem]'
-                  : 'max-w-[6.75rem] sm:max-w-none'
-              }`}
+              className="block h-[2.125rem] w-auto max-w-[6.75rem] shrink-0 object-contain object-left sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
 

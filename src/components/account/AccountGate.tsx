@@ -47,7 +47,7 @@ export function AccountGate() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/55 transition hover:border-white/30 hover:text-white/80"
               >
                 <LogOut className="h-4 w-4" strokeWidth={1.5} />
-                管理登出
+                後台登出
               </button>
             </div>
           </GlassPanel>
