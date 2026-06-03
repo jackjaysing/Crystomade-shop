@@ -23,7 +23,9 @@ export function calcShippingFeeForCart(items: CartItem[]): number {
   const productSubtotal = calcProductSubtotal(items)
   if (productSubtotal >= FREE_SHIPPING_THRESHOLD) return 0
   if (productSubtotal > 0) return SHIPPING_FEE
-  if (items.some(isPointRedemptionItem)) return SHIPPING_FEE
+  if (items.some(isPointRedemptionItem)) {
+    return SHIPPING_FEE
+  }
   return 0
 }
 

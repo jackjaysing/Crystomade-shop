@@ -8,7 +8,11 @@ import { calcCouponDiscount } from '../lib/couponCalculation'
 import { fetchMemberAvailableCoupons, redeemMemberCouponAtCheckout } from '../lib/api/coupons'
 import { CheckoutMemberSection } from '../components/member/CheckoutMemberSection'
 import { calcDiscountNtdFromPoints, clampPointsForDiscount } from '../lib/pointsCalculation'
-import { isPointRedemptionItem } from '../lib/cartItemKinds'
+import { isPointRedemptionItem, isRaffleGiftItem } from '../lib/cartItemKinds'
+import {
+  cartHasRaffleGiftBase,
+  RAFFLE_GIFT_REQUIRES_BASE_MESSAGE,
+} from '../lib/cartCheckoutRules'
 import { CVS_BRANDS } from '../constants/cvs'
 import { FREE_SHIPPING_THRESHOLD } from '../constants/shipping'
 import { useAuth } from '../contexts/AuthContext'
@@ -81,7 +85,8 @@ export function CheckoutPage() {
     return <Navigate to="/products" replace />
   }
 
-  const canCheckout = checkoutItemCount > 0
+  const raffleGiftBaseOk = cartHasRaffleGiftBase(items)
+  const canCheckout = checkoutItemCount > 0 && raffleGiftBaseOk
   const hasPointRedemption = items.some(isPointRedemptionItem)
   const redemptionPointsNeeded = items
     .filter(isPointRedemptionItem)
@@ -110,7 +115,12 @@ export function CheckoutPage() {
     e.preventDefault()
 
     if (!canCheckout) {
-      setMessage({ type: 'err', text: '購物車內已無可結帳商品，請返回選購其他典藏。' })
+      setMessage({
+        type: 'err',
+        text: !raffleGiftBaseOk
+          ? RAFFLE_GIFT_REQUIRES_BASE_MESSAGE
+          : '購物車內已無可結帳商品，請返回選購其他典藏。',
+      })
       return
     }
 
@@ -200,6 +210,12 @@ export function CheckoutPage() {
             </p>
           )}
 
+          {!raffleGiftBaseOk && (
+            <p className="mt-3 rounded-lg border border-amber-glow/30 bg-amber-glow/10 px-3 py-2 text-xs text-amber-glow/90">
+              {RAFFLE_GIFT_REQUIRES_BASE_MESSAGE}
+            </p>
+          )}
+
           <ul className="mt-4 space-y-3">
             {resolvedItems.map(
               ({ item, checkoutQuantity, isFullySnatched, snatchedQuantity }) => (
@@ -242,6 +258,10 @@ export function CheckoutPage() {
                       <p className="mt-0.5 text-xs text-red-300/80">
                         該物品已被搶先收藏
                       </p>
+                    ) : isRaffleGiftItem(item) ? (
+                      <p className="mt-0.5 text-xs text-amber-glow/80">
+                        抽獎禮物券 · 免費兌換
+                      </p>
                     ) : isPointRedemptionItem(item) ? (
                       <p className="mt-0.5 text-xs text-amber-glow/80">
                         點數兌換 · {item.requiredPoints ?? 0} 點 × {checkoutQuantity}
@@ -261,7 +281,7 @@ export function CheckoutPage() {
                   </div>
                   {!isFullySnatched && (
                     <p className="shrink-0 text-sm text-amber-glow">
-                      {isPointRedemptionItem(item)
+                      {isPointRedemptionItem(item) || isRaffleGiftItem(item)
                         ? 'NT$ 0'
                         : `NT$ ${(item.price * checkoutQuantity).toLocaleString()}`}
                     </p>
@@ -316,7 +336,7 @@ export function CheckoutPage() {
             )}
             {profile && couponPreview?.giftNote && (
               <p className="text-xs text-amber-glow/80">
-                禮物券：{couponPreview.giftNote}（隨訂單出貨附贈）
+                滿額贈禮：{couponPreview.giftNote}（隨訂單出貨附贈）
               </p>
             )}
             <div className="flex justify-between border-t border-white/10 pt-3 text-lg text-white">

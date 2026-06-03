@@ -20,7 +20,7 @@ export function calcCouponDiscount(
     return {
       discountNtd: 0,
       giftNote: gift,
-      label: `禮物券：${gift}`,
+      label: `滿額贈禮：${gift}`,
     }
   }
 

@@ -129,7 +129,7 @@ export interface PointsHistoryEntry {
   created_at: string
 }
 
-export type CartItemKind = 'product' | 'point_redemption'
+export type CartItemKind = 'product' | 'point_redemption' | 'raffle_gift'
 
 /** 購物車品項（精簡快照，供 localStorage 暫存） */
 export interface CartItem {
@@ -141,6 +141,9 @@ export interface CartItem {
   pointProductId?: string
   /** 兌換所需點數（單件） */
   requiredPoints?: number
+  /** 會員禮物券 ID（kind=raffle_gift） */
+  memberCouponId?: string
+  giftDescription?: string
   name: string
   price: number
   image_url: string
@@ -175,7 +178,9 @@ export interface PointProductFormData {
 /** 優惠券類型 */
 export type CouponType = 'fixed_discount' | 'percent_discount' | 'gift'
 
-export type MemberCouponStatus = 'available' | 'used' | 'expired'
+export type MemberCouponStatus = 'available' | 'used' | 'expired' | 'in_cart'
+
+export type CouponRedeemMode = 'checkout' | 'cart'
 
 /** 優惠券範本（後台定義） */
 export interface Coupon {
@@ -191,6 +196,11 @@ export interface Coupon {
   discount_zhe: number | null
   /** 禮品說明（禮物券） */
   gift_description: string | null
+  /** 禮物券圖片（抽獎獎品等） */
+  image_url: string | null
+  /** checkout：結帳折抵；cart：兌換入購物車 */
+  redeem_mode: CouponRedeemMode
+  source_raffle_id: string | null
   is_active: boolean
   /** 發放後有效天數；null 表示不限 */
   valid_days: number | null
@@ -210,6 +220,16 @@ export interface CouponFormData {
   valid_days: number | null
 }
 
+/** 後台：可兌換入購物車的禮物券範本 */
+export interface GiftCouponFormData {
+  title: string
+  description: string
+  gift_description: string
+  image_url: string | null
+  is_active: boolean
+  valid_days: number | null
+}
+
 /** 會員持有的優惠券 */
 export interface MemberCoupon {
   id: string
@@ -224,6 +244,53 @@ export interface MemberCoupon {
 
 export interface MemberCouponWithDefinition extends MemberCoupon {
   coupon: Coupon
+}
+
+/** 抽獎活動狀態 */
+export type RaffleStatus = 'open' | 'drawn' | 'cancelled'
+
+/** 抽獎活動 */
+export interface Raffle {
+  id: string
+  title: string
+  description: string
+  registration_deadline: string
+  status: RaffleStatus
+  is_active: boolean
+  winner_user_id: string | null
+  drawn_at: string | null
+  prize_title: string | null
+  prize_image_url: string | null
+  prize_gift_description: string | null
+  prize_coupon_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface RaffleFormData {
+  title: string
+  description: string
+  registration_deadline: string
+  is_active: boolean
+  prize_title: string
+  prize_gift_description: string
+  prize_image_url: string | null
+}
+
+export interface RaffleEntry {
+  id: string
+  raffle_id: string
+  user_id: string
+  entered_at: string
+}
+
+/** 前台／後台列表用：含報名數與是否已報名 */
+export interface RaffleWithMeta extends Raffle {
+  entry_count: number
+  user_entered: boolean
+  /** 目前登入會員是否為得主（未登入恒為 false） */
+  user_is_winner: boolean
+  winner_name: string | null
 }
 
 /** 建立訂單表單 */

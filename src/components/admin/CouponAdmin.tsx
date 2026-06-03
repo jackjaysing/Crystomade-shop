@@ -2,15 +2,12 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import {
   createCoupon,
   deleteCoupon,
-  fetchAllCoupons,
+  fetchAdminCheckoutCoupons,
   issueCouponToAllMembers,
   issueCouponToMember,
   updateCoupon,
 } from '../../lib/api/coupons'
-import {
-  fetchRegisteredCustomers,
-  formatPhoneDisplay,
-} from '../../lib/api/adminCustomers'
+import { fetchRegisteredCustomers } from '../../lib/api/adminCustomers'
 import { formatCouponRuleSummary } from '../../lib/couponCalculation'
 import {
   COUPON_TYPE_DESCRIPTIONS,
@@ -19,6 +16,7 @@ import {
 import { parseDiscountZhe } from '../../lib/productPricing'
 import type { AdminRegisteredCustomer, Coupon, CouponFormData, CouponType } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
+import { IssueCouponMemberModal } from './IssueCouponMemberModal'
 
 const emptyForm: CouponFormData = {
   title: '',
@@ -55,7 +53,7 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
     setMessage('')
     try {
       const [couponRows, memberRows] = await Promise.all([
-        fetchAllCoupons(),
+        fetchAdminCheckoutCoupons(),
         fetchRegisteredCustomers(),
       ])
       setCoupons(couponRows)
@@ -460,46 +458,18 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
       </GlassPanel>
 
       {issueCouponId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void/80 p-4">
-          <GlassPanel className="w-full max-w-md p-6">
-            <h3 className="font-display text-lg text-white">發放給指定會員</h3>
-            <p className="mt-1 text-sm text-white/50">
-              {coupons.find((c) => c.id === issueCouponId)?.title}
-            </p>
-            <select
-              value={issueUserId}
-              onChange={(e) => setIssueUserId(e.target.value)}
-              className="input-field mt-4"
-            >
-              <option value="">選擇會員…</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.real_name} · {formatPhoneDisplay(m.phone)}
-                </option>
-              ))}
-            </select>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIssueCouponId(null)
-                  setIssueUserId('')
-                }}
-                className="flex-1 rounded-lg border border-white/15 py-2.5 text-sm text-white/60"
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                disabled={issuing}
-                onClick={() => void handleIssueOne()}
-                className="flex-1 rounded-lg bg-amber-glow/90 py-2.5 text-sm font-medium text-void disabled:opacity-50"
-              >
-                {issuing ? '發放中…' : '確認發放'}
-              </button>
-            </div>
-          </GlassPanel>
-        </div>
+        <IssueCouponMemberModal
+          couponTitle={coupons.find((c) => c.id === issueCouponId)?.title ?? ''}
+          members={members}
+          issueUserId={issueUserId}
+          issuing={issuing}
+          onIssueUserIdChange={setIssueUserId}
+          onCancel={() => {
+            setIssueCouponId(null)
+            setIssueUserId('')
+          }}
+          onConfirm={() => void handleIssueOne()}
+        />
       )}
     </div>
   )

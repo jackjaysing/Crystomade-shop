@@ -11,7 +11,10 @@ import {
   buildCartItemKey,
   productRequiresBraceletSize,
 } from '../constants/braceletSizes'
-import { buildPointCartItemKey } from '../lib/cartItemKinds'
+import {
+  buildPointCartItemKey,
+  buildRaffleGiftCartItemKey,
+} from '../lib/cartItemKinds'
 import {
   calcGrandTotalBeforeDiscount,
   calcProductSubtotal,
@@ -38,6 +41,12 @@ interface CartContextValue {
   closeCart: () => void
   addItem: (product: Product, options?: AddToCartOptions) => void
   addPointRedemption: (pointProduct: PointProduct) => void
+  addRaffleGift: (payload: {
+    memberCouponId: string
+    title: string
+    giftDescription: string
+    imageUrl: string
+  }) => void
   removeItem: (cartItemKey: string) => void
   updateQuantity: (cartItemKey: string, quantity: number) => void
   /** 變更手串手圍（會依新規格合併或拆列） */
@@ -62,7 +71,12 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
       ? raw.cartItemKey
       : buildCartItemKey(raw.productId, selectedSize)
 
-  const kind = raw.kind === 'point_redemption' ? 'point_redemption' : 'product'
+  const kind =
+    raw.kind === 'point_redemption'
+      ? 'point_redemption'
+      : raw.kind === 'raffle_gift'
+        ? 'raffle_gift'
+        : 'product'
 
   return {
     cartItemKey,
@@ -77,6 +91,10 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
     quantity: raw.quantity,
     selectedSize,
     maxStock: Math.max(Number(raw.maxStock) || 0, 0),
+    memberCouponId:
+      raw.memberCouponId != null ? String(raw.memberCouponId) : undefined,
+    giftDescription:
+      raw.giftDescription != null ? String(raw.giftDescription) : undefined,
   }
 }
 
@@ -207,6 +225,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const addRaffleGift = useCallback(
+    (payload: {
+      memberCouponId: string
+      title: string
+      giftDescription: string
+      imageUrl: string
+    }) => {
+      const cartItemKey = buildRaffleGiftCartItemKey(payload.memberCouponId)
+      setItems((prev) => {
+        if (prev.some((item) => item.cartItemKey === cartItemKey)) return prev
+        return [
+          ...prev,
+          {
+            cartItemKey,
+            kind: 'raffle_gift' as const,
+            productId: payload.memberCouponId,
+            memberCouponId: payload.memberCouponId,
+            name: `${payload.title}（抽獎禮物）`,
+            giftDescription: payload.giftDescription,
+            price: 0,
+            image_url: payload.imageUrl,
+            quantity: 1,
+            selectedSize: null,
+            maxStock: 1,
+          },
+        ]
+      })
+    },
+    []
+  )
+
   const removeItem = useCallback((cartItemKey: string) => {
     setItems((prev) => prev.filter((item) => item.cartItemKey !== cartItemKey))
   }, [])
@@ -277,6 +326,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       closeCart,
       addItem,
       addPointRedemption,
+      addRaffleGift,
       removeItem,
       updateQuantity,
       updateItemSize,
@@ -293,6 +343,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       closeCart,
       addItem,
       addPointRedemption,
+      addRaffleGift,
       removeItem,
       updateQuantity,
       updateItemSize,

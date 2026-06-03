@@ -4,6 +4,7 @@ import { AccountGate } from '../components/account/AccountGate'
 import { AdminAccessSection } from '../components/account/AdminAccessSection'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import { MemberCouponsPanel } from '../components/member/MemberCouponsPanel'
+import { MemberGiftCouponsPanel } from '../components/member/MemberGiftCouponsPanel'
 import { MetalDivider } from '../components/ui/MetalDivider'
 import { POINTS_PER_NTD_DISCOUNT, POINTS_PER_NTD_EARN } from '../constants/points'
 import { useAuth } from '../contexts/AuthContext'
@@ -119,6 +120,7 @@ export function AccountPage() {
         </GlassPanel>
 
         <MemberCouponsPanel userId={user.id} />
+        <MemberGiftCouponsPanel userId={user.id} />
 
         <GlassPanel className="mt-6 p-6 sm:p-8">
           <h2 className="text-sm tracking-widest text-white/50">點數紀錄</h2>

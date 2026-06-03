@@ -10,6 +10,7 @@ import { AccountPage } from './pages/AccountPage'
 import { CheckoutPage } from './pages/CheckoutPage'
 import { PointShopPage } from './pages/PointShopPage'
 import { ProductsPage } from './pages/ProductsPage'
+import { RaffleFloatingWidget } from './components/raffle/RaffleFloatingWidget'
 
 /** 應用程式路由 */
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
             </Routes>
           </div>
           <SiteFooter />
+          <RaffleFloatingWidget />
         </div>
       </CartProvider>
     </AuthProvider>

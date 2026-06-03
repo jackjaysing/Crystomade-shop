@@ -35,6 +35,7 @@ const ENTITY_LABEL: Record<string, string> = {
   banner: '公告橫幅',
   member: '會員',
   coupon: '優惠券',
+  raffle: '抽獎',
 }
 
 /** 後台操作日誌列表 */

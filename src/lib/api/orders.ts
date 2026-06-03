@@ -2,7 +2,12 @@ import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
-import { isPaidCartItem, isPointRedemptionItem } from '../cartItemKinds'
+import { cartHasRaffleGiftBase } from '../cartCheckoutRules'
+import {
+  isPaidCartItem,
+  isPointRedemptionItem,
+  isRaffleGiftItem,
+} from '../cartItemKinds'
 import type { CartItem, Order, OrderFormData } from '../types'
 
 async function orderGroupSummary(orderIds: string[], verb: string): Promise<string> {
@@ -102,6 +107,14 @@ function buildPointRedemptionsJson(items: CartItem[]) {
     }))
 }
 
+function buildRaffleGiftsJson(items: CartItem[]) {
+  return items
+    .filter(isRaffleGiftItem)
+    .map((item) => ({
+      member_coupon_id: item.memberCouponId ?? item.productId,
+    }))
+}
+
 /** 會員結帳（點數折抵 + 點數兌換品） */
 export async function createMemberCheckoutFromCart(
   items: CartItem[],
@@ -124,6 +137,7 @@ export async function createMemberCheckoutFromCart(
     p_point_redemptions: buildPointRedemptionsJson(items),
     p_points_for_discount: Math.max(0, Math.floor(pointsForDiscount)),
     p_shipping_fee: shippingFee,
+    p_raffle_gifts: buildRaffleGiftsJson(items),
   })
 
   if (error) {
@@ -152,10 +166,20 @@ export async function createOrdersFromCart(
 ): Promise<Order[]> {
   const paidItems = items.filter(isPaidCartItem)
   const pointItems = items.filter(isPointRedemptionItem)
+  const giftItems = items.filter(isRaffleGiftItem)
+
+  if (giftItems.length > 0 && !cartHasRaffleGiftBase(items)) {
+    throw new Error(
+      '抽獎禮物券需與付費商品或點數兌換品一同結帳，無法單獨出貨'
+    )
+  }
 
   if (
     userId &&
-    (pointsForDiscount > 0 || pointItems.length > 0 || paidItems.length > 0)
+    (pointsForDiscount > 0 ||
+      pointItems.length > 0 ||
+      paidItems.length > 0 ||
+      giftItems.length > 0)
   ) {
     return createMemberCheckoutFromCart(
       items,
@@ -188,8 +212,8 @@ export async function createOrdersFromCart(
     }
   }
 
-  if (paidItems.length === 0 && pointItems.length > 0) {
-    throw new Error('訪客結帳無法使用點數兌換，請先登入會員')
+  if (paidItems.length === 0 && (pointItems.length > 0 || giftItems.length > 0)) {
+    throw new Error('訪客結帳無法使用點數兌換或禮物券，請先登入會員')
   }
 
   if (!shippingAssigned && shippingFee > 0 && orders.length === 0) {

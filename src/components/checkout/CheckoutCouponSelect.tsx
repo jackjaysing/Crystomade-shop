@@ -4,7 +4,7 @@ import {
   calcCouponDiscount,
   formatCouponRuleSummary,
 } from '../../lib/couponCalculation'
-import { COUPON_TYPE_LABELS } from '../../constants/coupons'
+import { getMemberCouponTypeLabel } from '../../constants/coupons'
 import type { MemberCouponWithDefinition } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 
@@ -57,6 +57,9 @@ export function CheckoutCouponSelect({
   return (
     <GlassPanel className="border border-white/10 p-4">
       <p className="text-xs tracking-widest text-white/50">優惠券</p>
+      <p className="mt-0.5 text-[11px] text-white/35">
+        不含抽獎禮物券（請至會員中心「我的禮物券」）
+      </p>
       <ul className="mt-3 space-y-2">
         <li>
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 px-3 py-2.5 transition hover:border-amber-glow/30">
@@ -97,7 +100,7 @@ export function CheckoutCouponSelect({
                     {mc.coupon.title}
                   </span>
                   <span className="mt-0.5 block text-xs text-amber-glow/80">
-                    {COUPON_TYPE_LABELS[mc.coupon.coupon_type]} ·{' '}
+                    {getMemberCouponTypeLabel(mc.coupon)} ·{' '}
                     {formatCouponRuleSummary(mc.coupon)}
                   </span>
                   {eligible && preview && (

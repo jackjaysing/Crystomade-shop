@@ -6,7 +6,13 @@ import { CartItemSizeEditor } from './CartItemSizeEditor'
 import { CartPointShopSection } from './CartPointShopSection'
 import { CartQuickAddSection } from './CartQuickAddSection'
 import { FREE_SHIPPING_THRESHOLD } from '../../constants/shipping'
-import { isPointRedemptionItem } from '../../lib/cartItemKinds'
+import { isPointRedemptionItem, isRaffleGiftItem } from '../../lib/cartItemKinds'
+import {
+  cartHasRaffleGiftBase,
+  RAFFLE_GIFT_REQUIRES_BASE_MESSAGE,
+} from '../../lib/cartCheckoutRules'
+import { useAuth } from '../../contexts/AuthContext'
+import { releaseGiftCouponFromCart } from '../../lib/api/coupons'
 import { MemberPointsBadge } from '../member/MemberPointsBadge'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 import { useQuickAddProducts } from '../../hooks/useQuickAddProducts'
@@ -14,6 +20,7 @@ import { useQuickAddProducts } from '../../hooks/useQuickAddProducts'
 /** 側邊滑出購物車 Drawer */
 export function CartDrawer() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const {
     items,
     itemCount,
@@ -40,10 +47,22 @@ export function CartDrawer() {
     loading: quickAddLoading,
   } = useQuickAddProducts(isOpen)
 
+  const handleRemoveItem = (item: (typeof items)[0]) => {
+    if (isRaffleGiftItem(item) && user && item.memberCouponId) {
+      void releaseGiftCouponFromCart(item.memberCouponId, user.id).finally(() => {
+        removeItem(item.cartItemKey)
+      })
+      return
+    }
+    removeItem(item.cartItemKey)
+  }
+
   if (!isOpen) return null
 
-  const canCheckout = checkoutItemCount > 0
+  const raffleGiftBaseOk = cartHasRaffleGiftBase(items)
+  const canCheckout = checkoutItemCount > 0 && raffleGiftBaseOk
   const hasPointRedemption = items.some(isPointRedemptionItem)
+  const hasRaffleGift = items.some(isRaffleGiftItem)
   const showFreeShippingProgress = subtotal > 0
 
   return (
@@ -136,7 +155,11 @@ export function CartDrawer() {
                           </p>
                         ) : (
                           <>
-                            {isPointRedemptionItem(item) ? (
+                            {isRaffleGiftItem(item) ? (
+                              <p className="mt-1 text-sm text-amber-glow">
+                                抽獎禮物 · 免費兌換
+                              </p>
+                            ) : isPointRedemptionItem(item) ? (
                               <p className="mt-1 text-sm text-amber-glow">
                                 點數兌換 · {item.requiredPoints ?? 0} 點
                               </p>
@@ -151,6 +174,7 @@ export function CartDrawer() {
                               </p>
                             )}
                             <div className="mt-2 flex items-center justify-between">
+                              {!isRaffleGiftItem(item) && (
                               <div className="flex items-center gap-2">
                                 <button
                                   type="button"
@@ -177,10 +201,11 @@ export function CartDrawer() {
                                   <Plus className="h-3.5 w-3.5" />
                                 </button>
                               </div>
+                              )}
                               <button
                                 type="button"
-                                onClick={() => removeItem(item.cartItemKey)}
-                                className="text-white/30 transition hover:text-red-400"
+                                onClick={() => handleRemoveItem(item)}
+                                className={`text-white/30 transition hover:text-red-400 ${isRaffleGiftItem(item) ? 'ml-auto' : ''}`}
                                 aria-label="移除商品"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -191,7 +216,7 @@ export function CartDrawer() {
                         {isFullySnatched && (
                           <button
                             type="button"
-                            onClick={() => removeItem(item.cartItemKey)}
+                            onClick={() => handleRemoveItem(item)}
                             className="mt-2 text-xs text-white/40 transition hover:text-red-400"
                           >
                             移出購物車
@@ -229,9 +254,19 @@ export function CartDrawer() {
                 }}
               />
             )}
-            {!canCheckout && (
+            {!canCheckout && checkoutItemCount > 0 && !raffleGiftBaseOk && (
+              <p className="text-center text-xs text-amber-glow/90">
+                {RAFFLE_GIFT_REQUIRES_BASE_MESSAGE}
+              </p>
+            )}
+            {!canCheckout && checkoutItemCount === 0 && (
               <p className="text-center text-xs text-red-300/80">
                 購物車內商品皆已被搶先收藏，請移除後再選購其他典藏。
+              </p>
+            )}
+            {hasRaffleGift && raffleGiftBaseOk && (
+              <p className="text-center text-[11px] text-white/40">
+                抽獎禮物將隨本筆訂單一併出貨
               </p>
             )}
             <div className="space-y-2 text-sm">

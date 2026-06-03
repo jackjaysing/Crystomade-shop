@@ -2,20 +2,21 @@ import { useEffect, useState } from 'react'
 import { fetchMemberCouponHistory } from '../../lib/api/coupons'
 import type { MemberCouponWithDefinition } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
+import { RAFFLE_GIFT_REQUIRES_BASE_MESSAGE } from '../../lib/cartCheckoutRules'
 import {
   MemberCouponList,
   splitMemberCoupons,
 } from './memberCouponShared'
 
-interface MemberCouponsPanelProps {
+interface MemberGiftCouponsPanelProps {
   userId: string
 }
 
-/** 會員中心：優惠券（折抵／打折／滿額贈禮，不含抽獎禮物券） */
-export function MemberCouponsPanel({ userId }: MemberCouponsPanelProps) {
-  const [discountCoupons, setDiscountCoupons] = useState<
-    MemberCouponWithDefinition[]
-  >([])
+/** 會員中心：禮物券（抽獎獎品，兌換至購物車） */
+export function MemberGiftCouponsPanel({ userId }: MemberGiftCouponsPanelProps) {
+  const [giftCoupons, setGiftCoupons] = useState<MemberCouponWithDefinition[]>(
+    []
+  )
   const [loading, setLoading] = useState(true)
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -27,7 +28,7 @@ export function MemberCouponsPanel({ userId }: MemberCouponsPanelProps) {
     void fetchMemberCouponHistory(userId)
       .then((rows) => {
         if (!cancelled) {
-          setDiscountCoupons(splitMemberCoupons(rows).discountCoupons)
+          setGiftCoupons(splitMemberCoupons(rows).giftCoupons)
         }
       })
       .finally(() => {
@@ -40,21 +41,26 @@ export function MemberCouponsPanel({ userId }: MemberCouponsPanelProps) {
 
   return (
     <GlassPanel className="mt-6 p-6 sm:p-8">
-      <h2 className="text-sm tracking-widest text-white/50">我的優惠券</h2>
+      <h2 className="text-sm tracking-widest text-white/50">我的禮物券</h2>
       <p className="mt-1 text-xs text-white/35">
-        結帳時可選用，含折抵、打折與滿額贈禮
+        抽獎獲得之獎品，可兌換至購物車後與其他商品併單出貨
       </p>
       {loading ? (
         <p className="mt-4 text-sm text-white/35">載入中…</p>
-      ) : discountCoupons.length === 0 ? (
-        <p className="mt-4 text-sm text-white/35">尚無優惠券，請留意活動發放。</p>
+      ) : giftCoupons.length === 0 ? (
+        <p className="mt-4 text-sm text-white/35">
+          尚無禮物券，中獎後會顯示於此。
+        </p>
       ) : (
         <MemberCouponList
-          items={discountCoupons}
-          variant="discount"
+          items={giftCoupons}
+          variant="gift"
           onReload={reload}
         />
       )}
+      <p className="mt-4 text-[11px] text-white/30">
+        {RAFFLE_GIFT_REQUIRES_BASE_MESSAGE}
+      </p>
     </GlassPanel>
   )
 }

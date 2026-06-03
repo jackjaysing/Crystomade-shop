@@ -4,7 +4,7 @@ import {
   calcProductSubtotal,
   calcShippingFeeForCart,
 } from './cartShipping'
-import { isPointRedemptionItem } from './cartItemKinds'
+import { isPointRedemptionItem, isRaffleGiftItem } from './cartItemKinds'
 import { isProductSoldOut } from './productStock'
 import type { CartItem, Product } from './types'
 
@@ -26,7 +26,7 @@ export function resolveCartItems(
   productsById: Map<string, Product>
 ): ResolvedCartItem[] {
   return items.map((item) => {
-    if (isPointRedemptionItem(item)) {
+    if (isPointRedemptionItem(item) || isRaffleGiftItem(item)) {
       const currentStock = item.maxStock
       const checkoutQuantity = Math.min(item.quantity, currentStock)
       return {
