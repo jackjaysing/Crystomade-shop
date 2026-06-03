@@ -19,31 +19,31 @@ export function Navbar() {
 
   return (
     <>
-      <header className="fixed top-0 z-40 w-full border-b border-white/[0.06] bg-black">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+      <header className="fixed top-0 z-40 w-full overflow-visible border-b border-white/[0.06] bg-black">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 overflow-visible px-3 py-3 sm:gap-3 sm:px-6 sm:py-4">
           <Link
             to="/products"
-            className="group flex shrink-0 items-center gap-0.5 transition hover:opacity-90 sm:gap-1"
+            className="group flex shrink-0 items-center gap-1 overflow-visible transition hover:opacity-90 sm:gap-1.5"
             aria-label="晶刻 Crystomade"
           >
             <img
               src="/logomark.png"
               alt=""
-              width={44}
-              height={44}
-              className="h-9 w-9 object-contain sm:h-11 sm:w-11"
+              width={40}
+              height={40}
+              className="block h-9 w-9 flex-none object-contain sm:h-11 sm:w-11"
             />
             <img
               src="/logoword.png"
-              alt=""
-              className="-ml-0.5 hidden h-8 w-auto object-contain object-left sm:block sm:h-10"
+              alt="晶刻 Crystomade"
+              className="block h-8 w-auto min-w-[4.25rem] flex-none object-contain object-left sm:h-9 md:h-10"
             />
           </Link>
 
-          <nav className="flex shrink-0 items-center gap-2 text-sm sm:gap-4 md:gap-6">
+          <nav className="flex shrink-0 items-center gap-1.5 text-sm sm:gap-4 md:gap-6">
             <Link
               to="/products"
-              className={`tracking-wide transition ${
+              className={`hidden tracking-wide transition md:inline ${
                 isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
               }`}
             >
@@ -83,7 +83,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={openCart}
-              className="relative rounded-full border border-white/10 p-2.5 text-white/70 transition hover:border-amber-glow/40 hover:text-amber-glow"
+              className="relative shrink-0 rounded-full border border-white/10 p-2.5 text-white/70 transition hover:border-amber-glow/40 hover:text-amber-glow"
               aria-label={`購物車，${checkoutItemCount} 件可結帳商品`}
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />
