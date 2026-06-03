@@ -1,11 +1,19 @@
-import { ShoppingCart, User } from 'lucide-react'
+import { ShoppingCart, Store, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { CartDrawer } from '../cart/CartDrawer'
-import { MemberHubMenu } from '../member/MemberHubMenu'
 import { MemberPointsBadge } from '../member/MemberPointsBadge'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
+import { usePointRedeemState } from '../../hooks/usePointRedeemState'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
+
+function navIconClass(active: boolean): string {
+  return `relative shrink-0 rounded-full border p-2.5 transition ${
+    active
+      ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
+      : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
+  }`
+}
 
 /** 全站導覽列 */
 export function Navbar() {
@@ -14,6 +22,7 @@ export function Navbar() {
   const isPointShop = pathname.startsWith('/point-shop')
   const isAccount = pathname.startsWith('/account')
   const { profile } = useAuth()
+  const { availablePoints } = usePointRedeemState()
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
 
@@ -36,14 +45,14 @@ export function Navbar() {
             <img
               src="/logoword.png"
               alt="晶刻 Crystomade"
-              className="block h-8 w-auto min-w-[4.25rem] flex-none object-contain object-left sm:h-9 md:h-10"
+              className="block h-7 w-auto max-w-[5.5rem] flex-none object-contain object-left sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
 
-          <nav className="flex shrink-0 items-center gap-1.5 text-sm sm:gap-4 md:gap-6">
+          <nav className="flex shrink-0 items-center gap-1 text-sm sm:gap-4 md:gap-6">
             <Link
               to="/products"
-              className={`hidden tracking-wide transition md:inline ${
+              className={`shrink-0 tracking-wide transition ${
                 isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
               }`}
             >
@@ -53,10 +62,11 @@ export function Navbar() {
             <div className="hidden items-center gap-4 md:flex md:gap-6">
               <Link
                 to="/point-shop"
-                className={`tracking-wide transition ${
+                className={`flex items-center gap-1 tracking-wide transition ${
                   isPointShop ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                 }`}
               >
+                <Store className="h-4 w-4" strokeWidth={1.5} />
                 點數商城
               </Link>
               <MemberPointsBadge />
@@ -78,12 +88,32 @@ export function Navbar() {
               </Link>
             </div>
 
-            <MemberHubMenu />
+            <div className="flex items-center gap-1 md:hidden">
+              <Link
+                to="/point-shop"
+                className={navIconClass(isPointShop)}
+                aria-label="點數商城"
+              >
+                <Store className="h-5 w-5" strokeWidth={1.5} />
+                {profile && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-glow px-0.5 text-[9px] font-medium text-void">
+                    {availablePoints > 99 ? '99+' : availablePoints}
+                  </span>
+                )}
+              </Link>
+              <Link
+                to="/account"
+                className={navIconClass(isAccount)}
+                aria-label={profile ? '會員中心' : '會員登入'}
+              >
+                <User className="h-5 w-5" strokeWidth={1.5} />
+              </Link>
+            </div>
 
             <button
               type="button"
               onClick={openCart}
-              className="relative shrink-0 rounded-full border border-white/10 p-2.5 text-white/70 transition hover:border-amber-glow/40 hover:text-amber-glow"
+              className={navIconClass(false)}
               aria-label={`購物車，${checkoutItemCount} 件可結帳商品`}
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />
