@@ -8,6 +8,8 @@ import { RevenueStatsPanel } from '../components/admin/RevenueStatsPanel'
 import { DeletedOrdersPanel } from '../components/admin/DeletedOrdersPanel'
 import { OrderTable } from '../components/admin/OrderTable'
 import { ProductForm } from '../components/admin/ProductForm'
+import { CustomerAdmin } from '../components/admin/CustomerAdmin'
+import { PointShopAdmin } from '../components/admin/PointShopAdmin'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
@@ -23,10 +25,20 @@ import {
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 import { Archive } from 'lucide-react'
 
-type AdminTab = 'products' | 'orders' | 'revenue' | 'banners' | 'analytics' | 'logs'
+type AdminTab =
+  | 'products'
+  | 'point_shop'
+  | 'customers'
+  | 'orders'
+  | 'revenue'
+  | 'banners'
+  | 'analytics'
+  | 'logs'
 
 const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'products', label: '商品管理' },
+  { id: 'point_shop', label: '點數商城' },
+  { id: 'customers', label: '客戶資料' },
   { id: 'orders', label: '訂單管理' },
   { id: 'banners', label: '公告橫幅' },
   { id: 'analytics', label: '瀏覽統計' },
@@ -168,6 +180,20 @@ export function AdminPage() {
                 }}
               />
             </div>
+          </section>
+        )}
+
+        {activeTab === 'point_shop' && (
+          <section>
+            <h2 className="mb-4 text-lg tracking-wide text-white/80">點數商城編輯</h2>
+            <PointShopAdmin />
+          </section>
+        )}
+
+        {activeTab === 'customers' && (
+          <section>
+            <h2 className="mb-4 text-lg tracking-wide text-white/80">客戶資料</h2>
+            <CustomerAdmin enabled={authed} />
           </section>
         )}
 

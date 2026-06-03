@@ -71,6 +71,20 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
       row.deleted_from_status === 'cancelled'
         ? row.deleted_from_status
         : null,
+    user_id: row.user_id != null ? String(row.user_id) : null,
+    is_point_redemption: Boolean(row.is_point_redemption),
+    point_product_id:
+      row.point_product_id != null ? String(row.point_product_id) : null,
+    redemption_points:
+      row.redemption_points != null ? Number(row.redemption_points) : null,
+    checkout_points_discount:
+      row.checkout_points_discount != null
+        ? Number(row.checkout_points_discount)
+        : null,
+    checkout_discount_ntd:
+      row.checkout_discount_ntd != null
+        ? Number(row.checkout_discount_ntd)
+        : null,
     products: resolveOrderProduct(row),
   }
 }

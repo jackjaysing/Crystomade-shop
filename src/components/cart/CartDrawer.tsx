@@ -3,7 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
 import { FreeShippingProgress } from './FreeShippingProgress'
 import { CartItemSizeEditor } from './CartItemSizeEditor'
+import { CartPointShopSection } from './CartPointShopSection'
 import { CartQuickAddSection } from './CartQuickAddSection'
+import { FREE_SHIPPING_THRESHOLD } from '../../constants/shipping'
+import { isPointRedemptionItem } from '../../lib/cartItemKinds'
+import { MemberPointsBadge } from '../member/MemberPointsBadge'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 import { useQuickAddProducts } from '../../hooks/useQuickAddProducts'
 
@@ -39,6 +43,7 @@ export function CartDrawer() {
   if (!isOpen) return null
 
   const canCheckout = checkoutItemCount > 0
+  const hasPointRedemption = items.some(isPointRedemptionItem)
   const showFreeShippingProgress = subtotal > 0
 
   return (
@@ -51,24 +56,27 @@ export function CartDrawer() {
       />
 
       <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-amber-glow/20 bg-graphite shadow-gold">
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-amber-glow" strokeWidth={1.5} />
-            <h2 className="font-display text-xl tracking-wide text-white">
-              購物車
-              {itemCount > 0 && (
-                <span className="ml-2 text-sm text-white/50">({itemCount})</span>
-              )}
-            </h2>
+        <div className="border-b border-white/10 px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-amber-glow" strokeWidth={1.5} />
+              <h2 className="font-display text-xl tracking-wide text-white">
+                購物車
+                {itemCount > 0 && (
+                  <span className="ml-2 text-sm text-white/50">({itemCount})</span>
+                )}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={closeCart}
+              className="rounded-full border border-white/10 p-2 text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
+              aria-label="關閉"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={closeCart}
-            className="rounded-full border border-white/10 p-2 text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
-            aria-label="關閉"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <MemberPointsBadge variant="drawer" />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
@@ -128,9 +136,15 @@ export function CartDrawer() {
                           </p>
                         ) : (
                           <>
-                            <p className="mt-1 text-sm text-amber-glow">
-                              NT$ {item.price.toLocaleString()}
-                            </p>
+                            {isPointRedemptionItem(item) ? (
+                              <p className="mt-1 text-sm text-amber-glow">
+                                點數兌換 · {item.requiredPoints ?? 0} 點
+                              </p>
+                            ) : (
+                              <p className="mt-1 text-sm text-amber-glow">
+                                NT$ {item.price.toLocaleString()}
+                              </p>
+                            )}
                             {snatchedQuantity > 0 && (
                               <p className="mt-1 text-xs text-red-300/80">
                                 {snatchedQuantity} 件已被搶先收藏
@@ -189,7 +203,8 @@ export function CartDrawer() {
                 )}
               </ul>
 
-              <div className="mt-8 border-t border-white/10 pt-6">
+              <div className="mt-8 space-y-6 border-t border-white/10 pt-6">
+                <CartPointShopSection enabled={isOpen} />
                 <CartQuickAddSection
                   products={quickAddProducts}
                   loading={quickAddLoading}
@@ -221,13 +236,18 @@ export function CartDrawer() {
             )}
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-white/60">
-                <span>商品小計</span>
+                <span>{hasPointRedemption ? '付費商品小計' : '商品小計'}</span>
                 <span>NT$ {subtotal.toLocaleString()}</span>
               </div>
+              {hasPointRedemption && (
+                <p className="text-[11px] text-white/35">
+                  兌換商品不可折抵運費；僅兌換時仍需支付運費
+                </p>
+              )}
               <div className="flex justify-between text-white/60">
                 <span>運費</span>
                 <span>
-                  {shippingFee === 0 && subtotal > 0 ? (
+                  {shippingFee === 0 && subtotal >= FREE_SHIPPING_THRESHOLD ? (
                     <span className="text-emerald-400">免運</span>
                   ) : shippingFee === 0 ? (
                     '—'

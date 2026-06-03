@@ -1,11 +1,17 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { CartItemSizeEditor } from '../components/cart/CartItemSizeEditor'
 import { OrderSuccessModal } from '../components/cart/OrderSuccessModal'
+import { CheckoutPointsDiscount } from '../components/checkout/CheckoutPointsDiscount'
+import { CheckoutMemberSection } from '../components/member/CheckoutMemberSection'
+import { calcDiscountNtdFromPoints, clampPointsForDiscount } from '../lib/pointsCalculation'
+import { isPointRedemptionItem } from '../lib/cartItemKinds'
 import { CVS_BRANDS } from '../constants/cvs'
 import { FREE_SHIPPING_THRESHOLD } from '../constants/shipping'
+import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
 import { useCartAvailability } from '../hooks/useCartAvailability'
+import { profileToOrderPrefill, syncMemberProfileFromCheckout } from '../lib/api/members'
 import { createOrdersFromCart } from '../lib/api/orders'
 import { validateOrderForm } from '../lib/normalizeOrder'
 import type { OrderFormData } from '../lib/types'
@@ -22,6 +28,7 @@ const emptyForm: OrderFormData = {
 
 /** 結帳頁：購物車明細 + 運費 + 收件表單 */
 export function CheckoutPage() {
+  const { user, profile, refreshProfile } = useAuth()
   const { items, clearCart } = useCart()
   const {
     resolvedItems,
@@ -41,12 +48,38 @@ export function CheckoutPage() {
   )
   const [showSuccess, setShowSuccess] = useState(false)
   const [successOrderNumber, setSuccessOrderNumber] = useState<string | null>(null)
+  const [pointsToUse, setPointsToUse] = useState(0)
+
+  useEffect(() => {
+    if (profile) {
+      setForm((prev) => ({
+        ...prev,
+        ...profileToOrderPrefill(profile),
+        cvs_brand: prev.cvs_brand,
+        cvs_store: prev.cvs_store,
+      }))
+    }
+  }, [profile?.id])
 
   if (items.length === 0 && !showSuccess) {
     return <Navigate to="/products" replace />
   }
 
   const canCheckout = checkoutItemCount > 0
+  const hasPointRedemption = items.some(isPointRedemptionItem)
+  const redemptionPointsNeeded = items
+    .filter(isPointRedemptionItem)
+    .reduce((s, i) => s + (i.requiredPoints ?? 0) * i.quantity, 0)
+  const clampedPointsToUse = profile
+    ? clampPointsForDiscount(
+        pointsToUse,
+        subtotal,
+        profile.points,
+        redemptionPointsNeeded
+      )
+    : 0
+  const pointsDiscountNtd = calcDiscountNtdFromPoints(clampedPointsToUse)
+  const payableTotal = Math.max(0, grandTotal - pointsDiscountNtd)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -62,6 +95,14 @@ export function CheckoutPage() {
       return
     }
 
+    if (user && profile) {
+      const totalPointsNeeded = clampedPointsToUse + redemptionPointsNeeded
+      if (totalPointsNeeded > profile.points) {
+        setMessage({ type: 'err', text: '點數不足，請調整折抵或兌換品項' })
+        return
+      }
+    }
+
     setSubmitting(true)
     setMessage(null)
     try {
@@ -73,9 +114,20 @@ export function CheckoutPage() {
       const createdOrders = await createOrdersFromCart(
         latest.checkoutItems,
         form,
-        latest.shippingFee
+        latest.shippingFee,
+        user?.id ?? null,
+        user ? clampedPointsToUse : 0
       )
+      if (user?.id) {
+        await syncMemberProfileFromCheckout(
+          user.id,
+          form.buyer_name,
+          form.phone
+        )
+        await refreshProfile()
+      }
       clearCart()
+      setPointsToUse(0)
       setForm(emptyForm)
       setSuccessOrderNumber(createdOrders[0]?.order_number ?? null)
       setShowSuccess(true)
@@ -150,6 +202,10 @@ export function CheckoutPage() {
                       <p className="mt-0.5 text-xs text-red-300/80">
                         該物品已被搶先收藏
                       </p>
+                    ) : isPointRedemptionItem(item) ? (
+                      <p className="mt-0.5 text-xs text-amber-glow/80">
+                        點數兌換 · {item.requiredPoints ?? 0} 點 × {checkoutQuantity}
+                      </p>
                     ) : (
                       <>
                         <p className="mt-0.5 text-xs text-white/40">
@@ -165,7 +221,9 @@ export function CheckoutPage() {
                   </div>
                   {!isFullySnatched && (
                     <p className="shrink-0 text-sm text-amber-glow">
-                      NT$ {(item.price * checkoutQuantity).toLocaleString()}
+                      {isPointRedemptionItem(item)
+                        ? 'NT$ 0'
+                        : `NT$ ${(item.price * checkoutQuantity).toLocaleString()}`}
                     </p>
                   )}
                 </li>
@@ -177,9 +235,14 @@ export function CheckoutPage() {
 
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between text-white/60">
-              <span>商品小計</span>
+              <span>{hasPointRedemption ? '付費商品小計' : '商品小計'}</span>
               <span>NT$ {subtotal.toLocaleString()}</span>
             </div>
+            {hasPointRedemption && (
+              <p className="text-[11px] text-white/35">
+                兌換商品為 NT$0，不可折抵運費；僅兌換時仍需支付運費
+              </p>
+            )}
             <div className="flex justify-between text-white/60">
               <span>
                 運費
@@ -190,7 +253,7 @@ export function CheckoutPage() {
                 )}
               </span>
               <span>
-                {shippingFee === 0 && subtotal > 0 ? (
+                {shippingFee === 0 && subtotal >= FREE_SHIPPING_THRESHOLD ? (
                   <span className="text-emerald-400">免運</span>
                 ) : shippingFee === 0 ? (
                   '—'
@@ -199,16 +262,36 @@ export function CheckoutPage() {
                 )}
               </span>
             </div>
+            {profile && pointsDiscountNtd > 0 && (
+              <div className="flex justify-between text-emerald-400/90">
+                <span>點數折抵</span>
+                <span>- NT$ {pointsDiscountNtd.toLocaleString()}</span>
+              </div>
+            )}
             <div className="flex justify-between border-t border-white/10 pt-3 text-lg text-white">
               <span>應付總額</span>
               <span className="font-medium text-amber-glow">
-                NT$ {grandTotal.toLocaleString()}
+                NT$ {payableTotal.toLocaleString()}
               </span>
             </div>
           </div>
+
+          {profile && subtotal > 0 && (
+            <div className="mt-4">
+              <CheckoutPointsDiscount
+                memberPoints={profile.points}
+                productSubtotal={subtotal}
+                pointsToUse={pointsToUse}
+                pointsReservedForRedemption={redemptionPointsNeeded}
+                onPointsChange={setPointsToUse}
+              />
+            </div>
+          )}
         </GlassPanel>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <CheckoutMemberSection />
+
           <GlassPanel className="p-6 sm:p-8">
             <p className="text-xs tracking-widest text-white/40">填寫取件資訊（超商宅配）</p>
 

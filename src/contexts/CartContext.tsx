@@ -11,9 +11,14 @@ import {
   buildCartItemKey,
   productRequiresBraceletSize,
 } from '../constants/braceletSizes'
-import { calcGrandTotal, calcShippingFee, calcSubtotal } from '../lib/cartShipping'
+import { buildPointCartItemKey } from '../lib/cartItemKinds'
+import {
+  calcGrandTotalBeforeDiscount,
+  calcProductSubtotal,
+  calcShippingFeeForCart,
+} from '../lib/cartShipping'
 import { getProductSalePrice } from '../lib/productPricing'
-import type { CartItem, Product } from '../lib/types'
+import type { CartItem, PointProduct, Product } from '../lib/types'
 
 const STORAGE_KEY = 'crystomade-cart'
 
@@ -32,6 +37,7 @@ interface CartContextValue {
   openCart: () => void
   closeCart: () => void
   addItem: (product: Product, options?: AddToCartOptions) => void
+  addPointRedemption: (pointProduct: PointProduct) => void
   removeItem: (cartItemKey: string) => void
   updateQuantity: (cartItemKey: string, quantity: number) => void
   /** 變更手串手圍（會依新規格合併或拆列） */
@@ -56,9 +62,15 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
       ? raw.cartItemKey
       : buildCartItemKey(raw.productId, selectedSize)
 
+  const kind = raw.kind === 'point_redemption' ? 'point_redemption' : 'product'
+
   return {
     cartItemKey,
+    kind,
     productId: raw.productId,
+    pointProductId: raw.pointProductId != null ? String(raw.pointProductId) : undefined,
+    requiredPoints:
+      raw.requiredPoints != null ? Number(raw.requiredPoints) || 0 : undefined,
     name: String(raw.name ?? ''),
     price: Number(raw.price) || 0,
     image_url: String(raw.image_url ?? ''),
@@ -113,9 +125,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items]
   )
 
-  const subtotal = useMemo(() => calcSubtotal(items), [items])
-  const shippingFee = useMemo(() => calcShippingFee(subtotal), [subtotal])
-  const grandTotal = useMemo(() => calcGrandTotal(items), [items])
+  const subtotal = useMemo(() => calcProductSubtotal(items), [items])
+  const shippingFee = useMemo(() => calcShippingFeeForCart(items), [items])
+  const grandTotal = useMemo(() => calcGrandTotalBeforeDiscount(items), [items])
 
   const openCart = useCallback(() => setIsOpen(true), [])
   const closeCart = useCallback(() => setIsOpen(false), [])
@@ -151,6 +163,46 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [
         ...prev,
         productToCartItem(product, Math.min(qty, product.stock), selectedSize),
+      ]
+    })
+  }, [])
+
+  const addPointRedemption = useCallback((pointProduct: PointProduct) => {
+    const cartItemKey = buildPointCartItemKey(pointProduct.id)
+    setItems((prev) => {
+      const existing = prev.find((item) => item.cartItemKey === cartItemKey)
+      if (existing) {
+        const nextQty = Math.min(existing.quantity + 1, pointProduct.stock)
+        if (nextQty <= 0) return prev
+        return prev.map((item) =>
+          item.cartItemKey === cartItemKey
+            ? {
+                ...item,
+                name: pointProduct.name,
+                image_url: pointProduct.image_url,
+                requiredPoints: pointProduct.required_points,
+                maxStock: pointProduct.stock,
+                quantity: nextQty,
+              }
+            : item
+        )
+      }
+      if (pointProduct.stock <= 0) return prev
+      return [
+        ...prev,
+        {
+          cartItemKey,
+          kind: 'point_redemption' as const,
+          productId: pointProduct.id,
+          pointProductId: pointProduct.id,
+          requiredPoints: pointProduct.required_points,
+          name: `${pointProduct.name}（點數兌換）`,
+          price: 0,
+          image_url: pointProduct.image_url,
+          quantity: 1,
+          selectedSize: null,
+          maxStock: pointProduct.stock,
+        },
       ]
     })
   }, [])
@@ -224,6 +276,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       openCart,
       closeCart,
       addItem,
+      addPointRedemption,
       removeItem,
       updateQuantity,
       updateItemSize,
@@ -239,6 +292,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       openCart,
       closeCart,
       addItem,
+      addPointRedemption,
       removeItem,
       updateQuantity,
       updateItemSize,

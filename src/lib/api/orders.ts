@@ -2,6 +2,7 @@ import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
+import { isPaidCartItem, isPointRedemptionItem } from '../cartItemKinds'
 import type { CartItem, Order, OrderFormData } from '../types'
 
 async function orderGroupSummary(orderIds: string[], verb: string): Promise<string> {
@@ -31,7 +32,8 @@ export async function createOrder(
   totalAmount: number,
   form: OrderFormData,
   checkoutId?: string,
-  selectedSize?: string | null
+  selectedSize?: string | null,
+  userId?: string | null
 ): Promise<Order> {
   const sizeValue = selectedSize?.trim() || null
 
@@ -45,6 +47,7 @@ export async function createOrder(
     p_cvs_store: form.cvs_store.trim(),
     p_checkout_id: checkoutId ?? null,
     p_selected_size: sizeValue,
+    p_user_id: userId ?? null,
   })
 
   if (error) {
@@ -67,6 +70,11 @@ export async function createOrder(
         '資料庫尚未啟用手圍規格欄位，請在 Supabase SQL Editor 執行 supabase/migration-add-order-selected-size.sql'
       )
     }
+    if (msg.includes('p_user_id') || msg.includes('user_id')) {
+      throw new Error(
+        '資料庫尚未啟用會員訂單功能，請在 Supabase SQL Editor 執行 supabase/migration-add-member-points.sql'
+      )
+    }
     throw new Error(msg)
   }
 
@@ -75,17 +83,94 @@ export async function createOrder(
   return normalizeOrder(row as Record<string, unknown>)
 }
 
+function buildPaidLinesJson(items: CartItem[]) {
+  return items
+    .filter(isPaidCartItem)
+    .map((item) => ({
+      product_id: item.productId,
+      quantity: item.quantity,
+      selected_size: item.selectedSize,
+    }))
+}
+
+function buildPointRedemptionsJson(items: CartItem[]) {
+  return items
+    .filter(isPointRedemptionItem)
+    .map((item) => ({
+      point_product_id: item.pointProductId ?? item.productId,
+      quantity: item.quantity,
+    }))
+}
+
+/** 會員結帳（點數折抵 + 點數兌換品） */
+export async function createMemberCheckoutFromCart(
+  items: CartItem[],
+  form: OrderFormData,
+  shippingFee: number,
+  userId: string,
+  pointsForDiscount: number
+): Promise<Order[]> {
+  const checkoutId = crypto.randomUUID()
+
+  const { data, error } = await supabase.rpc('place_member_checkout', {
+    p_checkout_id: checkoutId,
+    p_user_id: userId,
+    p_buyer_name: form.buyer_name.trim(),
+    p_line_name: form.line_name.trim(),
+    p_phone: form.phone.trim(),
+    p_cvs_brand: form.cvs_brand,
+    p_cvs_store: form.cvs_store.trim(),
+    p_paid_lines: buildPaidLinesJson(items),
+    p_point_redemptions: buildPointRedemptionsJson(items),
+    p_points_for_discount: Math.max(0, Math.floor(pointsForDiscount)),
+    p_shipping_fee: shippingFee,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (msg.includes('place_member_checkout') || msg.includes('function')) {
+      throw new Error(
+        '資料庫尚未啟用點數結帳功能，請在 Supabase SQL Editor 執行 supabase/migration-add-point-shop.sql'
+      )
+    }
+    if (msg.includes('點數不足')) throw new Error('點數不足，請調整折抵或兌換品項')
+    throw new Error(msg)
+  }
+
+  const rows = Array.isArray(data) ? data : data ? [data] : []
+  if (rows.length === 0) throw new Error('結帳失敗，請稍後再試')
+  return rows.map((row) => normalizeOrder(row as Record<string, unknown>))
+}
+
 /** 購物車批次下單（運費計入第一筆訂單） */
 export async function createOrdersFromCart(
   items: CartItem[],
   form: OrderFormData,
-  shippingFee: number
+  shippingFee: number,
+  userId?: string | null,
+  pointsForDiscount = 0
 ): Promise<Order[]> {
+  const paidItems = items.filter(isPaidCartItem)
+  const pointItems = items.filter(isPointRedemptionItem)
+
+  if (
+    userId &&
+    (pointsForDiscount > 0 || pointItems.length > 0 || paidItems.length > 0)
+  ) {
+    return createMemberCheckoutFromCart(
+      items,
+      form,
+      shippingFee,
+      userId,
+      pointsForDiscount
+    )
+  }
+
   const orders: Order[] = []
   let shippingAssigned = false
   const checkoutId = crypto.randomUUID()
 
-  for (const item of items) {
+  for (const item of paidItems) {
     for (let i = 0; i < item.quantity; i++) {
       const includeShipping = !shippingAssigned && shippingFee > 0
       const amount = item.price + (includeShipping ? shippingFee : 0)
@@ -96,10 +181,15 @@ export async function createOrdersFromCart(
         amount,
         form,
         checkoutId,
-        item.selectedSize
+        item.selectedSize,
+        userId
       )
       orders.push(order)
     }
+  }
+
+  if (paidItems.length === 0 && pointItems.length > 0) {
+    throw new Error('訪客結帳無法使用點數兌換，請先登入會員')
   }
 
   if (!shippingAssigned && shippingFee > 0 && orders.length === 0) {

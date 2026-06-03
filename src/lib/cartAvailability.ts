@@ -1,4 +1,10 @@
-import { calcGrandTotal, calcShippingFee, calcSubtotal } from './cartShipping'
+import {
+  calcGrandTotal,
+  calcGrandTotalBeforeDiscount,
+  calcProductSubtotal,
+  calcShippingFeeForCart,
+} from './cartShipping'
+import { isPointRedemptionItem } from './cartItemKinds'
 import { isProductSoldOut } from './productStock'
 import type { CartItem, Product } from './types'
 
@@ -20,6 +26,18 @@ export function resolveCartItems(
   productsById: Map<string, Product>
 ): ResolvedCartItem[] {
   return items.map((item) => {
+    if (isPointRedemptionItem(item)) {
+      const currentStock = item.maxStock
+      const checkoutQuantity = Math.min(item.quantity, currentStock)
+      return {
+        item,
+        currentStock,
+        checkoutQuantity,
+        isFullySnatched: checkoutQuantity === 0,
+        snatchedQuantity: item.quantity - checkoutQuantity,
+      }
+    }
+
     const product = productsById.get(item.productId)
     const currentStock =
       product && !isProductSoldOut(product) ? product.stock : 0
@@ -47,9 +65,13 @@ export function toCheckoutItems(resolved: ResolvedCartItem[]): CartItem[] {
     }))
 }
 
-export function calcCheckoutTotals(items: CartItem[]) {
-  const subtotal = calcSubtotal(items)
-  const shippingFee = calcShippingFee(subtotal)
-  const grandTotal = calcGrandTotal(items)
-  return { subtotal, shippingFee, grandTotal }
+export function calcCheckoutTotals(
+  items: CartItem[],
+  pointsDiscountNtd = 0
+) {
+  const subtotal = calcProductSubtotal(items)
+  const shippingFee = calcShippingFeeForCart(items)
+  const grandTotalBeforeDiscount = calcGrandTotalBeforeDiscount(items)
+  const grandTotal = calcGrandTotal(items, pointsDiscountNtd)
+  return { subtotal, shippingFee, grandTotal, grandTotalBeforeDiscount }
 }

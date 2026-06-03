@@ -71,17 +71,73 @@ export interface Order {
   deleted_at?: string | null
   /** 刪除當下狀態快照（恢復用） */
   deleted_from_status?: OrderStatus | null
+  /** 下單會員 ID */
+  user_id?: string | null
+  is_point_redemption?: boolean
+  point_product_id?: string | null
+  redemption_points?: number | null
+  checkout_points_discount?: number | null
+  checkout_discount_ntd?: number | null
   /** 關聯查詢時帶入 */
   products?: (Pick<Product, 'name' | 'image_url'> & {
     category?: ProductCategory
   }) | null
 }
 
+/** 會員資料 */
+export interface MemberProfile {
+  id: string
+  real_name: string
+  phone: string
+  birthday: string
+  points: number
+  created_at: string
+  updated_at: string
+}
+
+/** 後台：已註冊會員（含訂單統計） */
+export interface AdminRegisteredCustomer extends MemberProfile {
+  order_count: number
+  last_order_at: string | null
+  total_spent: number
+}
+
+/** 後台：未註冊客戶（訪客訂單彙總） */
+export interface AdminGuestCustomer {
+  /** 識別鍵（正規化電話） */
+  id: string
+  buyer_name: string
+  phone: string
+  line_name: string | null
+  order_count: number
+  last_order_at: string | null
+  total_spent: number
+}
+
+/** 點數變動紀錄 */
+export interface PointsHistoryEntry {
+  id: string
+  user_id: string
+  delta: number
+  balance_after: number
+  description: string
+  checkout_id: string | null
+  order_number: string | null
+  created_at: string
+}
+
+export type CartItemKind = 'product' | 'point_redemption'
+
 /** 購物車品項（精簡快照，供 localStorage 暫存） */
 export interface CartItem {
-  /** 列唯一識別（productId 或 productId_手圍） */
+  /** 列唯一識別（productId 或 point::點數商品 id） */
   cartItemKey: string
+  kind?: CartItemKind
   productId: string
+  /** 點數商城商品 ID（kind=point_redemption） */
+  pointProductId?: string
+  /** 兌換所需點數（單件） */
+  requiredPoints?: number
   name: string
   price: number
   image_url: string
@@ -90,6 +146,27 @@ export interface CartItem {
   selectedSize: string | null
   /** 加入當下可用庫存上限 */
   maxStock: number
+}
+
+/** 點數商城商品 */
+export interface PointProduct {
+  id: string
+  name: string
+  image_url: string
+  required_points: number
+  stock: number
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface PointProductFormData {
+  name: string
+  required_points: number
+  stock: number
+  is_active: boolean
+  imageFile: File | null
 }
 
 /** 建立訂單表單 */

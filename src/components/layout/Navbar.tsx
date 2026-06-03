@@ -1,6 +1,8 @@
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { CartDrawer } from '../cart/CartDrawer'
+import { MemberPointsBadge } from '../member/MemberPointsBadge'
+import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 
@@ -8,6 +10,9 @@ import { useCartAvailability } from '../../hooks/useCartAvailability'
 export function Navbar() {
   const { pathname } = useLocation()
   const isProducts = pathname.startsWith('/products')
+  const isPointShop = pathname.startsWith('/point-shop')
+  const isAccount = pathname.startsWith('/account')
+  const { profile } = useAuth()
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
 
@@ -40,6 +45,27 @@ export function Navbar() {
               }`}
             >
               典藏
+            </Link>
+            <Link
+              to="/point-shop"
+              className={`tracking-wide transition ${
+                isPointShop ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+              }`}
+            >
+              點數商城
+            </Link>
+            <MemberPointsBadge />
+            <Link
+              to="/account"
+              className={`flex items-center gap-1 tracking-wide transition ${
+                isAccount ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+              }`}
+              aria-label="會員中心"
+            >
+              <User className="h-4 w-4" strokeWidth={1.5} />
+              <span className="hidden sm:inline">
+                {profile ? '會員' : '登入'}
+              </span>
             </Link>
             <Link
               to="/admin"
