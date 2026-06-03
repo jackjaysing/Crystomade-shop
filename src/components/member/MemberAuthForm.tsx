@@ -132,13 +132,16 @@ export function MemberAuthForm({
             <input
               required
               type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              enterKeyHint="next"
+              name="register-phone"
               placeholder="手機號碼 *（例：0912345678）"
               value={registerForm.phone}
               onChange={(e) =>
                 setRegisterForm({ ...registerForm, phone: e.target.value })
               }
               className="input-field"
-              autoComplete="tel"
             />
             <input
               required
@@ -171,13 +174,16 @@ export function MemberAuthForm({
             <input
               required
               type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              enterKeyHint="next"
+              name="login-phone"
               placeholder="手機號碼 *"
               value={loginForm.phone}
               onChange={(e) =>
                 setLoginForm({ ...loginForm, phone: e.target.value })
               }
               className="input-field"
-              autoComplete="tel"
             />
             <input
               required

@@ -72,7 +72,7 @@ export function AccountPage() {
   const orderGroups = groupOrders(orders)
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pt-24 pb-16 max-md:pb-[calc(14rem+env(safe-area-inset-bottom,0px))]">
       <div className="mx-auto max-w-2xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

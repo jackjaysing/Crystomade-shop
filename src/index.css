@@ -14,6 +14,10 @@
     }
   }
 
+  html {
+    scroll-padding-top: var(--site-header-height);
+  }
+
   body {
     @apply bg-void font-sans antialiased text-white;
   }
@@ -31,9 +35,17 @@
 }
 
 @layer components {
-  /* 表單輸入共用樣式 */
+  /* 表單輸入共用樣式（手機至少 16px，避免 iOS 聚焦時自動縮放造成畫面跳動） */
   .input-field {
-    @apply w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-amber-glow/50 focus:ring-1 focus:ring-amber-glow/30;
+    @apply w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder:text-white/30 outline-none transition focus:border-amber-glow/50 focus:ring-1 focus:ring-amber-glow/30;
+    scroll-margin-top: calc(var(--site-header-height) + 0.5rem);
+    scroll-margin-bottom: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .input-field {
+      @apply text-sm;
+    }
   }
 }
 
