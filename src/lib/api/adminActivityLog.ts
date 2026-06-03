@@ -10,7 +10,7 @@ export type AdminActivityAction =
   | 'sort'
   | 'status'
 
-export type AdminActivityEntityType = 'product' | 'order' | 'banner'
+export type AdminActivityEntityType = 'product' | 'order' | 'banner' | 'member'
 
 export interface AdminActivityLog {
   id: string

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MemberAuthForm } from '../components/member/MemberAuthForm'
+import { LayoutDashboard } from 'lucide-react'
+import { AccountGate } from '../components/account/AccountGate'
 import { GlassPanel } from '../components/ui/GlassPanel'
+import { useAdminSession } from '../hooks/useAdminSession'
 import { MetalDivider } from '../components/ui/MetalDivider'
 import { POINTS_PER_NTD_DISCOUNT, POINTS_PER_NTD_EARN } from '../constants/points'
 import { useAuth } from '../contexts/AuthContext'
@@ -21,6 +23,7 @@ import type { PointsHistoryEntry } from '../lib/types'
 /** 會員中心：點數、點數紀錄、訂單歷史 */
 export function AccountPage() {
   const { user, profile, loading, logout, refreshProfile } = useAuth()
+  const { authed: adminAuthed } = useAdminSession()
   const [orders, setOrders] = useState<Order[]>([])
   const [history, setHistory] = useState<PointsHistoryEntry[]>([])
   const [dataLoading, setDataLoading] = useState(false)
@@ -65,25 +68,7 @@ export function AccountPage() {
   }
 
   if (!user || !profile) {
-    return (
-      <div className="min-h-screen pt-24 pb-16">
-        <div className="mx-auto max-w-md px-6">
-          <p className="text-xs tracking-[0.4em] text-amber-glow/60">MEMBER</p>
-          <h1 className="mt-2 font-display text-4xl text-white">會員中心</h1>
-          <p className="mt-3 text-sm text-white/50">
-            登入或註冊後，即可查看累積點數與訂單紀錄。
-          </p>
-          <div className="mt-8">
-            <MemberAuthForm variant="page" />
-          </div>
-          <p className="mt-6 text-center text-sm text-white/40">
-            <Link to="/products" className="hover:text-amber-glow">
-              返回典藏
-            </Link>
-          </p>
-        </div>
-      </div>
-    )
+    return <AccountGate />
   }
 
   const orderGroups = groupOrders(orders)
@@ -99,13 +84,24 @@ export function AccountPage() {
               {profile.real_name} · {formatPhoneDisplay(profile.phone)}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="text-sm text-white/40 transition hover:text-white/70"
-          >
-            登出
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            {adminAuthed && (
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-glow/45 bg-amber-glow/15 px-3 py-2 text-sm tracking-wide text-amber-glow transition hover:bg-amber-glow/25"
+              >
+                <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
+                後台
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="text-sm text-white/40 transition hover:text-white/70"
+            >
+              登出
+            </button>
+          </div>
         </div>
 
         <GlassPanel className="mt-8 overflow-hidden p-0">

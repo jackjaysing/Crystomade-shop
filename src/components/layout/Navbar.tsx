@@ -1,10 +1,11 @@
-import { ShoppingCart, Store, User } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Store, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { CartDrawer } from '../cart/CartDrawer'
 import { MemberPointsBadge } from '../member/MemberPointsBadge'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
 import { usePointRedeemState } from '../../hooks/usePointRedeemState'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { useCartAvailability } from '../../hooks/useCartAvailability'
 
 const NAV_ICON_GAP = 'gap-2'
@@ -23,7 +24,9 @@ export function Navbar() {
   const isProducts = pathname.startsWith('/products')
   const isPointShop = pathname.startsWith('/point-shop')
   const isAccount = pathname.startsWith('/account')
+  const isAdmin = pathname.startsWith('/admin')
   const { profile } = useAuth()
+  const { authed: adminAuthed } = useAdminSession()
   const { availablePoints } = usePointRedeemState()
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
@@ -84,12 +87,17 @@ export function Navbar() {
                 <User className="h-4 w-4" strokeWidth={1.5} />
                 <span>{profile ? '會員' : '登入'}</span>
               </Link>
-              <Link
-                to="/admin"
-                className="text-white/40 transition hover:text-white/70"
-              >
-                管理
-              </Link>
+              {adminAuthed && (
+                <Link
+                  to="/admin"
+                  className={`flex items-center gap-1 tracking-wide transition ${
+                    isAdmin ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
+                  後台
+                </Link>
+              )}
             </div>
 
             <div className={`flex items-center ${NAV_ICON_GAP} md:hidden`}>
@@ -120,6 +128,15 @@ export function Navbar() {
               >
                 <User className="h-5 w-5" strokeWidth={1.5} />
               </Link>
+              {adminAuthed && (
+                <Link
+                  to="/admin"
+                  className={navIconClass(isAdmin)}
+                  aria-label="後台管理"
+                >
+                  <LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />
+                </Link>
+              )}
             </div>
 
             <button

@@ -13,6 +13,7 @@ function readEnv(name: 'VITE_ADMIN_PASSWORD' | 'VITE_ADMIN_DISPLAY_NAME'): strin
 function persistAdminSession(displayName: string): void {
   sessionStorage.setItem(ADMIN_SESSION_KEY, 'true')
   sessionStorage.setItem(ADMIN_NAME_KEY, displayName)
+  window.dispatchEvent(new Event('admin-session-change'))
 }
 
 /** 檢查是否已通過管理員驗證 */
@@ -52,4 +53,5 @@ export function loginAdmin(password: string): boolean {
 export function logoutAdmin(): void {
   sessionStorage.removeItem(ADMIN_SESSION_KEY)
   sessionStorage.removeItem(ADMIN_NAME_KEY)
+  window.dispatchEvent(new Event('admin-session-change'))
 }

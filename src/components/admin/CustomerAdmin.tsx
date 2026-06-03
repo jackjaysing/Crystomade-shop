@@ -83,7 +83,11 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
     setSaving(true)
     setMessage('')
     try {
-      await adminUpdateMemberPoints(editing.id, editPoints, editReason)
+      await adminUpdateMemberPoints(editing.id, editPoints, editReason, {
+        realName: editing.real_name,
+        phone: editing.phone,
+        previousPoints: editing.points,
+      })
       setMessage(`已更新 ${editing.real_name} 的點數`)
       setEditing(null)
       await reload()

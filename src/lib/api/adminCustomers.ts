@@ -165,14 +165,23 @@ export async function fetchGuestCustomers(): Promise<AdminGuestCustomer[]> {
   )
 }
 
+export interface AdminUpdateMemberPointsContext {
+  realName: string
+  phone: string
+  previousPoints: number
+}
+
 /** 後台：調整會員點數 */
 export async function adminUpdateMemberPoints(
   userId: string,
   newPoints: number,
-  reason: string
+  reason: string,
+  member: AdminUpdateMemberPointsContext
 ): Promise<AdminRegisteredCustomer> {
   const points = Math.max(0, Math.floor(newPoints))
   const note = reason.trim() || '後台調整點數'
+  const prev = Math.max(0, Math.floor(member.previousPoints))
+  const memberLabel = `${member.realName.trim() || '（未填姓名）'} · ${formatPhoneDisplay(member.phone)}`
 
   const { data, error } = await supabase.rpc('admin_set_member_points', {
     p_user_id: userId,
@@ -195,9 +204,10 @@ export async function adminUpdateMemberPoints(
 
   void recordAdminActivity({
     action: 'update',
-    entityType: 'product',
+    entityType: 'member',
     entityId: userId,
-    summary: `調整會員點數為 ${points}：${note}`,
+    entityLabel: memberLabel,
+    summary: `調整會員「${member.realName.trim() || '未填姓名'}」點數：${prev} → ${points}（${note}）`,
   })
 
   const profile = normalizeMemberRow(row as Record<string, unknown>)

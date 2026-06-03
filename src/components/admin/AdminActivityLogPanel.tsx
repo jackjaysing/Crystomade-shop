@@ -33,6 +33,7 @@ const ENTITY_LABEL: Record<string, string> = {
   product: '商品',
   order: '訂單',
   banner: '公告橫幅',
+  member: '會員',
 }
 
 /** 後台操作日誌列表 */
@@ -90,7 +91,18 @@ export function AdminActivityLogPanel({
                     {ENTITY_LABEL[log.entity_type] ?? log.entity_type}
                   </span>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-white/75">
+                {log.entity_label && log.entity_type === 'member' && (
+                  <p className="mt-2 text-sm font-medium text-white/85">
+                    {log.entity_label}
+                  </p>
+                )}
+                <p
+                  className={`text-sm leading-relaxed text-white/75 ${
+                    log.entity_label && log.entity_type === 'member'
+                      ? 'mt-1'
+                      : 'mt-2'
+                  }`}
+                >
                   {log.summary}
                 </p>
               </GlassPanel>
