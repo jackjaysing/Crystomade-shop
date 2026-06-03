@@ -71,20 +71,21 @@ async function ensureMemberProfile(
   input: MemberRegisterInput
 ): Promise<void> {
   const phone = normalizePhone(input.phone)
-  const payload = {
-    id: user.id,
-    real_name: input.realName.trim(),
-    phone,
-    birthday: input.birthday,
-    updated_at: new Date().toISOString(),
-  }
 
-  const { error } = await supabase.from('member_profiles').upsert(payload, {
-    onConflict: 'id',
+  const { error } = await supabase.rpc('member_register_finalize', {
+    p_user_id: user.id,
+    p_real_name: input.realName.trim(),
+    p_phone: phone,
+    p_birthday: input.birthday,
   })
 
   if (error) {
     const msg = formatErrorMessage(error)
+    if (/member_register_finalize|function/i.test(msg)) {
+      throw new Error(
+        '註冊贈點功能未啟用，請在 Supabase SQL Editor 執行 supabase/migration-fix-member-welcome-bonus.sql'
+      )
+    }
     if (msg.includes('member_profiles') || msg.includes('relation')) {
       throw new Error(
         '資料庫尚未啟用會員功能，請在 Supabase SQL Editor 執行 supabase/migration-add-member-points.sql'

@@ -34,6 +34,7 @@ const ENTITY_LABEL: Record<string, string> = {
   order: '訂單',
   banner: '公告橫幅',
   member: '會員',
+  coupon: '優惠券',
 }
 
 /** 後台操作日誌列表 */

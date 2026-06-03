@@ -2,7 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { CartItemSizeEditor } from '../components/cart/CartItemSizeEditor'
 import { OrderSuccessModal } from '../components/cart/OrderSuccessModal'
+import { CheckoutCouponSelect } from '../components/checkout/CheckoutCouponSelect'
 import { CheckoutPointsDiscount } from '../components/checkout/CheckoutPointsDiscount'
+import { calcCouponDiscount } from '../lib/couponCalculation'
+import { fetchMemberAvailableCoupons, redeemMemberCouponAtCheckout } from '../lib/api/coupons'
 import { CheckoutMemberSection } from '../components/member/CheckoutMemberSection'
 import { calcDiscountNtdFromPoints, clampPointsForDiscount } from '../lib/pointsCalculation'
 import { isPointRedemptionItem } from '../lib/cartItemKinds'
@@ -49,6 +52,19 @@ export function CheckoutPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [successOrderNumber, setSuccessOrderNumber] = useState<string | null>(null)
   const [pointsToUse, setPointsToUse] = useState(0)
+  const [selectedCouponId, setSelectedCouponId] = useState<string | null>(null)
+  const [memberCoupons, setMemberCoupons] = useState<
+    Awaited<ReturnType<typeof fetchMemberAvailableCoupons>>
+  >([])
+
+  useEffect(() => {
+    if (!user?.id) {
+      setMemberCoupons([])
+      setSelectedCouponId(null)
+      return
+    }
+    void fetchMemberAvailableCoupons(user.id).then(setMemberCoupons)
+  }, [user?.id])
 
   useEffect(() => {
     if (profile) {
@@ -79,7 +95,16 @@ export function CheckoutPage() {
       )
     : 0
   const pointsDiscountNtd = calcDiscountNtdFromPoints(clampedPointsToUse)
-  const payableTotal = Math.max(0, grandTotal - pointsDiscountNtd)
+  const selectedCoupon = memberCoupons.find((c) => c.id === selectedCouponId) ?? null
+  const couponPreview =
+    selectedCoupon && subtotal > 0
+      ? calcCouponDiscount(subtotal, selectedCoupon)
+      : null
+  const couponDiscountNtd = couponPreview?.discountNtd ?? 0
+  const payableTotal = Math.max(
+    0,
+    grandTotal - pointsDiscountNtd - couponDiscountNtd
+  )
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -101,6 +126,10 @@ export function CheckoutPage() {
         setMessage({ type: 'err', text: '點數不足，請調整折抵或兌換品項' })
         return
       }
+      if (selectedCouponId && !couponPreview) {
+        setMessage({ type: 'err', text: '所選優惠券無法套用於本筆訂單' })
+        return
+      }
     }
 
     setSubmitting(true)
@@ -118,6 +147,16 @@ export function CheckoutPage() {
         user?.id ?? null,
         user ? clampedPointsToUse : 0
       )
+
+      const checkoutId = createdOrders[0]?.checkout_id
+      if (user?.id && selectedCouponId && checkoutId && subtotal > 0) {
+        await redeemMemberCouponAtCheckout(
+          selectedCouponId,
+          checkoutId,
+          subtotal
+        )
+      }
+
       if (user?.id) {
         await syncMemberProfileFromCheckout(
           user.id,
@@ -128,6 +167,7 @@ export function CheckoutPage() {
       }
       clearCart()
       setPointsToUse(0)
+      setSelectedCouponId(null)
       setForm(emptyForm)
       setSuccessOrderNumber(createdOrders[0]?.order_number ?? null)
       setShowSuccess(true)
@@ -268,6 +308,17 @@ export function CheckoutPage() {
                 <span>- NT$ {pointsDiscountNtd.toLocaleString()}</span>
               </div>
             )}
+            {profile && couponPreview && couponDiscountNtd > 0 && (
+              <div className="flex justify-between text-emerald-400/90">
+                <span>優惠券</span>
+                <span>- NT$ {couponDiscountNtd.toLocaleString()}</span>
+              </div>
+            )}
+            {profile && couponPreview?.giftNote && (
+              <p className="text-xs text-amber-glow/80">
+                禮物券：{couponPreview.giftNote}（隨訂單出貨附贈）
+              </p>
+            )}
             <div className="flex justify-between border-t border-white/10 pt-3 text-lg text-white">
               <span>應付總額</span>
               <span className="font-medium text-amber-glow">
@@ -275,6 +326,17 @@ export function CheckoutPage() {
               </span>
             </div>
           </div>
+
+          {profile && user?.id && (
+            <div className="mt-4">
+              <CheckoutCouponSelect
+                userId={user.id}
+                productSubtotal={subtotal}
+                selectedId={selectedCouponId}
+                onSelect={setSelectedCouponId}
+              />
+            </div>
+          )}
 
           {profile && subtotal > 0 && (
             <div className="mt-4">

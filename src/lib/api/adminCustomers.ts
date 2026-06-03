@@ -214,4 +214,41 @@ export async function adminUpdateMemberPoints(
   return { ...profile, order_count: 0, last_order_at: null, total_spent: 0 }
 }
 
+export interface AdminDeleteMemberContext {
+  realName: string
+  phone: string
+  points: number
+  orderCount: number
+}
+
+/** 後台：刪除會員註冊資料（需先於前端通過驗證碼確認） */
+export async function adminDeleteMember(
+  userId: string,
+  member: AdminDeleteMemberContext
+): Promise<void> {
+  const memberLabel = `${member.realName.trim() || '（未填姓名）'} · ${formatPhoneDisplay(member.phone)}`
+
+  const { error } = await supabase.rpc('admin_delete_member', {
+    p_user_id: userId,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/admin_delete_member|function/i.test(msg)) {
+      throw new Error(
+        '後台刪除會員功能未啟用，請執行 supabase/migration-admin-delete-member.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  void recordAdminActivity({
+    action: 'delete',
+    entityType: 'member',
+    entityId: userId,
+    entityLabel: memberLabel,
+    summary: `刪除會員註冊資料：${member.realName.trim() || '未填姓名'}（${formatPhoneDisplay(member.phone)}，原點數 ${member.points}，訂單 ${member.orderCount} 筆）`,
+  })
+}
+
 export { formatPhoneDisplay }

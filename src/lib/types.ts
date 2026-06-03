@@ -78,6 +78,9 @@ export interface Order {
   redemption_points?: number | null
   checkout_points_discount?: number | null
   checkout_discount_ntd?: number | null
+  member_coupon_id?: string | null
+  checkout_coupon_discount?: number | null
+  coupon_gift_note?: string | null
   /** 關聯查詢時帶入 */
   products?: (Pick<Product, 'name' | 'image_url'> & {
     category?: ProductCategory
@@ -167,6 +170,60 @@ export interface PointProductFormData {
   stock: number
   is_active: boolean
   imageFile: File | null
+}
+
+/** 優惠券類型 */
+export type CouponType = 'fixed_discount' | 'percent_discount' | 'gift'
+
+export type MemberCouponStatus = 'available' | 'used' | 'expired'
+
+/** 優惠券範本（後台定義） */
+export interface Coupon {
+  id: string
+  title: string
+  description: string
+  coupon_type: CouponType
+  /** 滿額門檻（付費商品小計） */
+  min_purchase_amount: number
+  /** 折抵金額（純折抵） */
+  discount_amount: number | null
+  /** 折扣（折）（純打折） */
+  discount_zhe: number | null
+  /** 禮品說明（禮物券） */
+  gift_description: string | null
+  is_active: boolean
+  /** 發放後有效天數；null 表示不限 */
+  valid_days: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CouponFormData {
+  title: string
+  description: string
+  coupon_type: CouponType
+  min_purchase_amount: number
+  discount_amount: number | null
+  discount_zhe: number | null
+  gift_description: string | null
+  is_active: boolean
+  valid_days: number | null
+}
+
+/** 會員持有的優惠券 */
+export interface MemberCoupon {
+  id: string
+  user_id: string
+  coupon_id: string
+  status: MemberCouponStatus
+  issued_at: string
+  expires_at: string | null
+  used_at: string | null
+  checkout_id: string | null
+}
+
+export interface MemberCouponWithDefinition extends MemberCoupon {
+  coupon: Coupon
 }
 
 /** 建立訂單表單 */

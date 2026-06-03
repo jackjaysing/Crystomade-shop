@@ -85,6 +85,14 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
       row.checkout_discount_ntd != null
         ? Number(row.checkout_discount_ntd)
         : null,
+    member_coupon_id:
+      row.member_coupon_id != null ? String(row.member_coupon_id) : null,
+    checkout_coupon_discount:
+      row.checkout_coupon_discount != null
+        ? Number(row.checkout_coupon_discount)
+        : null,
+    coupon_gift_note:
+      row.coupon_gift_note != null ? String(row.coupon_gift_note) : null,
     products: resolveOrderProduct(row),
   }
 }

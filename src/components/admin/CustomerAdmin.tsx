@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  adminDeleteMember,
   adminUpdateMemberPoints,
   fetchGuestCustomers,
   fetchRegisteredCustomers,
   formatPhoneDisplay,
 } from '../../lib/api/adminCustomers'
 import type { AdminGuestCustomer, AdminRegisteredCustomer } from '../../lib/types'
+import { DeleteMemberConfirmModal } from './DeleteMemberConfirmModal'
 import { GlassPanel } from '../ui/GlassPanel'
 
 type CustomerView = 'registered' | 'guest'
@@ -27,6 +29,9 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
   const [editPoints, setEditPoints] = useState(0)
   const [editReason, setEditReason] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deletingMember, setDeletingMember] =
+    useState<AdminRegisteredCustomer | null>(null)
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false)
 
   const reload = useCallback(async () => {
     if (!enabled) return
@@ -76,6 +81,28 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
     setEditing(customer)
     setEditPoints(customer.points)
     setEditReason('')
+  }
+
+  const handleDeleteMember = async () => {
+    if (!deletingMember) return
+    setDeleteSubmitting(true)
+    setMessage('')
+    try {
+      await adminDeleteMember(deletingMember.id, {
+        realName: deletingMember.real_name,
+        phone: deletingMember.phone,
+        points: deletingMember.points,
+        orderCount: deletingMember.order_count,
+      })
+      setMessage(`已刪除 ${deletingMember.real_name} 的註冊資料`)
+      setDeletingMember(null)
+      if (editing?.id === deletingMember.id) setEditing(null)
+      await reload()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '刪除失敗')
+    } finally {
+      setDeleteSubmitting(false)
+    }
   }
 
   const handleSavePoints = async () => {
@@ -155,7 +182,9 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
       {message && (
         <p
           className={`text-sm ${
-            message.includes('已更新') ? 'text-emerald-400' : 'text-red-400'
+            message.includes('已更新') || message.includes('已刪除')
+              ? 'text-emerald-400'
+              : 'text-red-400'
           }`}
         >
           {message}
@@ -222,13 +251,22 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
                         {new Date(c.created_at).toLocaleDateString('zh-TW')}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(c)}
-                          className="rounded border border-amber-glow/35 px-3 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/10"
-                        >
-                          編輯點數
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(c)}
+                            className="rounded border border-amber-glow/35 px-3 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/10"
+                          >
+                            編輯點數
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingMember(c)}
+                            className="rounded border border-red-400/35 px-3 py-1 text-xs text-red-300 transition hover:bg-red-500/10"
+                          >
+                            刪除註冊
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -262,6 +300,17 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
         <p className="text-xs text-white/35">
           未註冊客戶為訪客下單紀錄（無會員帳號），依電話彙總；若已註冊同號碼則僅顯示於「已註冊會員」。
         </p>
+      )}
+
+      {deletingMember && (
+        <DeleteMemberConfirmModal
+          customer={deletingMember}
+          deleting={deleteSubmitting}
+          onClose={() => {
+            if (!deleteSubmitting) setDeletingMember(null)
+          }}
+          onConfirm={handleDeleteMember}
+        />
       )}
 
       {editing && (

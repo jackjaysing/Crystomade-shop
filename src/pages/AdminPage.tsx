@@ -10,6 +10,7 @@ import { OrderTable } from '../components/admin/OrderTable'
 import { ProductForm } from '../components/admin/ProductForm'
 import { CustomerAdmin } from '../components/admin/CustomerAdmin'
 import { PointShopAdmin } from '../components/admin/PointShopAdmin'
+import { CouponAdmin } from '../components/admin/CouponAdmin'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
@@ -28,6 +29,7 @@ import { Archive } from 'lucide-react'
 type AdminTab =
   | 'products'
   | 'point_shop'
+  | 'coupons'
   | 'customers'
   | 'orders'
   | 'revenue'
@@ -38,6 +40,7 @@ type AdminTab =
 const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'products', label: '商品管理' },
   { id: 'point_shop', label: '點數商城' },
+  { id: 'coupons', label: '優惠券' },
   { id: 'customers', label: '客戶資料' },
   { id: 'orders', label: '訂單管理' },
   { id: 'banners', label: '公告橫幅' },
@@ -187,6 +190,13 @@ export function AdminPage() {
           <section>
             <h2 className="mb-4 text-lg tracking-wide text-white/80">點數商城編輯</h2>
             <PointShopAdmin />
+          </section>
+        )}
+
+        {activeTab === 'coupons' && (
+          <section>
+            <h2 className="mb-4 text-lg tracking-wide text-white/80">優惠券管理</h2>
+            <CouponAdmin enabled={authed} />
           </section>
         )}
 
