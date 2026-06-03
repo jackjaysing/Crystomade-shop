@@ -31,6 +31,9 @@ export function Navbar() {
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
 
+  /** 手機：僅管理登入、未登入會員時顯示後台圖示；雙登入改由會員中心進入 */
+  const showMobileAdminIcon = adminAuthed && !profile
+
   return (
     <>
       <header
@@ -134,7 +137,7 @@ export function Navbar() {
                 >
                   <User className="h-5 w-5" strokeWidth={1.5} />
                 </Link>
-                {adminAuthed && (
+                {showMobileAdminIcon && (
                   <Link
                     to="/admin"
                     className={navIconClass(isAdmin)}
