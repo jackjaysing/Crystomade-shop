@@ -31,10 +31,6 @@ export function Navbar() {
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
 
-  /** 手機同時會員＋管理登入時空間不足，精簡右側圖示、保留購物車 */
-  const mobileCompact = Boolean(profile && adminAuthed)
-  const showMobileAdminIcon = adminAuthed && !profile
-
   return (
     <>
       <header
@@ -64,21 +60,15 @@ export function Navbar() {
           <nav
             className={`ml-auto flex min-w-0 shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
           >
-            <div
-              className={`flex min-w-0 items-center ${NAV_ICON_GAP} md:gap-6 ${
-                mobileCompact ? 'max-md:overflow-x-auto max-md:no-scrollbar' : ''
-              }`}
-            >
-              {!mobileCompact && (
-                <Link
-                  to="/products"
-                  className={`shrink-0 tracking-wide transition md:hidden ${
-                    isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-                  }`}
-                >
-                  典藏
-                </Link>
-              )}
+            <div className={`flex min-w-0 items-center ${NAV_ICON_GAP} md:gap-6`}>
+              <Link
+                to="/products"
+                className={`shrink-0 tracking-wide transition md:hidden ${
+                  isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                典藏
+              </Link>
 
               <div className="hidden items-center gap-6 md:flex">
                 <Link
@@ -115,41 +105,28 @@ export function Navbar() {
               </div>
 
               <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:hidden`}>
-                {mobileCompact ? (
+                <div className="flex shrink-0 items-center gap-1.5">
                   <Link
                     to="/point-shop"
                     className={navIconClass(isPointShop)}
-                    aria-label={`點數商城，可用 ${availablePoints} 點`}
+                    aria-label={
+                      profile
+                        ? `點數商城，可用 ${availablePoints} 點`
+                        : '點數商城'
+                    }
                   >
                     <Store className="h-5 w-5" strokeWidth={1.5} />
-                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-glow px-0.5 text-[9px] font-medium text-void">
-                      {availablePoints > 99 ? '99+' : availablePoints}
-                    </span>
                   </Link>
-                ) : (
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <Link
-                      to="/point-shop"
-                      className={navIconClass(isPointShop)}
-                      aria-label={
-                        profile
-                          ? `點數商城，可用 ${availablePoints} 點`
-                          : '點數商城'
-                      }
+                  {profile && (
+                    <span
+                      className={`whitespace-nowrap text-xs font-medium tabular-nums ${
+                        isPointShop ? 'text-amber-glow' : 'text-white/70'
+                      }`}
                     >
-                      <Store className="h-5 w-5" strokeWidth={1.5} />
-                    </Link>
-                    {profile && (
-                      <span
-                        className={`whitespace-nowrap text-xs font-medium tabular-nums ${
-                          isPointShop ? 'text-amber-glow' : 'text-white/70'
-                        }`}
-                      >
-                        {availablePoints > 999 ? '999+' : availablePoints} 點
-                      </span>
-                    )}
-                  </div>
-                )}
+                      {availablePoints > 999 ? '999+' : availablePoints} 點
+                    </span>
+                  )}
+                </div>
                 <Link
                   to="/account"
                   className={navIconClass(isAccount)}
@@ -157,7 +134,7 @@ export function Navbar() {
                 >
                   <User className="h-5 w-5" strokeWidth={1.5} />
                 </Link>
-                {showMobileAdminIcon && (
+                {adminAuthed && (
                   <Link
                     to="/admin"
                     className={navIconClass(isAdmin)}
