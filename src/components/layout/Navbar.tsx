@@ -113,28 +113,30 @@ export function Navbar() {
               </div>
 
               <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:hidden`}>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <Link
-                    to="/point-shop"
-                    className={navIconClass(isPointShop)}
-                    aria-label={
-                      profile
-                        ? `點數商城，可用 ${availablePoints} 點`
-                        : '點數商城'
-                    }
-                  >
-                    <Store className="h-5 w-5" strokeWidth={1.5} />
-                  </Link>
+                <Link
+                  to="/point-shop"
+                  className={
+                    profile
+                      ? `flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-2.5 transition ${
+                          isPointShop
+                            ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
+                            : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
+                        }`
+                      : navIconClass(isPointShop)
+                  }
+                  aria-label={
+                    profile
+                      ? `點數商城，可用 ${availablePoints} 點`
+                      : '點數商城'
+                  }
+                >
+                  <Store className="h-5 w-5 shrink-0" strokeWidth={1.5} />
                   {profile && (
-                    <span
-                      className={`whitespace-nowrap text-xs font-medium tabular-nums ${
-                        isPointShop ? 'text-amber-glow' : 'text-white/70'
-                      }`}
-                    >
+                    <span className="whitespace-nowrap text-xs font-medium tabular-nums">
                       {availablePoints > 999 ? '999+' : availablePoints} 點
                     </span>
                   )}
-                </div>
+                </Link>
                 <Link
                   to="/account"
                   className={
