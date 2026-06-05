@@ -67,7 +67,7 @@ export function PageViewStats({
   )
 
   return (
-    <section className="space-y-8">
+    <section className="w-full space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg tracking-wide text-white/80">瀏覽統計</h2>
         <button
@@ -90,11 +90,11 @@ export function PageViewStats({
 
       {!error && (
         <div className="grid gap-4 sm:grid-cols-2">
-          <GlassPanel className="p-6">
+          <GlassPanel className="p-6 md:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs tracking-wide text-white/45">當日瀏覽次數</p>
-                <p className="mt-2 font-display text-4xl text-amber-glow">
+                <p className="text-xs tracking-wide text-white/45 md:text-sm">當日瀏覽次數</p>
+                <p className="mt-2 font-display text-4xl text-amber-glow md:text-5xl">
                   {loading && !stats ? '—' : formatCount(stats?.todayCount ?? 0)}
                 </p>
                 <p className="mt-1 text-xs text-white/35">台北時區 · 今日累計</p>
@@ -103,11 +103,11 @@ export function PageViewStats({
             </div>
           </GlassPanel>
 
-          <GlassPanel className="p-6">
+          <GlassPanel className="p-6 md:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs tracking-wide text-white/45">總瀏覽次數</p>
-                <p className="mt-2 font-display text-4xl text-white">
+                <p className="text-xs tracking-wide text-white/45 md:text-sm">總瀏覽次數</p>
+                <p className="mt-2 font-display text-4xl text-white md:text-5xl">
                   {loading && !stats ? '—' : formatCount(stats?.totalCount ?? 0)}
                 </p>
                 <p className="mt-1 text-xs text-white/35">自啟用統計以來</p>
@@ -118,11 +118,11 @@ export function PageViewStats({
         </div>
       )}
 
-      <GlassPanel className="p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <GlassPanel className="w-full p-6 md:p-8">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 md:mb-6">
           <div>
-            <h3 className="font-display text-lg text-white">商品瀏覽排行</h3>
-            <p className="mt-1 text-xs text-white/40">
+            <h3 className="font-display text-lg text-white md:text-xl">商品瀏覽排行</h3>
+            <p className="mt-1 text-xs text-white/40 md:text-sm">
               依各商品被開啟詳情的次數排序（前 15 名）
             </p>
           </div>
@@ -167,11 +167,12 @@ export function PageViewStats({
         )}
       </GlassPanel>
 
-      <GlassPanel className="p-6">
-        <div className="mb-4">
-          <h3 className="font-display text-lg text-white">瀏覽時段分析</h3>
-          <p className="mt-1 text-xs text-white/40">
+      <GlassPanel className="w-full p-6 md:p-8">
+        <div className="mb-4 md:mb-6">
+          <h3 className="font-display text-lg text-white md:text-xl">瀏覽時段分析</h3>
+          <p className="mt-1 text-xs text-white/40 md:text-sm">
             訪客在星期幾、幾點瀏覽前台（台北時區，自啟用時段統計後累計）
+            <span className="md:hidden"> · 手機可左右滑動查看熱力圖</span>
           </p>
         </div>
 

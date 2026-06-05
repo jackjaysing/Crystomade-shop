@@ -25,7 +25,7 @@ export function ProductViewRankChart({ rows, metricLabel }: ProductViewRankChart
         return (
           <li
             key={row.productId}
-            className="rounded-xl border border-white/8 bg-white/[0.02] p-3 sm:p-4"
+            className="rounded-xl border border-white/8 bg-white/[0.02] p-3 sm:p-4 md:p-5"
           >
             <div className="flex gap-3 sm:gap-4">
               <span
@@ -39,11 +39,11 @@ export function ProductViewRankChart({ rows, metricLabel }: ProductViewRankChart
                 <img
                   src={row.imageUrl}
                   alt=""
-                  className="h-14 w-14 shrink-0 rounded-lg border border-white/10 object-cover sm:h-16 sm:w-16"
+                  className="h-14 w-14 shrink-0 rounded-lg border border-white/10 object-cover sm:h-16 sm:w-16 md:h-20 md:w-20"
                 />
               ) : (
                 <div
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-dashed border-white/15 bg-white/[0.03] text-[10px] text-white/30 sm:h-16 sm:w-16"
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-dashed border-white/15 bg-white/[0.03] text-[10px] text-white/30 sm:h-16 sm:w-16 md:h-20 md:w-20"
                   aria-hidden
                 >
                   無圖
@@ -51,18 +51,18 @@ export function ProductViewRankChart({ rows, metricLabel }: ProductViewRankChart
               )}
 
               <div className="min-w-0 flex-1">
-                <p className="font-medium leading-snug break-words text-white">
+                <p className="font-medium leading-snug break-words text-white md:text-lg">
                   {row.name}
                 </p>
-                <div className="mt-2 flex items-center gap-3">
-                  <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/8">
+                <div className="mt-2 flex items-center gap-3 md:mt-3">
+                  <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/8 md:h-3">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-amber-glow/35 to-amber-glow"
                       style={{ width: `${barPercent}%` }}
                       role="presentation"
                     />
                   </div>
-                  <span className="shrink-0 text-sm tabular-nums text-amber-glow">
+                  <span className="shrink-0 text-sm tabular-nums text-amber-glow md:text-base">
                     {row.count.toLocaleString('zh-TW')}
                     <span className="ml-1 text-xs text-white/40">次</span>
                   </span>

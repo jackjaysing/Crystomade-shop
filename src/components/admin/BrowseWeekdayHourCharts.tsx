@@ -8,123 +8,74 @@ interface BrowseWeekdayHourChartsProps {
   cells: BrowseHeatmapCell[]
 }
 
-const CHART_HEIGHT = 120
-
-function MiniBarChart({
-  items,
-  ariaLabel,
-}: {
+interface BarChartProps {
   items: { label: string; count: number }[]
   ariaLabel: string
-}) {
+}
+
+function ResponsiveBarChart({ items, ariaLabel }: BarChartProps) {
   const max = Math.max(...items.map((item) => item.count), 1)
-  const barWidth = 28
-  const gap = 8
-  const width = items.length * (barWidth + gap) + gap
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${CHART_HEIGHT + 36}`}
-      className="h-auto w-full"
+    <div
+      className="flex w-full gap-2 md:gap-3"
       role="img"
       aria-label={ariaLabel}
     >
-      {items.map((item, index) => {
-        const barHeight =
-          item.count > 0 ? Math.max(6, (item.count / max) * CHART_HEIGHT) : 2
-        const x = gap + index * (barWidth + gap)
-        const y = CHART_HEIGHT - barHeight
+      {items.map((item) => {
+        const heightPercent = item.count > 0 ? Math.max(6, (item.count / max) * 100) : 2
         return (
-          <g key={item.label}>
-            <title>
-              {item.label}：{item.count.toLocaleString('zh-TW')} 次
-            </title>
-            <rect
-              x={x}
-              y={y}
-              width={barWidth}
-              height={barHeight}
-              rx={4}
-              fill="url(#browseMiniBar)"
-            />
-            <text
-              x={x + barWidth / 2}
-              y={CHART_HEIGHT + 16}
-              textAnchor="middle"
-              className="fill-white/45 text-[8px]"
-            >
-              {item.label.slice(1)}
-            </text>
-          </g>
+          <div
+            key={item.label}
+            className="flex min-w-0 flex-1 flex-col items-center gap-2"
+            title={`${item.label}：${item.count.toLocaleString('zh-TW')} 次`}
+          >
+            <div className="flex h-40 w-full items-end md:h-52">
+              <div
+                className="w-full rounded-md bg-gradient-to-t from-amber-glow/25 to-amber-glow"
+                style={{ height: `${heightPercent}%` }}
+              />
+            </div>
+            <span className="w-full truncate text-center text-[10px] text-white/45 md:text-xs">
+              {item.label}
+            </span>
+          </div>
         )
       })}
-      <defs>
-        <linearGradient id="browseMiniBar" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f5d78e" />
-          <stop offset="100%" stopColor="#c9a227" stopOpacity="0.25" />
-        </linearGradient>
-      </defs>
-    </svg>
+    </div>
   )
 }
 
-function HourBarChart({
-  items,
-  ariaLabel,
-}: {
-  items: { label: string; count: number }[]
-  ariaLabel: string
-}) {
+function HourBarChart({ items, ariaLabel }: BarChartProps) {
   const sampled = items.filter((_, hour) => hour % 2 === 0)
   const max = Math.max(...sampled.map((item) => item.count), 1)
-  const barWidth = 14
-  const gap = 4
-  const width = sampled.length * (barWidth + gap) + gap
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${CHART_HEIGHT + 36}`}
-      className="h-auto w-full"
+    <div
+      className="flex w-full gap-1.5 md:gap-2"
       role="img"
       aria-label={ariaLabel}
     >
       {sampled.map((item, index) => {
-        const barHeight =
-          item.count > 0 ? Math.max(6, (item.count / max) * CHART_HEIGHT) : 2
-        const x = gap + index * (barWidth + gap)
-        const y = CHART_HEIGHT - barHeight
+        const heightPercent = item.count > 0 ? Math.max(6, (item.count / max) * 100) : 2
         const hour = index * 2
         return (
-          <g key={hour}>
-            <title>
-              {hour}時：{item.count.toLocaleString('zh-TW')} 次
-            </title>
-            <rect
-              x={x}
-              y={y}
-              width={barWidth}
-              height={barHeight}
-              rx={3}
-              fill="url(#browseHourBar)"
-            />
-            <text
-              x={x + barWidth / 2}
-              y={CHART_HEIGHT + 16}
-              textAnchor="middle"
-              className="fill-white/45 text-[7px]"
-            >
-              {hour}
-            </text>
-          </g>
+          <div
+            key={hour}
+            className="flex min-w-0 flex-1 flex-col items-center gap-2"
+            title={`${hour}時：${item.count.toLocaleString('zh-TW')} 次`}
+          >
+            <div className="flex h-40 w-full items-end md:h-52">
+              <div
+                className="w-full rounded-md bg-gradient-to-t from-blue-500/20 to-blue-300"
+                style={{ height: `${heightPercent}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-white/45 md:text-xs">{hour}</span>
+          </div>
         )
       })}
-      <defs>
-        <linearGradient id="browseHourBar" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#93c5fd" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
-        </linearGradient>
-      </defs>
-    </svg>
+    </div>
   )
 }
 
@@ -137,13 +88,13 @@ export function BrowseWeekdayHourCharts({ cells }: BrowseWeekdayHourChartsProps)
   if (!hasData) return null
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div>
-        <p className="mb-2 text-xs text-white/45">各星期瀏覽量</p>
-        <MiniBarChart items={weekdayRows} ariaLabel="各星期瀏覽次數長條圖" />
+    <div className="grid w-full gap-6 lg:grid-cols-2 lg:gap-8">
+      <div className="w-full">
+        <p className="mb-3 text-sm text-white/45 md:text-base">各星期瀏覽量</p>
+        <ResponsiveBarChart items={weekdayRows} ariaLabel="各星期瀏覽次數長條圖" />
       </div>
-      <div>
-        <p className="mb-2 text-xs text-white/45">各時段瀏覽量（每 2 小時）</p>
+      <div className="w-full">
+        <p className="mb-3 text-sm text-white/45 md:text-base">各時段瀏覽量（每 2 小時）</p>
         <HourBarChart items={hourRows} ariaLabel="各小時瀏覽次數長條圖" />
       </div>
     </div>
