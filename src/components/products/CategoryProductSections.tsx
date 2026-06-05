@@ -1,41 +1,38 @@
 import { useRef, type RefObject } from 'react'
-import { PRODUCT_CATEGORIES } from '../../constants/categories'
-import type { Product, ProductCategory } from '../../lib/types'
+import type { BraceletStyle, Product, ProductCategory } from '../../lib/types'
 import { CategoryProductRow } from './CategoryProductRow'
 
 interface CategoryProductSectionsProps {
   productsByCategory: Record<ProductCategory, Product[]>
+  categoriesToShow: ProductCategory[]
   onProductClick: (product: Product) => void
   sectionRefs: RefObject<Record<ProductCategory, HTMLElement | null>>
+  activeBraceletStyle?: BraceletStyle | null
+  onBraceletStyleSelect?: (style: BraceletStyle | null) => void
 }
 
 /** 典藏：手串／擺件／礦石分欄橫向卷軸 */
 export function CategoryProductSections({
   productsByCategory,
+  categoriesToShow,
   onProductClick,
   sectionRefs,
+  activeBraceletStyle,
+  onBraceletStyleSelect,
 }: CategoryProductSectionsProps) {
-  const hasAnyProducts = PRODUCT_CATEGORIES.some(
-    (cat) => productsByCategory[cat.id].length > 0
-  )
-
-  if (!hasAnyProducts) {
-    return (
-      <p className="text-center text-white/40">目前沒有符合條件的商品</p>
-    )
-  }
-
   return (
     <div className="space-y-12 md:space-y-16">
-      {PRODUCT_CATEGORIES.map((cat) => (
+      {categoriesToShow.map((categoryId) => (
         <CategoryProductRow
-          key={cat.id}
+          key={categoryId}
           ref={(node) => {
-            sectionRefs.current[cat.id] = node
+            sectionRefs.current[categoryId] = node
           }}
-          category={cat.id}
-          products={productsByCategory[cat.id]}
+          category={categoryId}
+          products={productsByCategory[categoryId]}
           onProductClick={onProductClick}
+          activeBraceletStyle={activeBraceletStyle}
+          onBraceletStyleSelect={onBraceletStyleSelect}
         />
       ))}
     </div>

@@ -7,7 +7,7 @@ export interface BraceletStyleOption {
 
 /** 手串款式 */
 export const BRACELET_STYLES: BraceletStyleOption[] = [
-  { id: '通用', label: '通用' },
+  { id: '通用', label: '通用款' },
   { id: '男款', label: '男款' },
   { id: '女款', label: '女款' },
   { id: '兒童款', label: '兒童款' },

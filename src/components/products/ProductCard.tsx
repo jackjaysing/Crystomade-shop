@@ -1,4 +1,4 @@
-import { getProductCategoryLabel } from '../../constants/categories'
+import { getProductCategoryBadgeLines } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
@@ -14,6 +14,7 @@ interface ProductCardProps {
 export function ProductCard({ product, onClick }: ProductCardProps) {
   const isSold = isProductSoldOut(product)
   const isHot = product.is_hot
+  const categoryLines = getProductCategoryBadgeLines(product)
 
   const card = (
     <article
@@ -37,8 +38,16 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         {/* 金屬邊框光暈 */}
         <div className="pointer-events-none absolute inset-0 bg-metal-gradient opacity-0 transition group-hover:opacity-100" />
 
-        <span className="absolute left-3 top-3 rounded-full border border-white/20 bg-void/70 px-2.5 py-1 text-[10px] tracking-wider text-amber-glow/90 backdrop-blur-sm">
-          {getProductCategoryLabel(product)}
+        <span
+          className={`absolute left-3 top-3 max-w-[4.5rem] border border-white/20 bg-void/70 px-2 py-1 text-[10px] leading-tight tracking-wider text-amber-glow/90 backdrop-blur-sm ${
+            categoryLines.length > 1 ? 'rounded-md text-center' : 'rounded-full px-2.5'
+          }`}
+        >
+          {categoryLines.map((line) => (
+            <span key={line} className="block">
+              {line}
+            </span>
+          ))}
         </span>
 
         <ProductImageBadges product={product} />

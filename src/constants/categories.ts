@@ -27,3 +27,14 @@ export function getProductCategoryLabel(product: Pick<Product, 'category' | 'bra
   }
   return getCategoryLabel(product.category)
 }
+
+/** 商品卡片角標：手串＋款式分行顯示，避免與熱門圖示重疊 */
+export function getProductCategoryBadgeLines(
+  product: Pick<Product, 'category' | 'bracelet_style'>
+): string[] {
+  if (product.category === '手串' && product.bracelet_style) {
+    const style = getBraceletStyleLabel(product.bracelet_style)
+    if (style) return ['手串', style]
+  }
+  return [getCategoryLabel(product.category)]
+}

@@ -1,3 +1,4 @@
+import { useCategoryScrollSpy } from '../hooks/useCategoryScrollSpy'
 import { useMemo, useRef, useState } from 'react'
 
 import { TAG_FILTERS } from '../constants/tags'
@@ -13,7 +14,6 @@ import {
 } from '../constants/crystalColors'
 
 import { BraceletStyleFilter } from '../components/products/BraceletStyleFilter'
-
 import { CategoryFilter } from '../components/products/CategoryFilter'
 
 import {
@@ -109,6 +109,8 @@ export function ProductsPage() {
   const scrollToCategory = (category: ProductCategory) => {
 
     setActiveCategory(category)
+
+    suppressScrollSpy()
 
     requestAnimationFrame(() => {
 
@@ -254,11 +256,39 @@ export function ProductsPage() {
 
 
 
-  const hasAnyProducts = PRODUCT_CATEGORIES.some(
+  const hasAnyProducts = filteredProducts.length > 0
 
-    (cat) => productsByCategory[cat.id].length > 0
+
+
+  const categoriesToShow = useMemo(
+
+    () =>
+
+      PRODUCT_CATEGORIES.filter((cat) =>
+
+        filteredProducts.some((product) => product.category === cat.id)
+
+      ).map((cat) => cat.id),
+
+    [filteredProducts]
 
   )
+
+
+
+  const visibleCategories = categoriesToShow
+
+
+
+  const { suppressScrollSpy } = useCategoryScrollSpy(categorySectionRefs, {
+
+    enabled: hasAnyProducts && !loading,
+
+    visibleCategories,
+
+    onActiveChange: setActiveCategory,
+
+  })
 
 
 
@@ -516,9 +546,15 @@ export function ProductsPage() {
 
             productsByCategory={productsByCategory}
 
+            categoriesToShow={categoriesToShow}
+
             onProductClick={setSelectedProduct}
 
             sectionRefs={categorySectionRefs}
+
+            activeBraceletStyle={activeBraceletStyle}
+
+            onBraceletStyleSelect={setActiveBraceletStyle}
 
           />
 

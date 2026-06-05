@@ -14,22 +14,21 @@ import {
 
 } from 'react'
 
+import { getBraceletStyleLabel } from '../../constants/braceletStyles'
 import { getCategoryLabel } from '../../constants/categories'
 
-import type { Product, ProductCategory } from '../../lib/types'
-
+import type { BraceletStyle, Product, ProductCategory } from '../../lib/types'
+import { BraceletStyleFilter } from './BraceletStyleFilter'
 import { ProductCard } from './ProductCard'
 
 
 
 interface CategoryProductRowProps {
-
   category: ProductCategory
-
   products: Product[]
-
   onProductClick: (product: Product) => void
-
+  activeBraceletStyle?: BraceletStyle | null
+  onBraceletStyleSelect?: (style: BraceletStyle | null) => void
 }
 
 
@@ -180,7 +179,16 @@ function RowNavButton({
 
 export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProps>(
 
-  function CategoryProductRow({ category, products, onProductClick }, ref) {
+  function CategoryProductRow(
+    {
+      category,
+      products,
+      onProductClick,
+      activeBraceletStyle = null,
+      onBraceletStyleSelect,
+    },
+    ref
+  ) {
 
     const sectionRef = useRef<HTMLElement | null>(null)
 
@@ -490,11 +498,16 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
 
 
-    if (products.length === 0) return null
+    const isEmpty = products.length === 0
+    const activeStyleLabel = activeBraceletStyle
+      ? getBraceletStyleLabel(activeBraceletStyle)
+      : ''
+    const showUniversalStyleHint =
+      category === '手串' &&
+      activeBraceletStyle != null &&
+      activeBraceletStyle !== '通用'
 
-
-
-    const showNav = canScrollLeft || canScrollRight
+    const showNav = !isEmpty && (canScrollLeft || canScrollRight)
 
 
 
@@ -526,16 +539,22 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
       >
 
-        <div className="mb-4 flex items-end justify-between gap-3">
-
-          <h2 className="font-display text-2xl text-white md:text-3xl">
-
-            {getCategoryLabel(category)}
-
-          </h2>
-
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+            <h2 className="font-display text-2xl text-white md:text-3xl">
+              {getCategoryLabel(category)}
+            </h2>
+            {category === '手串' && onBraceletStyleSelect && (
+              <div className="max-w-full overflow-x-auto no-scrollbar">
+                <BraceletStyleFilter
+                  variant="inline"
+                  activeStyle={activeBraceletStyle}
+                  onSelect={onBraceletStyleSelect}
+                />
+              </div>
+            )}
+          </div>
           <p className="shrink-0 text-xs text-white/40">{products.length} 件</p>
-
         </div>
 
 
@@ -580,39 +599,46 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
 
 
-          <div
-
-            ref={trackRef}
-
-            className="flex touch-pan-x gap-4 overflow-x-auto overscroll-x-contain pb-2 no-scrollbar snap-x snap-proximity"
-
-          >
-
-            {products.map((product) => (
-
-              <div
-
-                key={product.id}
-
-                data-carousel-card
-
-                className="w-44 shrink-0 snap-start sm:w-52 md:w-56 lg:w-60"
-
-              >
-
-                <ProductCard
-
-                  product={product}
-
-                  onClick={() => onProductClick(product)}
-
-                />
-
-              </div>
-
-            ))}
-
-          </div>
+          {isEmpty ? (
+            <p className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-10 text-center text-sm text-white/45">
+              {category === '手串' && activeBraceletStyle ? (
+                showUniversalStyleHint ? (
+                  <>
+                    目前無{activeStyleLabel}商品，可參考
+                    <button
+                      type="button"
+                      onClick={() => onBraceletStyleSelect?.('通用')}
+                      className="ml-1 text-amber-glow/90 underline decoration-amber-glow/40 underline-offset-2 transition hover:text-amber-glow"
+                    >
+                      通用款
+                    </button>
+                  </>
+                ) : (
+                  <>目前無{activeStyleLabel}商品</>
+                )
+              ) : (
+                '目前沒有符合條件的商品'
+              )}
+            </p>
+          ) : (
+            <div
+              ref={trackRef}
+              className="flex touch-pan-x gap-4 overflow-x-auto overscroll-x-contain pb-2 no-scrollbar snap-x snap-proximity"
+            >
+              {products.map((product) => (
+                <div
+                  key={product.id}
+                  data-carousel-card
+                  className="w-44 shrink-0 snap-start sm:w-52 md:w-56 lg:w-60"
+                >
+                  <ProductCard
+                    product={product}
+                    onClick={() => onProductClick(product)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
 
         </div>
 
