@@ -31,9 +31,6 @@ export function Navbar() {
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
 
-  /** 手機：僅管理登入、未登入會員時顯示後台圖示；雙登入改由會員中心進入 */
-  const showMobileAdminIcon = adminAuthed && !profile
-
   return (
     <>
       <header
@@ -56,24 +53,32 @@ export function Navbar() {
             <img
               src="/logoword.png"
               alt="晶刻 Crystomade"
-              className="block h-[2.125rem] w-auto max-w-[6.75rem] shrink-0 object-contain object-left sm:h-9 sm:max-w-none md:h-10"
+              className="hidden h-[2.125rem] w-auto max-w-[6.75rem] shrink-0 object-contain object-left min-[400px]:block sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
 
-          <nav
-            className={`ml-auto flex min-w-0 shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
+          <Link
+            to="/products"
+            className={`shrink-0 tracking-wide transition md:hidden ${
+              isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+            }`}
           >
-            <div className={`flex min-w-0 items-center ${NAV_ICON_GAP} md:gap-6`}>
-              <Link
-                to="/products"
-                className={`shrink-0 tracking-wide transition md:hidden ${
-                  isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-                }`}
-              >
-                典藏
-              </Link>
+            典藏
+          </Link>
 
+          <nav
+            className={`ml-auto flex shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
+          >
+            <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:gap-6`}>
               <div className="hidden items-center gap-6 md:flex">
+                <Link
+                  to="/products"
+                  className={`tracking-wide transition ${
+                    isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  典藏
+                </Link>
                 <Link
                   to="/point-shop"
                   className={`flex items-center gap-1 tracking-wide transition ${
@@ -137,15 +142,6 @@ export function Navbar() {
                 >
                   <User className="h-5 w-5" strokeWidth={1.5} />
                 </Link>
-                {showMobileAdminIcon && (
-                  <Link
-                    to="/admin"
-                    className={navIconClass(isAdmin)}
-                    aria-label="後台管理"
-                  >
-                    <LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />
-                  </Link>
-                )}
               </div>
             </div>
 

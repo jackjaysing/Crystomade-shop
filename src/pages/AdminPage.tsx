@@ -15,6 +15,7 @@ import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
 import { usePageViewStats } from '../hooks/usePageViewStats'
+import { usePageViewTimeSlotStats } from '../hooks/usePageViewTimeSlotStats'
 import { useProductViewStats } from '../hooks/useProductViewStats'
 import { useAdminActivityLogs } from '../hooks/useAdminActivityLogs'
 import { useProducts } from '../hooks/useProducts'
@@ -67,10 +68,18 @@ export function AdminPage() {
     reload: reloadPageViewStats,
   } = usePageViewStats(authed)
   const {
+    stats: productViewStats,
     statsByProductId,
+    loading: productViewLoading,
     error: productViewError,
     reload: reloadProductViewStats,
   } = useProductViewStats(authed)
+  const {
+    slots: pageViewTimeSlots,
+    loading: timeSlotLoading,
+    error: timeSlotError,
+    reload: reloadTimeSlotStats,
+  } = usePageViewTimeSlotStats(authed)
   const {
     banners,
     error: bannerError,
@@ -86,7 +95,11 @@ export function AdminPage() {
   const reloadAnalytics = () => {
     reloadPageViewStats()
     reloadProductViewStats()
+    reloadTimeSlotStats()
   }
+
+  const analyticsLoading =
+    pageViewLoading || productViewLoading || timeSlotLoading
 
   useEffect(() => {
     const ok = isAdminAuthenticated()
@@ -269,7 +282,12 @@ export function AdminPage() {
         {activeTab === 'analytics' && (
           <PageViewStats
             stats={pageViewStats}
-            loading={pageViewLoading}
+            products={products}
+            productViewStats={productViewStats}
+            productViewError={productViewError}
+            timeSlots={pageViewTimeSlots}
+            timeSlotError={timeSlotError}
+            loading={analyticsLoading}
             error={pageViewError}
             onReload={reloadAnalytics}
           />

@@ -11,10 +11,22 @@ export interface ProductViewStats {
   totalCount: number
 }
 
+export interface PageViewTimeSlot {
+  dayOfWeek: number
+  hour: number
+  viewCount: number
+}
+
 interface ProductViewStatsRow {
   product_id: string
   today_count: number
   total_count: number
+}
+
+interface PageViewTimeSlotRow {
+  day_of_week: number
+  hour_of_day: number
+  view_count: number
 }
 
 /** 記錄一次頁面瀏覽（fire-and-forget） */
@@ -63,5 +75,20 @@ export async function fetchProductViewStats(): Promise<ProductViewStats[]> {
     productId: row.product_id,
     todayCount: Number(row.today_count ?? 0),
     totalCount: Number(row.total_count ?? 0),
+  }))
+}
+
+/** 取得瀏覽時段統計（週幾 × 小時，台北時區） */
+export async function fetchPageViewTimeSlotStats(): Promise<PageViewTimeSlot[]> {
+  const { data, error } = await supabase.rpc('get_page_view_time_slot_stats')
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return (data ?? []).map((row: PageViewTimeSlotRow) => ({
+    dayOfWeek: Number(row.day_of_week ?? 0),
+    hour: Number(row.hour_of_day ?? 0),
+    viewCount: Number(row.view_count ?? 0),
   }))
 }

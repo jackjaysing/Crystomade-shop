@@ -1,9 +1,28 @@
+import { useMemo, useState } from 'react'
 import { Eye, RefreshCw } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
-import type { PageViewStats as PageViewStatsData } from '../../lib/api/analytics'
+import type {
+  PageViewStats as PageViewStatsData,
+  PageViewTimeSlot,
+  ProductViewStats,
+} from '../../lib/api/analytics'
+import type { Product } from '../../lib/types'
+import {
+  buildBrowseHeatmapCells,
+  buildProductViewRanking,
+  type ProductViewMetric,
+} from '../../lib/browseAnalytics'
+import { ProductViewRankChart } from './ProductViewRankChart'
+import { BrowseTimeHeatmap } from './BrowseTimeHeatmap'
+import { BrowseWeekdayHourCharts } from './BrowseWeekdayHourCharts'
 
 interface PageViewStatsProps {
   stats: PageViewStatsData | null
+  products: Product[]
+  productViewStats: ProductViewStats[]
+  productViewError: string | null
+  timeSlots: PageViewTimeSlot[]
+  timeSlotError: string | null
   loading: boolean
   error: string | null
   onReload: () => void
@@ -13,11 +32,43 @@ function formatCount(value: number): string {
   return value.toLocaleString('zh-TW')
 }
 
-/** 後台瀏覽次數統計卡片 */
-export function PageViewStats({ stats, loading, error, onReload }: PageViewStatsProps) {
+/** 後台瀏覽統計（總覽、商品排行、時段熱力圖） */
+export function PageViewStats({
+  stats,
+  products,
+  productViewStats,
+  productViewError,
+  timeSlots,
+  timeSlotError,
+  loading,
+  error,
+  onReload,
+}: PageViewStatsProps) {
+  const [productMetric, setProductMetric] = useState<ProductViewMetric>('total')
+
+  const productRanking = useMemo(
+    () => buildProductViewRanking(products, productViewStats, productMetric),
+    [products, productViewStats, productMetric]
+  )
+
+  const heatmapCells = useMemo(
+    () => buildBrowseHeatmapCells(timeSlots),
+    [timeSlots]
+  )
+
+  const migrationHint = (
+    <p className="mt-2 text-xs text-white/45">
+      請在 Supabase SQL Editor 執行{' '}
+      <code className="text-white/60">migration-add-page-views.sql</code>、{' '}
+      <code className="text-white/60">migration-add-product-views.sql</code>
+      {' '}與{' '}
+      <code className="text-white/60">migration-add-browse-time-slots.sql</code>
+    </p>
+  )
+
   return (
-    <section className="mb-16">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <section className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg tracking-wide text-white/80">瀏覽統計</h2>
         <button
           type="button"
@@ -33,12 +84,7 @@ export function PageViewStats({ stats, loading, error, onReload }: PageViewStats
       {error && (
         <GlassPanel className="border-amber-glow/20 p-5">
           <p className="text-sm text-amber-glow/90">無法載入瀏覽統計：{error}</p>
-          <p className="mt-2 text-xs text-white/45">
-            請在 Supabase SQL Editor 執行{' '}
-            <code className="text-white/60">migration-add-page-views.sql</code>
-            {' '}與{' '}
-            <code className="text-white/60">migration-add-product-views.sql</code>
-          </p>
+          {migrationHint}
         </GlassPanel>
       )}
 
@@ -71,6 +117,78 @@ export function PageViewStats({ stats, loading, error, onReload }: PageViewStats
           </GlassPanel>
         </div>
       )}
+
+      <GlassPanel className="p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg text-white">商品瀏覽排行</h3>
+            <p className="mt-1 text-xs text-white/40">
+              依各商品被開啟詳情的次數排序（前 15 名）
+            </p>
+          </div>
+          <div className="flex rounded-full border border-white/10 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setProductMetric('today')}
+              className={`rounded-full px-3 py-1.5 transition ${
+                productMetric === 'today'
+                  ? 'bg-amber-glow/20 text-amber-glow'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              今日
+            </button>
+            <button
+              type="button"
+              onClick={() => setProductMetric('total')}
+              className={`rounded-full px-3 py-1.5 transition ${
+                productMetric === 'total'
+                  ? 'bg-amber-glow/20 text-amber-glow'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              累計
+            </button>
+          </div>
+        </div>
+
+        {productViewError ? (
+          <>
+            <p className="text-sm text-amber-glow/90">
+              無法載入商品瀏覽排行：{productViewError}
+            </p>
+            {migrationHint}
+          </>
+        ) : (
+          <ProductViewRankChart
+            rows={productRanking}
+            metricLabel={productMetric === 'today' ? '今日' : '累計'}
+          />
+        )}
+      </GlassPanel>
+
+      <GlassPanel className="p-6">
+        <div className="mb-4">
+          <h3 className="font-display text-lg text-white">瀏覽時段分析</h3>
+          <p className="mt-1 text-xs text-white/40">
+            訪客在星期幾、幾點瀏覽前台（台北時區，自啟用時段統計後累計）
+          </p>
+        </div>
+
+        {timeSlotError ? (
+          <>
+            <p className="text-sm text-amber-glow/90">
+              無法載入瀏覽時段：{timeSlotError}
+            </p>
+            {migrationHint}
+          </>
+        ) : (
+          <div className="space-y-6">
+            <BrowseTimeHeatmap cells={heatmapCells} />
+            <BrowseWeekdayHourCharts cells={heatmapCells} />
+          </div>
+        )}
+      </GlassPanel>
     </section>
   )
 }
