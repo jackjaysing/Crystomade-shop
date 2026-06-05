@@ -16,6 +16,7 @@ export type AdminActivityEntityType =
   | 'banner'
   | 'member'
   | 'coupon'
+  | 'wish_message'
 
 export interface AdminActivityLog {
   id: string

@@ -8,6 +8,7 @@ import {
 } from '../../constants/raffles'
 import { isRaffleResultSeen } from '../../lib/raffleResultSeen'
 import type { RaffleWithMeta } from '../../lib/types'
+import { WishBoardFabSlot } from '../wish-board/WishBoardFloatingWidget'
 import { RaffleActivityPanel } from './RaffleActivityPanel'
 import { RouletteWheelIcon } from './RouletteWheelIcon'
 
@@ -79,11 +80,16 @@ export function RaffleFloatingWidget() {
   return (
     <>
       <div
-        className={`fixed left-0 z-[45] flex flex-col items-start gap-1 transition-transform duration-300 ${
-          isCollapsed ? '-translate-x-[calc(100%-2.5rem)]' : 'translate-x-0'
-        }`}
+        className="fixed left-0 z-[45] flex flex-col items-start gap-2"
         style={safeBottom}
       >
+        <WishBoardFabSlot />
+
+        <div
+          className={`flex flex-col items-start gap-1 transition-transform duration-300 ${
+            isCollapsed ? '-translate-x-[calc(100%-2.5rem)]' : 'translate-x-0'
+          }`}
+        >
         {!isCollapsed && (
           <button
             type="button"
@@ -106,7 +112,7 @@ export function RaffleFloatingWidget() {
             }
             openPanel()
           }}
-          className={`ml-2 flex items-center justify-center border border-amber-glow/40 bg-graphite/90 text-amber-glow shadow-[0_4px_24px_rgba(0,0,0,0.45),0_0_20px_rgba(212,165,116,0.12)] backdrop-blur-md transition-all duration-300 hover:border-amber-glow/70 hover:bg-amber-glow/15 hover:text-white ${
+          className={`ml-2 flex flex-col items-center justify-center border border-amber-glow/40 bg-graphite/90 text-amber-glow shadow-[0_4px_24px_rgba(0,0,0,0.45),0_0_20px_rgba(212,165,116,0.12)] backdrop-blur-md transition-all duration-300 hover:border-amber-glow/70 hover:bg-amber-glow/15 hover:text-white ${
             isCollapsed
               ? 'h-11 w-10 rounded-r-2xl'
               : 'h-[4.5rem] w-[4.5rem] rounded-full'
@@ -114,22 +120,26 @@ export function RaffleFloatingWidget() {
           aria-label={
             isCollapsed
               ? winPulse
-                ? '展開輪盤，查看中獎結果'
-                : '展開抽獎輪盤'
+                ? '展開抽獎區，查看中獎結果'
+                : '展開抽獎區'
               : winPulse
-                ? '抽獎活動，您已中獎'
-                : '抽獎活動'
+                ? '抽獎區，您已中獎'
+                : '抽獎區'
           }
-          title={winPulse ? '恭喜中獎！點擊查看' : '抽獎活動'}
+          title={winPulse ? '恭喜中獎！點擊查看' : '抽獎區'}
         >
           <RouletteWheelIcon
             className={
               isCollapsed
                 ? 'h-4 w-4 transition-all duration-300'
-                : 'h-11 w-11 transition-all duration-300'
+                : 'h-8 w-8 transition-all duration-300'
             }
           />
+          {!isCollapsed && (
+            <span className="mt-0.5 text-[10px] font-medium tracking-wide">抽獎區</span>
+          )}
         </button>
+        </div>
       </div>
 
       <RaffleActivityPanel

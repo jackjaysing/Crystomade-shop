@@ -304,11 +304,7 @@ export function ProductsPage() {
 
           <p className="text-xs tracking-[0.4em] text-amber-glow/60">CRYSTOMADE</p>
 
-          <h1 className="mt-4 font-display text-5xl text-white sm:text-6xl">
-
-            晶刻
-
-          </h1>
+          <h1 className="mt-4 font-display text-5xl text-white sm:text-6xl">晶刻</h1>
 
           <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-white/50">
 

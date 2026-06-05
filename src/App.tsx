@@ -10,6 +10,7 @@ import { AccountPage } from './pages/AccountPage'
 import { CheckoutPage } from './pages/CheckoutPage'
 import { PointShopPage } from './pages/PointShopPage'
 import { ProductsPage } from './pages/ProductsPage'
+import { WishBoardPage } from './pages/WishBoardPage'
 import { RaffleFloatingWidget } from './components/raffle/RaffleFloatingWidget'
 
 /** 應用程式路由 */
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/" element={<Navigate to="/products" replace />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/point-shop" element={<PointShopPage />} />
+              <Route path="/wish-board" element={<WishBoardPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/admin" element={<AdminPage />} />

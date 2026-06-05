@@ -36,6 +36,7 @@ const ENTITY_LABEL: Record<string, string> = {
   member: '會員',
   coupon: '優惠券',
   raffle: '抽獎',
+  wish_message: '許願留言',
 }
 
 /** 後台操作日誌列表 */

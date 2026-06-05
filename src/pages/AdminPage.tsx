@@ -12,6 +12,7 @@ import { CustomerAdmin } from '../components/admin/CustomerAdmin'
 import { PointShopAdmin } from '../components/admin/PointShopAdmin'
 import { PromotionsAdmin } from '../components/admin/PromotionsAdmin'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
+import { WishBoardAdmin } from '../components/admin/WishBoardAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
 import { usePageViewStats } from '../hooks/usePageViewStats'
@@ -35,6 +36,7 @@ type AdminTab =
   | 'orders'
   | 'revenue'
   | 'banners'
+  | 'wish_board'
   | 'analytics'
   | 'logs'
 
@@ -45,6 +47,7 @@ const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'customers', label: '客戶資料' },
   { id: 'orders', label: '訂單管理' },
   { id: 'banners', label: '公告橫幅' },
+  { id: 'wish_board', label: '許願留言' },
   { id: 'analytics', label: '瀏覽統計' },
   { id: 'revenue', label: '收入統計' },
   { id: 'logs', label: '後台日誌' },
@@ -276,6 +279,16 @@ export function AdminPage() {
               </p>
             )}
             <BannerAdmin banners={banners} onUpdated={reloadBanners} />
+          </section>
+        )}
+
+        {activeTab === 'wish_board' && (
+          <section>
+            <h2 className="mb-4 text-lg tracking-wide text-white/80">許願留言</h2>
+            <p className="mb-4 text-sm text-white/45">
+              會員在前台提交的許願留言，僅供後台查看與參考。
+            </p>
+            <WishBoardAdmin enabled={authed} />
           </section>
         )}
 

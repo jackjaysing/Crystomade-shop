@@ -354,6 +354,17 @@ export type ProductGalleryEditItem =
   | { kind: 'existing'; url: string }
   | { kind: 'new'; file: File; previewUrl: string }
 
+/** 許願留言 */
+export interface WishMessage {
+  id: string
+  content: string
+  display_name: string
+  member_id: string
+  created_at: string
+  /** 後台列表：會員電話（辨識同名） */
+  member_phone?: string | null
+}
+
 /** 後台編輯商品表單 */
 export interface ProductEditData {
   name: string
