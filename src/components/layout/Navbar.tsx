@@ -137,10 +137,23 @@ export function Navbar() {
                 </div>
                 <Link
                   to="/account"
-                  className={navIconClass(isAccount)}
+                  className={
+                    profile
+                      ? navIconClass(isAccount)
+                      : `flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-2.5 transition ${
+                          isAccount
+                            ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
+                            : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
+                        }`
+                  }
                   aria-label={profile ? '會員中心' : '會員登入'}
                 >
-                  <User className="h-5 w-5" strokeWidth={1.5} />
+                  <User className="h-5 w-5 shrink-0" strokeWidth={1.5} />
+                  {!profile && (
+                    <span className="whitespace-nowrap text-xs font-medium tracking-wide">
+                      登入
+                    </span>
+                  )}
                 </Link>
               </div>
             </div>
