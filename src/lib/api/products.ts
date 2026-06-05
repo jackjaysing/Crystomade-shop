@@ -166,6 +166,8 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
     .insert({
       name: form.name,
       category: form.category,
+      bracelet_style:
+        form.category === '手串' ? form.bracelet_style ?? '通用' : null,
       price: form.price,
       discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),
@@ -213,6 +215,8 @@ export async function updateProduct(
     .update({
       name: form.name.trim(),
       category: form.category,
+      bracelet_style:
+        form.category === '手串' ? form.bracelet_style ?? '通用' : null,
       price: form.price,
       discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),

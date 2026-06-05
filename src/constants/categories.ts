@@ -1,4 +1,5 @@
-import type { ProductCategory } from '../lib/types'
+import type { Product, ProductCategory } from '../lib/types'
+import { getBraceletStyleLabel } from './braceletStyles'
 
 /** 商品品類選項 */
 export interface CategoryOption {
@@ -16,4 +17,13 @@ export const PRODUCT_CATEGORIES: CategoryOption[] = [
 /** 品類顯示標籤 */
 export function getCategoryLabel(category: ProductCategory): string {
   return PRODUCT_CATEGORIES.find((c) => c.id === category)?.label ?? category
+}
+
+/** 前台／後台品類標籤（手串含款式） */
+export function getProductCategoryLabel(product: Pick<Product, 'category' | 'bracelet_style'>): string {
+  if (product.category === '手串' && product.bracelet_style) {
+    const style = getBraceletStyleLabel(product.bracelet_style)
+    return style ? `手串 · ${style}` : '手串'
+  }
+  return getCategoryLabel(product.category)
 }

@@ -1,4 +1,4 @@
-import { getCategoryLabel } from '../../constants/categories'
+import { getProductCategoryLabel } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
@@ -38,7 +38,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         <div className="pointer-events-none absolute inset-0 bg-metal-gradient opacity-0 transition group-hover:opacity-100" />
 
         <span className="absolute left-3 top-3 rounded-full border border-white/20 bg-void/70 px-2.5 py-1 text-[10px] tracking-wider text-amber-glow/90 backdrop-blur-sm">
-          {getCategoryLabel(product.category)}
+          {getProductCategoryLabel(product)}
         </span>
 
         <ProductImageBadges product={product} />

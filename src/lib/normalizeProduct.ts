@@ -1,3 +1,4 @@
+import { parseBraceletStyle } from '../constants/braceletStyles'
 import type { Product, ProductCategory } from './types'
 import { parseDiscountZhe } from './productPricing'
 import { sanitizeProductTags } from './productTags'
@@ -31,6 +32,10 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     id: String(row.id ?? ''),
     name: String(row.name ?? ''),
     category: parseCategory(row.category),
+    bracelet_style:
+      parseCategory(row.category) === '手串'
+        ? parseBraceletStyle(row.bracelet_style) ?? '通用'
+        : null,
     price: typeof price === 'number' ? price : Number(price) || 0,
     discount_zhe: parseDiscountZhe(row.discount_zhe),
     tags: sanitizeProductTags(Array.isArray(tags) ? tags.map(String) : []),

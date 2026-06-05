@@ -12,11 +12,16 @@ export type CvsBrand = '7-11' | '全家'
 /** 商品品類 */
 export type ProductCategory = '手串' | '擺件' | '礦石'
 
+/** 手串款式（僅品類為手串時使用） */
+export type BraceletStyle = '通用' | '男款' | '女款' | '兒童款'
+
 /** 商品 */
 export interface Product {
   id: string
   name: string
   category: ProductCategory
+  /** 手串款式；非手串為 null */
+  bracelet_style: BraceletStyle | null
   /** 原價（NT$） */
   price: number
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
@@ -306,6 +311,7 @@ export interface OrderFormData {
 export interface ProductFormData {
   name: string
   category: ProductCategory
+  bracelet_style: BraceletStyle | null
   /** 原價（NT$） */
   price: number
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
@@ -352,6 +358,7 @@ export type ProductGalleryEditItem =
 export interface ProductEditData {
   name: string
   category: ProductCategory
+  bracelet_style: BraceletStyle | null
   /** 原價（NT$） */
   price: number
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */

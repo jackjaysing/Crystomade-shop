@@ -2,10 +2,19 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { updateProduct, deleteProduct } from '../../lib/api/products'
+import {
+  BRACELET_STYLES,
+  DEFAULT_BRACELET_STYLE,
+} from '../../constants/braceletStyles'
 import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
-import type { Product, ProductCategory, ProductEditData } from '../../lib/types'
+import type {
+  BraceletStyle,
+  Product,
+  ProductCategory,
+  ProductEditData,
+} from '../../lib/types'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
@@ -26,6 +35,7 @@ function toEditForm(product: Product): ProductEditData {
   return {
     name: product.name,
     category: product.category,
+    bracelet_style: product.bracelet_style,
     price: product.price,
     discount_zhe: product.discount_zhe,
     tags: [...product.tags],
@@ -340,7 +350,14 @@ export function ProductEditModal({
                     className="sr-only"
                     checked={form.category === cat.id}
                     onChange={() =>
-                      setForm({ ...form, category: cat.id as ProductCategory })
+                      setForm({
+                        ...form,
+                        category: cat.id as ProductCategory,
+                        bracelet_style:
+                          cat.id === '手串'
+                            ? form.bracelet_style ?? DEFAULT_BRACELET_STYLE
+                            : null,
+                      })
                     }
                   />
                   {cat.label}
@@ -348,6 +365,38 @@ export function ProductEditModal({
               ))}
             </div>
           </div>
+
+          {form.category === '手串' && (
+            <div>
+              <p className="mb-2 text-xs text-white/50">手串分類</p>
+              <div className="flex flex-wrap gap-2">
+                {BRACELET_STYLES.map((style) => (
+                  <label
+                    key={style.id}
+                    className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                      form.bracelet_style === style.id
+                        ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
+                        : 'border-white/10 text-white/50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="edit-bracelet_style"
+                      className="sr-only"
+                      checked={form.bracelet_style === style.id}
+                      onChange={() =>
+                        setForm({
+                          ...form,
+                          bracelet_style: style.id as BraceletStyle,
+                        })
+                      }
+                    />
+                    {style.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <p className="mb-2 text-xs text-white/50">功效標籤</p>

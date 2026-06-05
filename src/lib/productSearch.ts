@@ -1,4 +1,4 @@
-import { getCategoryLabel } from '../constants/categories'
+import { getProductCategoryLabel } from '../constants/categories'
 import type { Product } from './types'
 
 /** 商品是否符合關鍵字搜尋 */
@@ -10,7 +10,8 @@ export function productMatchesSearchQuery(product: Product, query: string): bool
     product.name,
     product.description,
     product.category,
-    getCategoryLabel(product.category),
+    getProductCategoryLabel(product),
+    product.bracelet_style ?? '',
     ...product.tags,
   ]
     .join(' ')

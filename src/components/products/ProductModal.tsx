@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCategoryLabel } from '../../constants/categories'
+import { getProductCategoryLabel } from '../../constants/categories'
 import {
   productRequiresBraceletSize,
 } from '../../constants/braceletSizes'
@@ -107,7 +107,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
         <div className="p-8">
           <p className="text-xs tracking-[0.25em] text-amber-glow/70">
-            {getCategoryLabel(product.category)}
+            {getProductCategoryLabel(product)}
             {!isSold && ` · 庫存 ${product.stock} 件`}
           </p>
           <h2
