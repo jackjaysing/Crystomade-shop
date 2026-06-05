@@ -57,15 +57,6 @@ export function Navbar() {
             />
           </Link>
 
-          <Link
-            to="/products"
-            className={`shrink-0 tracking-wide transition md:hidden ${
-              isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-            }`}
-          >
-            典藏
-          </Link>
-
           <nav
             className={`ml-auto flex shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
           >
@@ -113,6 +104,14 @@ export function Navbar() {
               </div>
 
               <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:hidden`}>
+                <Link
+                  to="/products"
+                  className={`shrink-0 tracking-wide transition ${
+                    isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  典藏
+                </Link>
                 <Link
                   to="/point-shop"
                   className={
