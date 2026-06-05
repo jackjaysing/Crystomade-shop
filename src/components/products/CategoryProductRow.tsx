@@ -34,7 +34,9 @@ interface CategoryProductRowProps {
 
 
 
-const NAV_BUTTON_POSITION_CLASS = 'absolute top-1/2 z-10 -translate-y-1/2'
+/** 對齊商品圖 aspect-[3/4] 的垂直中央（w-44→11rem、sm:w-52…） */
+const NAV_BUTTON_SLOT_CLASS =
+  'pointer-events-none absolute z-30 -translate-y-1/2 top-[calc(11rem*2/3)] sm:top-[calc(13rem*2/3)] md:top-[calc(14rem*2/3)] lg:top-[calc(15rem*2/3)]'
 
 const ARROW_SCROLL_DURATION_MS = 240
 
@@ -152,7 +154,7 @@ function RowNavButton({
 
       aria-label={label}
 
-      className={`flex h-11 w-11 items-center justify-center rounded-full border bg-void/90 text-amber-glow shadow-[0_4px_20px_rgba(0,0,0,0.45)] backdrop-blur-sm transition ${
+      className={`pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full border bg-void/85 text-amber-glow shadow-[0_4px_20px_rgba(0,0,0,0.45)] backdrop-blur-sm transition sm:h-11 sm:w-11 ${
 
         disabled
 
@@ -544,7 +546,7 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
             <>
 
-              <div className={`${NAV_BUTTON_POSITION_CLASS} left-0`}>
+              <div className={`${NAV_BUTTON_SLOT_CLASS} left-1 sm:left-0`}>
 
                 <RowNavButton
 
@@ -558,7 +560,7 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
               </div>
 
-              <div className={`${NAV_BUTTON_POSITION_CLASS} right-0`}>
+              <div className={`${NAV_BUTTON_SLOT_CLASS} right-1 sm:right-0`}>
 
                 <RowNavButton
 
