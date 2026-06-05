@@ -79,6 +79,10 @@ function clampScrollLeft(track: HTMLDivElement, nextLeft: number): number {
 
 
 
+function prefersFinePointer(): boolean {
+  return window.matchMedia('(pointer: fine)').matches
+}
+
 function getWheelDelta(event: WheelEvent): number {
 
   if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
@@ -442,13 +446,18 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
       const wheelOptions: AddEventListenerOptions = { passive: false, capture: true }
 
+      const attachWheelListeners = () => {
+        if (!prefersFinePointer()) return
+        track.addEventListener('wheel', handleWheel, wheelOptions)
+        section?.addEventListener('wheel', handleWheel, wheelOptions)
+      }
 
+      const detachWheelListeners = () => {
+        track.removeEventListener('wheel', handleWheel, wheelOptions)
+        section?.removeEventListener('wheel', handleWheel, wheelOptions)
+      }
 
-      track.addEventListener('wheel', handleWheel, wheelOptions)
-
-      section?.addEventListener('wheel', handleWheel, wheelOptions)
-
-
+      attachWheelListeners()
 
       updateNavState()
 
@@ -464,9 +473,7 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
       return () => {
 
-        track.removeEventListener('wheel', handleWheel, wheelOptions)
-
-        section?.removeEventListener('wheel', handleWheel, wheelOptions)
+        detachWheelListeners()
 
         track.removeEventListener('scroll', scheduleNavStateUpdate)
 
@@ -623,7 +630,7 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
           ) : (
             <div
               ref={trackRef}
-              className="flex touch-pan-x gap-4 overflow-x-auto overscroll-x-contain pb-2 no-scrollbar snap-x snap-proximity"
+              className="flex gap-4 overflow-x-auto overscroll-x-contain pb-2 no-scrollbar snap-x snap-proximity"
             >
               {products.map((product) => (
                 <div
