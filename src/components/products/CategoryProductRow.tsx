@@ -129,6 +129,8 @@ function RowNavButton({
 
   disabled,
 
+  caption,
+
 }: {
 
   direction: 'prev' | 'next'
@@ -137,11 +139,59 @@ function RowNavButton({
 
   disabled: boolean
 
+  caption?: string
+
 }) {
 
   const Icon = direction === 'prev' ? ChevronLeft : ChevronRight
 
-  const label = direction === 'prev' ? '上一組商品' : '下一組商品'
+  const label = caption
+    ? `${caption}商品`
+    : direction === 'prev'
+      ? '上一組商品'
+      : '下一組商品'
+
+  const disabledClass =
+    'pointer-events-none border-white/10 text-white/20 opacity-40'
+
+  const activeClass =
+    'border-amber-glow/45 hover:border-amber-glow/70 hover:bg-amber-glow/10'
+
+  if (caption) {
+
+    return (
+
+      <button
+
+        type="button"
+
+        onClick={onClick}
+
+        disabled={disabled}
+
+        aria-label={label}
+
+        className={`pointer-events-auto flex flex-col items-center justify-center gap-0.5 rounded-2xl border bg-void/85 px-2.5 py-2 text-amber-glow shadow-[0_4px_20px_rgba(0,0,0,0.45)] backdrop-blur-sm transition sm:px-3 sm:py-2.5 ${
+
+          disabled ? disabledClass : activeClass
+
+        }`}
+
+      >
+
+        <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+
+        <span className="text-[11px] font-medium tracking-wider sm:text-xs">
+
+          {caption}
+
+        </span>
+
+      </button>
+
+    )
+
+  }
 
 
 
@@ -159,11 +209,7 @@ function RowNavButton({
 
       className={`pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full border bg-void/85 text-amber-glow shadow-[0_4px_20px_rgba(0,0,0,0.45)] backdrop-blur-sm transition sm:h-11 sm:w-11 ${
 
-        disabled
-
-          ? 'pointer-events-none border-white/10 text-white/20 opacity-40'
-
-          : 'border-amber-glow/45 hover:border-amber-glow/70 hover:bg-amber-glow/10'
+        disabled ? disabledClass : activeClass
 
       }`}
 
@@ -591,6 +637,8 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
                 <RowNavButton
 
                   direction="next"
+
+                  caption="看更多"
 
                   onClick={() => scrollByStep('next')}
 
