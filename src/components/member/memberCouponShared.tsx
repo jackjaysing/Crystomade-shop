@@ -1,4 +1,8 @@
-import { formatCouponRuleSummary } from '../../lib/couponCalculation'
+import {
+  formatCouponRuleSummary,
+  formatMemberCouponExpiryCountdown,
+  isMemberCouponExpired,
+} from '../../lib/couponCalculation'
 import {
   getMemberCouponTypeLabel,
   isCartRaffleGiftCoupon,
@@ -46,6 +50,9 @@ export function MemberCouponList({
       {items.map((mc) => {
         const st = statusLabel(mc)
         const isGift = variant === 'gift'
+        const expiryCountdown = isGift
+          ? formatMemberCouponExpiryCountdown(mc)
+          : null
         return (
           <li
             key={mc.id}
@@ -72,9 +79,22 @@ export function MemberCouponList({
                     )}
                   </p>
                   {isGift ? (
-                    <p className="mt-1 text-xs text-white/45">
-                      {giftRuleSummary(mc)}
-                    </p>
+                    <>
+                      <p className="mt-1 text-xs text-white/45">
+                        {giftRuleSummary(mc)}
+                      </p>
+                      {expiryCountdown && (
+                        <p
+                          className={`mt-1 text-xs font-medium ${
+                            isMemberCouponExpired(mc)
+                              ? 'text-white/40'
+                              : 'text-amber-glow/90'
+                          }`}
+                        >
+                          {expiryCountdown}
+                        </p>
+                      )}
+                    </>
                   ) : (
                     mc.coupon.description && (
                       <p className="mt-1 text-xs text-white/45">

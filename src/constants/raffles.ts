@@ -12,3 +12,11 @@ export const RAFFLE_FAB_STORAGE_KEY = 'crystomade-raffle-fab-mode'
 export type RaffleFabMode = 'visible' | 'collapsed'
 
 export const RAFFLE_RESULT_SEEN_KEY = 'crystomade-raffle-result-seen'
+
+/** 抽獎禮物券說明（固定文案，前台顯示與禮物券同步） */
+export const RAFFLE_GIFT_DESCRIPTION = '不限額「隨單送」'
+
+/** 抽獎禮物券發放後有效天數 */
+export const RAFFLE_GIFT_VALID_DAYS = 30
+
+export const RAFFLE_GIFT_DISPLAY_NOTE = `${RAFFLE_GIFT_DESCRIPTION} · 發放後保留${RAFFLE_GIFT_VALID_DAYS}日`

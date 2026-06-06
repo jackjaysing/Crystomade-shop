@@ -1,4 +1,5 @@
 import { isCartRaffleGiftCoupon } from '../../constants/coupons'
+import { assertBrowserDisplayableImageFile } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
 import { supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
 import type {
@@ -120,7 +121,8 @@ export async function fetchAdminCartGiftCoupons(): Promise<Coupon[]> {
 }
 
 export async function uploadGiftCouponImage(file: File): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'jpg'
+  assertBrowserDisplayableImageFile(file)
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
   const path = `gift-coupons/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   const { error } = await supabase.storage

@@ -7,6 +7,7 @@ import { RaffleGiftRedeemButton } from '../member/RaffleGiftRedeemButton'
 import { markRaffleResultsSeen } from '../../lib/raffleResultSeen'
 import type { RaffleWithMeta } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
+import { RafflePrizeDisplay } from './RafflePrizeDisplay'
 import { RouletteWheelIcon } from './RouletteWheelIcon'
 
 interface RaffleActivityPanelProps {
@@ -150,7 +151,7 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
                           : 'border-white/10 bg-white/5'
                       }`}
                     >
-                      <p className="text-sm text-white/50">{r.title}</p>
+                      <RafflePrizeDisplay raffle={r} imageSize="sm" />
                       {r.user_is_winner ? (
                         <div className="mt-3 flex flex-col items-center gap-2 text-center">
                           <RouletteWheelIcon className="h-10 w-10 text-amber-glow raffle-fab-win-pulse rounded-full" />
@@ -196,15 +197,10 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
                         key={r.id}
                         className="rounded-xl border border-white/10 bg-white/5 p-4"
                       >
-                        <p className="font-medium text-white">{r.title}</p>
-                        {r.description && (
-                          <p className="mt-1 text-sm text-white/50">
-                            {r.description}
-                          </p>
-                        )}
-                        <p className="mt-2 text-xs text-white/40">
-                          報名截止：{formatDeadline(r.registration_deadline)}{' '}
-                          · 已報名 {r.entry_count} 人
+                        <RafflePrizeDisplay raffle={r} />
+                        <p className="mt-3 text-xs text-white/40">
+                          報名截止：{formatDeadline(r.registration_deadline)} · 已報名{' '}
+                          {r.entry_count} 人
                         </p>
                         {r.user_entered ? (
                           <p className="mt-3 text-sm text-emerald-300/90">

@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
 import { redeemGiftCouponToCart } from '../../lib/api/coupons'
 import { RAFFLE_GIFT_REQUIRES_BASE_MESSAGE } from '../../lib/cartCheckoutRules'
+import { isMemberCouponExpired } from '../../lib/couponCalculation'
 import type { MemberCouponWithDefinition } from '../../lib/types'
 
 interface RaffleGiftRedeemButtonProps {
@@ -24,6 +25,7 @@ export function RaffleGiftRedeemButton({
 
   const canRedeem =
     memberCoupon.status === 'available' &&
+    !isMemberCouponExpired(memberCoupon) &&
     memberCoupon.coupon.redeem_mode === 'cart' &&
     memberCoupon.coupon.coupon_type === 'gift'
 

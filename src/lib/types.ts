@@ -273,12 +273,11 @@ export interface Raffle {
 }
 
 export interface RaffleFormData {
-  title: string
   description: string
   registration_deadline: string
   is_active: boolean
+  /** 禮物名稱（同時作為活動名稱） */
   prize_title: string
-  prize_gift_description: string
   prize_image_url: string | null
 }
 
@@ -296,6 +295,8 @@ export interface RaffleWithMeta extends Raffle {
   /** 目前登入會員是否為得主（未登入恒為 false） */
   user_is_winner: boolean
   winner_name: string | null
+  /** 上架編號，如 20260607-01 */
+  listed_code: string
 }
 
 /** 建立訂單表單 */

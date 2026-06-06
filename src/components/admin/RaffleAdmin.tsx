@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   createRaffle,
   deleteRaffle,
@@ -8,18 +8,27 @@ import {
   updateRaffle,
   uploadRafflePrizeImage,
 } from '../../lib/api/raffles'
-import { RAFFLE_STATUS_LABELS } from '../../constants/raffles'
+import {
+  assertBrowserDisplayableImageFile,
+  BROWSER_IMAGE_ACCEPT,
+  isBrowserDisplayableImageUrl,
+} from '../../lib/browserImage'
+import {
+  RAFFLE_GIFT_DISPLAY_NOTE,
+  RAFFLE_STATUS_LABELS,
+} from '../../constants/raffles'
+import { getNextRaffleListedCode } from '../../lib/raffleListedCode'
 import type { RaffleFormData, RaffleWithMeta } from '../../lib/types'
 import { formatPhoneDisplay } from '../../lib/api/adminCustomers'
+import { RaffleListedCode } from '../raffle/RaffleListedCode'
+import { RafflePrizeImage, prizeName, prizeNameRaw } from '../raffle/RafflePrizeImage'
 import { GlassPanel } from '../ui/GlassPanel'
 
 const emptyForm: RaffleFormData = {
-  title: '',
   description: '',
   registration_deadline: '',
   is_active: true,
   prize_title: '',
-  prize_gift_description: '',
   prize_image_url: null,
 }
 
@@ -99,29 +108,23 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
     setPrizeImageFile(null)
     setPrizeImagePreview(r.prize_image_url)
     setForm({
-      title: r.title,
       description: r.description,
       registration_deadline: toDatetimeLocalValue(r.registration_deadline),
       is_active: r.is_active,
-      prize_title: r.prize_title ?? '',
-      prize_gift_description: r.prize_gift_description ?? '',
+      prize_title: prizeNameRaw(r),
       prize_image_url: r.prize_image_url,
     })
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!form.title.trim()) {
-      setMessage('請填寫活動名稱')
-      return
-    }
     if (!form.registration_deadline) {
       setMessage('請設定報名截止時間')
       return
     }
 
-    if (form.prize_title.trim() && !form.prize_gift_description.trim()) {
-      setMessage('請填寫禮物券說明')
+    if (!form.prize_title.trim()) {
+      setMessage('請填寫禮物名稱')
       return
     }
 
@@ -156,7 +159,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
   }
 
   const handleDelete = async (r: RaffleWithMeta) => {
-    if (!confirm(`確定刪除抽獎「${r.title}」？\n\n報名紀錄將一併刪除。`)) return
+    if (!confirm(`確定刪除抽獎「${prizeName(r)}」？\n\n報名紀錄將一併刪除。`)) return
     try {
       await deleteRaffle(r.id)
       setMessage('已刪除')
@@ -169,7 +172,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
   const handleDraw = async (r: RaffleWithMeta) => {
     if (
       !confirm(
-        `確定為「${r.title}」執行抽獎？\n\n將從 ${r.entry_count} 位報名者中隨機抽出 1 名。`
+        `確定為「${prizeName(r)}」執行抽獎？\n\n將從 ${r.entry_count} 位報名者中隨機抽出 1 名。`
       )
     ) {
       return
@@ -207,6 +210,13 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
   const isRegistrationOpen = (r: RaffleWithMeta) =>
     r.status === 'open' && new Date(r.registration_deadline) > new Date()
 
+  const formListedCode = useMemo(() => {
+    if (editingId) {
+      return raffles.find((r) => r.id === editingId)?.listed_code ?? '—'
+    }
+    return getNextRaffleListedCode(raffles)
+  }, [editingId, raffles])
+
   return (
     <div className="space-y-8">
       {message && (
@@ -220,11 +230,17 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
           {editingId ? '編輯抽獎活動' : '新增抽獎活動'}
         </h3>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <RaffleListedCode code={formListedCode} />
+          {!editingId && (
+            <p className="-mt-2 text-xs text-white/35">儲存後自動套用此上架編號</p>
+          )}
           <input
             type="text"
-            value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            placeholder="活動名稱 *"
+            value={form.prize_title}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, prize_title: e.target.value }))
+            }
+            placeholder="禮物名稱 *"
             className="w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white outline-none focus:border-amber-glow/50"
           />
           <textarea
@@ -255,45 +271,44 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
           </div>
 
           <div className="rounded-xl border border-amber-glow/20 bg-amber-glow/5 p-4">
-            <p className="mb-3 text-sm font-medium text-amber-glow/90">獎品禮物券</p>
-            <input
-              type="text"
-              value={form.prize_title}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, prize_title: e.target.value }))
-              }
-              placeholder="禮物名稱（留空則無獎品券）"
-              className="mb-3 w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white outline-none focus:border-amber-glow/50"
-            />
-            <textarea
-              value={form.prize_gift_description}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  prize_gift_description: e.target.value,
-                }))
-              }
-              placeholder="禮物說明（得主兌換時顯示）"
-              rows={2}
-              className="mb-3 w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white outline-none focus:border-amber-glow/50"
-            />
+            <p className="mb-1 text-sm font-medium text-amber-glow/90">禮物照片</p>
+            <p className="mb-3 text-xs text-white/45">
+              儲存後自動建立禮物券 · 禮物說明固定為「{RAFFLE_GIFT_DISPLAY_NOTE}」
+            </p>
             <div className="flex flex-wrap items-start gap-4">
-              {(prizeImagePreview || form.prize_image_url) && (
+              {(prizeImagePreview ||
+                isBrowserDisplayableImageUrl(form.prize_image_url)) && (
                 <img
                   src={prizeImagePreview ?? form.prize_image_url ?? ''}
                   alt=""
                   className="h-20 w-20 rounded-lg object-cover"
                 />
               )}
+              {form.prize_image_url &&
+                !prizeImagePreview &&
+                !isBrowserDisplayableImageUrl(form.prize_image_url) && (
+                  <p className="text-xs text-amber-glow/90">
+                    目前照片為瀏覽器不支援的格式（如 DNG），請重新上傳 JPG 或 PNG。
+                  </p>
+                )}
               <label className="cursor-pointer rounded-lg border border-dashed border-white/25 px-4 py-3 text-sm text-white/50 hover:border-amber-glow/40 hover:text-white/70">
-                上傳禮物照片
+                上傳禮物照片（JPG／PNG）
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={BROWSER_IMAGE_ACCEPT}
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
                     if (!file) return
+                    try {
+                      assertBrowserDisplayableImageFile(file)
+                    } catch (err) {
+                      setMessage(
+                        err instanceof Error ? err.message : '圖片格式不支援'
+                      )
+                      e.target.value = ''
+                      return
+                    }
                     setPrizeImageFile(file)
                     setPrizeImagePreview(URL.createObjectURL(file))
                   }}
@@ -346,8 +361,11 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
               <li key={r.id}>
                 <GlassPanel className="p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-white">{r.title}</p>
+                    <div className="flex min-w-0 flex-1 gap-4">
+                      <RafflePrizeImage raffle={r} imageSize="sm" />
+                      <div className="min-w-0">
+                      <RaffleListedCode code={r.listed_code} />
+                      <p className="mt-1 font-medium text-white">{prizeName(r)}</p>
                       {r.description && (
                         <p className="mt-1 text-sm text-white/50">{r.description}</p>
                       )}
@@ -365,6 +383,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                               : '—'}
                         </p>
                       )}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button

@@ -67,6 +67,37 @@ export function formatCouponRuleSummary(coupon: Coupon): string {
   return `${minLabel} 贈 ${coupon.gift_description?.trim() || coupon.title}`
 }
 
+const MS_PER_DAY = 86_400_000
+
+/** 距到期日剩餘天數（已過期為 0；無到期日為 null） */
+export function couponDaysRemaining(expiresAt: string | null): number | null {
+  if (!expiresAt) return null
+  const diff = new Date(expiresAt).getTime() - Date.now()
+  if (diff <= 0) return 0
+  return Math.ceil(diff / MS_PER_DAY)
+}
+
+export function formatMemberCouponExpiryCountdown(
+  memberCoupon: Pick<MemberCouponWithDefinition, 'expires_at' | 'status'>
+): string | null {
+  if (!memberCoupon.expires_at || memberCoupon.status === 'used') return null
+
+  const expiryLabel = new Date(memberCoupon.expires_at).toLocaleDateString(
+    'zh-TW'
+  )
+  const days = couponDaysRemaining(memberCoupon.expires_at)
+  const expired =
+    days === 0 ||
+    memberCoupon.status === 'expired' ||
+    new Date(memberCoupon.expires_at).getTime() < Date.now()
+
+  if (expired) {
+    return `已於 ${expiryLabel} 過期`
+  }
+
+  return `剩餘 ${days} 天（至 ${expiryLabel}）`
+}
+
 export function isMemberCouponExpired(
   memberCoupon: Pick<MemberCouponWithDefinition, 'expires_at' | 'status'>
 ): boolean {

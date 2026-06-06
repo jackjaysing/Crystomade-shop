@@ -1,4 +1,10 @@
+import { assertBrowserDisplayableImageFile } from '../browserImage'
+import {
+  RAFFLE_GIFT_DESCRIPTION,
+  RAFFLE_GIFT_VALID_DAYS,
+} from '../../constants/raffles'
 import { formatErrorMessage } from '../formatError'
+import { buildRaffleListedCodes, raffleDayKey } from '../raffleListedCode'
 import { supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
 import type { Raffle, RaffleEntry, RaffleFormData, RaffleWithMeta } from '../types'
 
@@ -13,9 +19,14 @@ function normalizeRaffle(row: Record<string, unknown>): Raffle {
     winner_user_id:
       row.winner_user_id != null ? String(row.winner_user_id) : null,
     drawn_at: row.drawn_at != null ? String(row.drawn_at) : null,
-    prize_title: row.prize_title != null ? String(row.prize_title) : null,
+    prize_title:
+      row.prize_title != null && String(row.prize_title).trim() !== ''
+        ? String(row.prize_title)
+        : null,
     prize_image_url:
-      row.prize_image_url != null ? String(row.prize_image_url) : null,
+      row.prize_image_url != null && String(row.prize_image_url).trim() !== ''
+        ? String(row.prize_image_url)
+        : null,
     prize_gift_description:
       row.prize_gift_description != null
         ? String(row.prize_gift_description)
@@ -35,20 +46,22 @@ function migrationHint(msg: string): string | null {
 }
 
 function rafflePayload(data: RaffleFormData) {
+  const prizeTitle = data.prize_title.trim()
   return {
-    title: data.title.trim(),
+    title: prizeTitle,
     description: data.description.trim(),
     registration_deadline: data.registration_deadline,
     is_active: data.is_active,
-    prize_title: data.prize_title.trim() || null,
+    prize_title: prizeTitle || null,
     prize_image_url: data.prize_image_url,
-    prize_gift_description: data.prize_gift_description.trim() || null,
+    prize_gift_description: RAFFLE_GIFT_DESCRIPTION,
     updated_at: new Date().toISOString(),
   }
 }
 
 export async function uploadRafflePrizeImage(file: File): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'jpg'
+  assertBrowserDisplayableImageFile(file)
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
   const path = `raffle-prizes/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   const { error } = await supabase.storage
@@ -64,28 +77,25 @@ async function syncRafflePrizeCoupon(
   raffleId: string,
   data: RaffleFormData,
   existingCouponId: string | null
-): Promise<string | null> {
+): Promise<string> {
   const prizeTitle = data.prize_title.trim()
   if (!prizeTitle) {
-    if (existingCouponId) {
-      await supabase.from('coupons').delete().eq('id', existingCouponId)
-    }
-    return null
+    throw new Error('請填寫禮物名稱')
   }
 
   const couponRow = {
     title: prizeTitle,
-    description: `抽獎活動獎品：${data.title.trim()}`,
+    description: `抽獎活動獎品：${prizeTitle}`,
     coupon_type: 'gift' as const,
     min_purchase_amount: 0,
     discount_amount: null,
     discount_zhe: null,
-    gift_description: data.prize_gift_description.trim() || prizeTitle,
+    gift_description: RAFFLE_GIFT_DESCRIPTION,
     image_url: data.prize_image_url,
     redeem_mode: 'cart' as const,
     source_raffle_id: raffleId,
     is_active: true,
-    valid_days: null,
+    valid_days: RAFFLE_GIFT_VALID_DAYS,
     updated_at: new Date().toISOString(),
   }
 
@@ -113,6 +123,71 @@ async function finalizeOverdueRaffles(): Promise<void> {
   if (error && !/finalize_overdue_raffles|42883/i.test(formatErrorMessage(error))) {
     console.warn('finalize_overdue_raffles:', formatErrorMessage(error))
   }
+}
+
+/** 抽獎獎品圖／名稱以禮物券為準；補齊僅存在於 coupons 的舊資料 */
+async function enrichRafflePrizesFromCoupons(rows: Raffle[]): Promise<Raffle[]> {
+  if (rows.length === 0) return rows
+
+  const couponIds = [
+    ...new Set(
+      rows
+        .map((r) => r.prize_coupon_id)
+        .filter((id): id is string => Boolean(id))
+    ),
+  ]
+  const raffleIds = rows.map((r) => r.id)
+
+  const orFilters: string[] = []
+  if (couponIds.length > 0) {
+    orFilters.push(`id.in.(${couponIds.join(',')})`)
+  }
+  if (raffleIds.length > 0) {
+    orFilters.push(`source_raffle_id.in.(${raffleIds.join(',')})`)
+  }
+  if (orFilters.length === 0) return rows
+
+  const { data, error } = await supabase
+    .from('coupons')
+    .select('id, title, image_url, source_raffle_id')
+    .or(orFilters.join(','))
+
+  if (error) {
+    console.warn('[晶刻] 讀取抽獎禮物券失敗:', formatErrorMessage(error))
+    return rows
+  }
+
+  const couponById = new Map<string, Record<string, unknown>>()
+  const couponByRaffleId = new Map<string, Record<string, unknown>>()
+  for (const row of data ?? []) {
+    const raw = row as Record<string, unknown>
+    couponById.set(String(raw.id), raw)
+    if (raw.source_raffle_id != null) {
+      couponByRaffleId.set(String(raw.source_raffle_id), raw)
+    }
+  }
+
+  return rows.map((r) => {
+    const coupon = r.prize_coupon_id
+      ? couponById.get(r.prize_coupon_id)
+      : couponByRaffleId.get(r.id)
+    if (!coupon) return r
+
+    const couponTitle =
+      coupon.title != null && String(coupon.title).trim() !== ''
+        ? String(coupon.title)
+        : null
+    const couponImage =
+      coupon.image_url != null && String(coupon.image_url).trim() !== ''
+        ? String(coupon.image_url)
+        : null
+
+    return {
+      ...r,
+      prize_title: r.prize_title ?? couponTitle,
+      prize_image_url: r.prize_image_url ?? couponImage,
+    }
+  })
 }
 
 async function attachRaffleMeta(
@@ -158,6 +233,8 @@ async function attachRaffleMeta(
     }
   }
 
+  const listedCodes = await fetchListedCodeMap()
+
   return rows.map((r) => ({
     ...r,
     entry_count: countByRaffle.get(r.id) ?? 0,
@@ -166,7 +243,25 @@ async function attachRaffleMeta(
     winner_name: r.winner_user_id
       ? winnerNames.get(r.winner_user_id) ?? null
       : null,
+    listed_code:
+      listedCodes.get(r.id) ?? `${raffleDayKey(r.created_at)}-01`,
   }))
+}
+
+async function fetchListedCodeMap(): Promise<Map<string, string>> {
+  const { data, error } = await supabase.from('raffles').select('id, created_at')
+
+  if (error) {
+    console.warn('[晶刻] 讀取抽獎上架編號失敗:', formatErrorMessage(error))
+    return new Map()
+  }
+
+  return buildRaffleListedCodes(
+    (data ?? []).map((row) => ({
+      id: String((row as { id: string }).id),
+      created_at: String((row as { created_at: string }).created_at),
+    }))
+  )
 }
 
 /** 前台：進行中與近期抽獎（截止後自動開獎） */
@@ -180,7 +275,7 @@ export async function fetchPublicRaffles(
     .select('*')
     .eq('is_active', true)
     .neq('status', 'cancelled')
-    .order('registration_deadline', { ascending: false })
+    .order('created_at', { ascending: false })
 
   if (error) {
     const hint = migrationHint(formatErrorMessage(error))
@@ -190,7 +285,8 @@ export async function fetchPublicRaffles(
   const rows = (data ?? []).map((row) =>
     normalizeRaffle(row as Record<string, unknown>)
   )
-  return attachRaffleMeta(rows, userId)
+  const enriched = await enrichRafflePrizesFromCoupons(rows)
+  return attachRaffleMeta(enriched, userId)
 }
 
 /** 後台：全部抽獎 */
@@ -210,7 +306,8 @@ export async function fetchAllRaffles(): Promise<RaffleWithMeta[]> {
   const rows = (data ?? []).map((row) =>
     normalizeRaffle(row as Record<string, unknown>)
   )
-  return attachRaffleMeta(rows)
+  const enriched = await enrichRafflePrizesFromCoupons(rows)
+  return attachRaffleMeta(enriched)
 }
 
 export async function createRaffle(data: RaffleFormData): Promise<Raffle> {
@@ -230,18 +327,14 @@ export async function createRaffle(data: RaffleFormData): Promise<Raffle> {
 
   const raffle = normalizeRaffle(row as Record<string, unknown>)
   const couponId = await syncRafflePrizeCoupon(raffle.id, data, null)
-  if (couponId) {
-    const { data: updated, error: updErr } = await supabase
-      .from('raffles')
-      .update({ prize_coupon_id: couponId, updated_at: new Date().toISOString() })
-      .eq('id', raffle.id)
-      .select('*')
-      .single()
-    if (updErr) throw new Error(formatErrorMessage(updErr))
-    return normalizeRaffle(updated as Record<string, unknown>)
-  }
-
-  return raffle
+  const { data: updated, error: updErr } = await supabase
+    .from('raffles')
+    .update({ prize_coupon_id: couponId, updated_at: new Date().toISOString() })
+    .eq('id', raffle.id)
+    .select('*')
+    .single()
+  if (updErr) throw new Error(formatErrorMessage(updErr))
+  return normalizeRaffle(updated as Record<string, unknown>)
 }
 
 export async function updateRaffle(
