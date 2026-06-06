@@ -366,6 +366,20 @@ export interface WishMessage {
   member_phone?: string | null
 }
 
+/** 命理諮詢留言 */
+export interface FortuneConsultationRequest {
+  id: string
+  question: string
+  line_id: string
+  display_name: string | null
+  member_id: string | null
+  created_at: string
+  /** 後台列表：會員電話 */
+  member_phone?: string | null
+  /** 後台列表：會員姓名 */
+  member_real_name?: string | null
+}
+
 /** 後台編輯商品表單 */
 export interface ProductEditData {
   name: string

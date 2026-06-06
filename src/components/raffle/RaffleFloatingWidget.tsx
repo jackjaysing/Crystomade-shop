@@ -8,6 +8,7 @@ import {
 } from '../../constants/raffles'
 import { isRaffleResultSeen } from '../../lib/raffleResultSeen'
 import type { RaffleWithMeta } from '../../lib/types'
+import { FortuneConsultationFabSlot } from '../fortune-consultation/FortuneConsultationFloatingWidget'
 import { WishBoardFabSlot } from '../wish-board/WishBoardFloatingWidget'
 import { RaffleActivityPanel } from './RaffleActivityPanel'
 import { RouletteWheelIcon } from './RouletteWheelIcon'
@@ -83,8 +84,6 @@ export function RaffleFloatingWidget() {
         className="fixed left-0 z-[45] flex flex-col items-start gap-2"
         style={safeBottom}
       >
-        <WishBoardFabSlot />
-
         <div
           className={`flex flex-col items-start gap-1 transition-transform duration-300 ${
             isCollapsed ? '-translate-x-[calc(100%-2.5rem)]' : 'translate-x-0'
@@ -140,6 +139,10 @@ export function RaffleFloatingWidget() {
           )}
         </button>
         </div>
+
+        <WishBoardFabSlot />
+
+        <FortuneConsultationFabSlot />
       </div>
 
       <RaffleActivityPanel

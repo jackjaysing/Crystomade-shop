@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, MessageSquareHeart } from 'lucide-react'
-import { WISH_FAB_STORAGE_KEY, type WishFabMode } from '../../constants/wishBoard'
-import { WishBoardPanel } from './WishBoardPanel'
+import { ChevronLeft, MoonStar } from 'lucide-react'
+import {
+  FORTUNE_FAB_STORAGE_KEY,
+  type FortuneFabMode,
+} from '../../constants/fortuneConsultation'
+import { FortuneConsultationPanel } from './FortuneConsultationPanel'
 
-function readStoredMode(): WishFabMode {
+function readStoredMode(): FortuneFabMode {
   try {
-    const v = localStorage.getItem(WISH_FAB_STORAGE_KEY)
+    const v = localStorage.getItem(FORTUNE_FAB_STORAGE_KEY)
     if (v === 'visible' || v === 'collapsed') return v
   } catch {
     /* ignore */
@@ -13,14 +16,14 @@ function readStoredMode(): WishFabMode {
   return 'visible'
 }
 
-/** 左側懸浮許願板按鈕（抽獎區下方，不含外層 fixed 定位） */
-export function WishBoardFabSlot() {
-  const [mode, setMode] = useState<WishFabMode>(() => readStoredMode())
+/** 左側懸浮命理諮詢按鈕（最下方，不含外層 fixed 定位） */
+export function FortuneConsultationFabSlot() {
+  const [mode, setMode] = useState<FortuneFabMode>(() => readStoredMode())
   const [panelOpen, setPanelOpen] = useState(false)
 
   useEffect(() => {
     try {
-      localStorage.setItem(WISH_FAB_STORAGE_KEY, mode)
+      localStorage.setItem(FORTUNE_FAB_STORAGE_KEY, mode)
     } catch {
       /* ignore */
     }
@@ -41,7 +44,7 @@ export function WishBoardFabSlot() {
           <button
             type="button"
             title="向左收合"
-            aria-label="向左收合許願板"
+            aria-label="向左收合命理諮詢"
             onClick={() => setMode('collapsed')}
             className="ml-3 rounded-md border border-white/10 bg-graphite/90 p-1 text-white/40 backdrop-blur-md hover:bg-white/10 hover:text-white"
           >
@@ -64,10 +67,10 @@ export function WishBoardFabSlot() {
               ? 'h-11 w-10 rounded-r-2xl'
               : 'h-[4.5rem] w-[4.5rem] rounded-full'
           }`}
-          aria-label={isCollapsed ? '展開許願板' : '許願板'}
-          title="許願板"
+          aria-label={isCollapsed ? '展開命理諮詢' : '命理諮詢'}
+          title="命理諮詢"
         >
-          <MessageSquareHeart
+          <MoonStar
             className={
               isCollapsed
                 ? 'h-4 w-4 transition-all duration-300'
@@ -76,12 +79,17 @@ export function WishBoardFabSlot() {
             strokeWidth={1.75}
           />
           {!isCollapsed && (
-            <span className="mt-0.5 text-[10px] font-medium tracking-wide">許願板</span>
+            <span className="mt-0.5 text-[10px] font-medium tracking-wide">
+              命理諮詢
+            </span>
           )}
         </button>
       </div>
 
-      <WishBoardPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
+      <FortuneConsultationPanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+      />
     </>
   )
 }

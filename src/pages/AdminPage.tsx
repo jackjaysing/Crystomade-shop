@@ -12,6 +12,7 @@ import { CustomerAdmin } from '../components/admin/CustomerAdmin'
 import { PointShopAdmin } from '../components/admin/PointShopAdmin'
 import { PromotionsAdmin } from '../components/admin/PromotionsAdmin'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
+import { FortuneConsultationAdmin } from '../components/admin/FortuneConsultationAdmin'
 import { WishBoardAdmin } from '../components/admin/WishBoardAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
@@ -37,6 +38,7 @@ type AdminTab =
   | 'revenue'
   | 'banners'
   | 'wish_board'
+  | 'fortune_consultation'
   | 'analytics'
   | 'logs'
 
@@ -48,6 +50,7 @@ const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'orders', label: '訂單管理' },
   { id: 'banners', label: '公告橫幅' },
   { id: 'wish_board', label: '許願留言' },
+  { id: 'fortune_consultation', label: '命理諮詢' },
   { id: 'analytics', label: '瀏覽統計' },
   { id: 'revenue', label: '收入統計' },
   { id: 'logs', label: '後台日誌' },
@@ -289,6 +292,16 @@ export function AdminPage() {
               會員在前台提交的許願留言，僅供後台查看與參考。
             </p>
             <WishBoardAdmin enabled={authed} />
+          </section>
+        )}
+
+        {activeTab === 'fortune_consultation' && (
+          <section>
+            <h2 className="mb-4 text-lg tracking-wide text-white/80">命理諮詢</h2>
+            <p className="mb-4 text-sm text-white/45">
+              客戶填寫的諮詢問題與 Line ID，供命理老師聯絡使用。
+            </p>
+            <FortuneConsultationAdmin enabled={authed} />
           </section>
         )}
 
