@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ChangeEvent } from 'react'
+import { createPortal } from 'react-dom'
+import { X } from 'lucide-react'
 import { createProduct } from '../../lib/api/products'
 import {
   BRACELET_STYLES,
@@ -18,6 +20,8 @@ import { IntegerField } from '../ui/IntegerField'
 import { parseIntegerInput } from '../../lib/parseIntegerInput'
 
 interface ProductFormProps {
+  open: boolean
+  onClose: () => void
   onCreated: () => void
 }
 
@@ -36,8 +40,8 @@ const initialForm: ProductFormData = {
   galleryFiles: [],
 }
 
-/** 後台：上架新商品表單（封面 + 多張詳情圖） */
-export function ProductForm({ onCreated }: ProductFormProps) {
+/** 後台：上架新商品表單（彈窗 · 封面 + 多張詳情圖） */
+export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
   const [form, setForm] = useState<ProductFormData>(initialForm)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
@@ -151,8 +155,8 @@ export function ProductForm({ onCreated }: ProductFormProps) {
     try {
       await createProduct({ ...form, stock })
       resetForm()
-      setMessage('上架成功！前台已同步')
       onCreated()
+      onClose()
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '上架失敗')
     } finally {
@@ -160,11 +164,45 @@ export function ProductForm({ onCreated }: ProductFormProps) {
     }
   }
 
-  return (
-    <GlassPanel className="p-6">
-      <h3 className="font-display text-xl text-amber-glow">新增商品</h3>
+  if (!open) return null
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex animate-fadeIn sm:items-center sm:justify-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-create-title"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-void/80 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label="關閉"
+      />
+
+      <GlassPanel className="relative z-10 flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden rounded-none sm:h-auto sm:max-h-[90vh] sm:rounded-2xl">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-6">
+          <div className="min-w-0 pr-2">
+            <h3 id="product-create-title" className="font-display text-xl text-amber-glow">
+              新增商品
+            </h3>
+            <p className="mt-1 text-xs text-white/35">上架後前台會立即同步</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-full border border-white/10 p-2 text-white/60 transition hover:text-white"
+            aria-label="關閉視窗"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-6 sm:py-6"
+        >
+          <div className="space-y-4">
         <input
           placeholder="水晶名稱"
           value={form.name}
@@ -387,24 +425,27 @@ export function ProductForm({ onCreated }: ProductFormProps) {
           />
         </div>
 
-        {message && (
-          <p
-            className={`text-sm ${
-              message.includes('成功') ? 'text-emerald-400' : 'text-red-400'
-            }`}
-          >
-            {message}
-          </p>
-        )}
+          {message && (
+            <p
+              className={`text-sm ${
+                message.includes('成功') ? 'text-emerald-400' : 'text-red-400'
+              }`}
+            >
+              {message}
+            </p>
+          )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded-lg bg-amber-glow/90 py-3 text-sm tracking-widest text-void disabled:opacity-50"
-        >
-          {submitting ? '上架中…' : '確認上架'}
-        </button>
-      </form>
-    </GlassPanel>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-lg bg-amber-glow/90 py-3 text-sm tracking-widest text-void disabled:opacity-50"
+          >
+            {submitting ? '上架中…' : '確認上架'}
+          </button>
+          </div>
+        </form>
+      </GlassPanel>
+    </div>,
+    document.body
   )
 }

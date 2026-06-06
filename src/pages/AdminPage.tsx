@@ -27,7 +27,7 @@ import {
   logoutAdmin,
 } from '../lib/adminAuth'
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
-import { Archive } from 'lucide-react'
+import { Archive, Plus } from 'lucide-react'
 
 type AdminTab =
   | 'products'
@@ -65,6 +65,7 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('products')
   const [orderListView, setOrderListView] = useState<'active' | 'deleted'>('active')
   const [showDeleted, setShowDeleted] = useState(false)
+  const [showCreateProduct, setShowCreateProduct] = useState(false)
   const { products, reload: reloadProducts } = useProducts()
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(authed)
   const {
@@ -181,27 +182,39 @@ export function AdminPage() {
           <section>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg tracking-wide text-white/80">商品管理</h2>
-              <button
-                type="button"
-                onClick={() => setShowDeleted(true)}
-                className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
-              >
-                <Archive className="h-4 w-4" strokeWidth={1.5} />
-                已刪除物品
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateProduct(true)}
+                  className="flex items-center gap-2 rounded-lg border border-amber-glow/40 bg-amber-glow/10 px-4 py-2 text-sm text-amber-glow transition hover:border-amber-glow/60 hover:bg-amber-glow/15"
+                >
+                  <Plus className="h-4 w-4" strokeWidth={2} />
+                  新增商品
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleted(true)}
+                  className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
+                >
+                  <Archive className="h-4 w-4" strokeWidth={1.5} />
+                  已刪除物品
+                </button>
+              </div>
             </div>
-            <div className="grid gap-8 lg:grid-cols-2">
-              <ProductForm onCreated={reloadProducts} />
-              <ProductListAdmin
-                products={products}
-                viewStatsByProductId={statsByProductId}
-                viewStatsError={productViewError}
-                onUpdated={() => {
-                  reloadProducts()
-                  reloadProductViewStats()
-                }}
-              />
-            </div>
+            <ProductListAdmin
+              products={products}
+              viewStatsByProductId={statsByProductId}
+              viewStatsError={productViewError}
+              onUpdated={() => {
+                reloadProducts()
+                reloadProductViewStats()
+              }}
+            />
+            <ProductForm
+              open={showCreateProduct}
+              onClose={() => setShowCreateProduct(false)}
+              onCreated={reloadProducts}
+            />
           </section>
         )}
 
