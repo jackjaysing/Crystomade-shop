@@ -24,6 +24,7 @@ import type { ProductGalleryEditItem } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { IntegerField } from '../ui/IntegerField'
 import { parseIntegerInput } from '../../lib/parseIntegerInput'
+import { productPhotoAlt } from '../../lib/imageAlt'
 
 interface ProductEditModalProps {
   product: Product
@@ -471,7 +472,7 @@ export function ProductEditModal({
             <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-amber-glow/30 py-8 transition hover:border-amber-glow/50">
               <img
                 src={coverDisplay}
-                alt="封面預覽"
+                alt={productPhotoAlt(form.name || product.name)}
                 className="max-h-48 rounded object-cover"
               />
               <span className="mt-2 text-xs text-white/40">點擊更換封面</span>
@@ -489,6 +490,7 @@ export function ProductEditModal({
               詳情相簿（封面之後的順序，可用箭頭調整）
             </p>
             <AdminProductGalleryEditor
+              productName={form.name || product.name}
               items={galleryEditorItems}
               onMove={moveGalleryItem}
               onRemove={removeGalleryItem}

@@ -1,5 +1,6 @@
 import { getProductCategoryBadgeLines } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
+import { productPhotoAlt } from '../../lib/imageAlt'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageBadges } from './ProductImageBadges'
@@ -31,7 +32,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       <div className="relative aspect-[3/4] overflow-hidden">
         <img
           src={product.image_url}
-          alt={product.name}
+          alt={productPhotoAlt(product.name)}
           className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
           loading="lazy"
         />

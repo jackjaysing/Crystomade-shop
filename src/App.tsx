@@ -24,7 +24,7 @@ export default function App() {
           <Navbar />
           <PageViewTracker />
           <SiteMetaSync />
-          <div className="flex-1">
+          <main id="main-content" className="flex-1">
             <Routes>
               <Route path="/" element={<Navigate to="/products" replace />} />
               <Route path="/products" element={<ProductsPage />} />
@@ -34,7 +34,7 @@ export default function App() {
               <Route path="/account" element={<AccountPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
-          </div>
+          </main>
           <SiteFooter />
           <RaffleFloatingWidget />
         </div>

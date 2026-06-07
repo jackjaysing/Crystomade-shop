@@ -31,8 +31,9 @@ export function PointShopPage() {
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-6xl px-6">
+        <section aria-labelledby="point-shop-heading">
         <p className="text-xs tracking-[0.4em] text-amber-glow/60">POINT SHOP</p>
-        <h1 className="mt-2 font-display text-4xl text-white sm:text-5xl">點數商城</h1>
+        <h1 id="point-shop-heading" className="mt-2 font-display text-4xl text-white sm:text-5xl">點數商城</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/50">
           使用累積點數兌換精選好禮，加入購物車後與典藏商品一併結帳。兌換商品為
           NT$0且不可折抵運費；若購物車僅有兌換品，仍需支付運費。
@@ -94,8 +95,8 @@ export function PointShopPage() {
           <MetalDivider />
         </div>
 
-        <section>
-          <h2 className="text-sm tracking-[0.3em] text-white/50">兌換商品</h2>
+        <section aria-labelledby="point-products-heading">
+          <h2 id="point-products-heading" className="text-sm tracking-[0.3em] text-white/50">兌換商品</h2>
 
           {loading ? (
             <p className="mt-8 text-center text-sm text-white/40">載入中…</p>
@@ -130,6 +131,7 @@ export function PointShopPage() {
             瀏覽不需登入；點選「登入兌換」即可註冊或登入會員。
           </p>
         )}
+        </section>
       </div>
     </div>
   )

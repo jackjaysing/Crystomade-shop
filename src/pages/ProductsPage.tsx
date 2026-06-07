@@ -468,7 +468,14 @@ export function ProductsPage() {
 
 
 
-      <section ref={productSectionRef} className="mx-auto max-w-7xl scroll-mt-72 px-4 py-12">
+      <section
+        ref={productSectionRef}
+        aria-labelledby="products-collection-heading"
+        className="mx-auto max-w-7xl scroll-mt-72 px-4 py-12"
+      >
+        <h2 id="products-collection-heading" className="sr-only">
+          水晶典藏商品
+        </h2>
 
         {loading && (
 

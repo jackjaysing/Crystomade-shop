@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { productRequiresBraceletSize } from '../../constants/braceletSizes'
 import { isProductSoldOut } from '../../lib/productStock'
+import { productPhotoAlt } from '../../lib/imageAlt'
 import type { Product } from '../../lib/types'
 import { BraceletSizePicker } from '../products/BraceletSizePicker'
 import { ProductPriceDisplay } from '../products/ProductPriceDisplay'
@@ -67,7 +68,7 @@ export function CartQuickAddSection({
                 >
                   <img
                     src={product.image_url}
-                    alt=""
+                    alt={productPhotoAlt(product.name)}
                     className="aspect-square w-full object-cover"
                   />
                   <div className="space-y-2 p-2.5">

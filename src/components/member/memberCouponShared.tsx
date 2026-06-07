@@ -7,6 +7,7 @@ import {
   getMemberCouponTypeLabel,
   isCartRaffleGiftCoupon,
 } from '../../constants/coupons'
+import { giftImageAlt } from '../../lib/imageAlt'
 import type { MemberCouponWithDefinition } from '../../lib/types'
 import { RaffleGiftRedeemButton } from './RaffleGiftRedeemButton'
 
@@ -63,7 +64,7 @@ export function MemberCouponList({
                 {isGift && mc.coupon.image_url && (
                   <img
                     src={mc.coupon.image_url}
-                    alt=""
+                    alt={giftImageAlt(mc.coupon.title)}
                     className="h-14 w-14 shrink-0 rounded-lg object-cover"
                   />
                 )}

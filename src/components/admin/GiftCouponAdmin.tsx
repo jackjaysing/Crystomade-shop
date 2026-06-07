@@ -9,6 +9,7 @@ import {
   uploadGiftCouponImage,
 } from '../../lib/api/coupons'
 import { fetchRegisteredCustomers } from '../../lib/api/adminCustomers'
+import { giftImageAlt } from '../../lib/imageAlt'
 import type { AdminRegisteredCustomer, Coupon, GiftCouponFormData } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { IssueCouponMemberModal } from './IssueCouponMemberModal'
@@ -217,7 +218,7 @@ export function GiftCouponAdmin({ enabled = true }: GiftCouponAdminProps) {
             {form.image_url && !imageFile && (
               <img
                 src={form.image_url}
-                alt=""
+                alt={giftImageAlt(form.title || '禮物券')}
                 className="mb-2 h-24 w-24 rounded-lg border border-white/10 object-cover"
               />
             )}
@@ -319,7 +320,7 @@ export function GiftCouponAdmin({ enabled = true }: GiftCouponAdminProps) {
                       {c.image_url && (
                         <img
                           src={c.image_url}
-                          alt=""
+                          alt={giftImageAlt(c.title)}
                           className="h-14 w-14 shrink-0 rounded-lg border border-white/10 object-cover"
                         />
                       )}

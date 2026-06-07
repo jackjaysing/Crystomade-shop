@@ -5,6 +5,7 @@ import {
   fetchAllPointProducts,
   updatePointProduct,
 } from '../../lib/api/pointProducts'
+import { adminProductThumbAlt, pointProductPhotoAlt } from '../../lib/imageAlt'
 import type { PointProduct } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 
@@ -151,7 +152,11 @@ export function PointShopAdmin() {
             <label className="mb-2 block text-xs text-white/50">商品圖片 *</label>
             <input type="file" accept="image/*" onChange={handleFile} className="text-sm text-white/60" />
             {preview && (
-              <img src={preview} alt="" className="mt-2 h-32 w-32 rounded-lg object-cover" />
+              <img
+                src={preview}
+                alt={pointProductPhotoAlt(name || '點數商品預覽')}
+                className="mt-2 h-32 w-32 rounded-lg object-cover"
+              />
             )}
           </div>
           {message && (
@@ -184,7 +189,7 @@ export function PointShopAdmin() {
               >
                 <img
                   src={p.image_url}
-                  alt=""
+                  alt={adminProductThumbAlt(p.name)}
                   className="h-20 w-20 shrink-0 rounded-lg object-cover"
                 />
                 <div className="min-w-0 flex-1">

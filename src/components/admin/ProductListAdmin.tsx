@@ -12,6 +12,7 @@ import {
 import type { ProductViewStats } from '../../lib/api/analytics'
 import { getProductSalePrice, hasProductDiscount } from '../../lib/productPricing'
 import { canSwapProductWithNeighbor, sortProducts } from '../../lib/sortProducts'
+import { adminProductThumbAlt } from '../../lib/imageAlt'
 import type { Product, ProductCategory } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { HotProductBadge } from '../products/HotProductBadge'
@@ -113,7 +114,7 @@ export function ProductListAdmin({
     <li key={p.id} className="flex gap-4 py-4">
       <img
         src={p.image_url}
-        alt={p.name}
+        alt={adminProductThumbAlt(p.name)}
         className="h-16 w-16 shrink-0 rounded object-cover"
       />
       <div className="min-w-0 flex-1">

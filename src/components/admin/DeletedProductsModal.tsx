@@ -4,6 +4,7 @@ import { getCategoryLabel } from '../../constants/categories'
 import { restoreProduct } from '../../lib/api/products'
 import { getProductSalePrice, hasProductDiscount } from '../../lib/productPricing'
 import { isProductSoldOut } from '../../lib/productStock'
+import { adminProductThumbAlt } from '../../lib/imageAlt'
 import type { Product } from '../../lib/types'
 import { useDeletedProducts } from '../../hooks/useDeletedProducts'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -91,7 +92,7 @@ export function DeletedProductsModal({
                 >
                   <img
                     src={product.image_url}
-                    alt=""
+                    alt={adminProductThumbAlt(product.name)}
                     className="h-16 w-16 shrink-0 rounded object-cover opacity-70 grayscale"
                   />
                   <div className="min-w-0 flex-1">

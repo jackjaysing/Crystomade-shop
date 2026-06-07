@@ -1,4 +1,5 @@
 import type { ProductViewRankRow } from '../../lib/browseAnalytics'
+import { adminProductThumbAlt } from '../../lib/imageAlt'
 
 interface ProductViewRankChartProps {
   rows: ProductViewRankRow[]
@@ -38,7 +39,7 @@ export function ProductViewRankChart({ rows, metricLabel }: ProductViewRankChart
               {row.imageUrl ? (
                 <img
                   src={row.imageUrl}
-                  alt=""
+                  alt={adminProductThumbAlt(row.name)}
                   className="h-14 w-14 shrink-0 rounded-lg border border-white/10 object-cover sm:h-16 sm:w-16 md:h-20 md:w-20"
                 />
               ) : (

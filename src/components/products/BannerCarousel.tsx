@@ -126,7 +126,9 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
         style={{ transform: `translate3d(-${activeIndex * 100}%, 0, 0)` }}
       >
         {banners.map((banner) => {
-          const altText = banner.name.trim() || '公告橫幅'
+          const altText = banner.name.trim()
+            ? `晶刻 Crystomade 公告：${banner.name.trim()}`
+            : '晶刻 Crystomade 活動公告橫幅'
           const image = (
             <img
               src={banner.image_url}

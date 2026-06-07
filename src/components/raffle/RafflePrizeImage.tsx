@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { isBrowserDisplayableImageUrl } from '../../lib/browserImage'
+import { giftImageAlt } from '../../lib/imageAlt'
 import type { RaffleWithMeta } from '../../lib/types'
 import { ImageLightbox } from '../ui/ImageLightbox'
 
@@ -32,6 +33,7 @@ export function RafflePrizeImage({
     ? raffle.prize_image_url
     : null
   const name = prizeName(raffle)
+  const imageAlt = giftImageAlt(prizeNameRaw(raffle))
   const imageClass =
     imageSize === 'sm'
       ? 'h-16 w-16 shrink-0 rounded-lg object-cover'
@@ -41,7 +43,7 @@ export function RafflePrizeImage({
     const image = (
       <img
         src={imageUrl}
-        alt={name}
+        alt={imageAlt}
         className={`${imageClass} border border-white/10 bg-white/5`}
         onError={() => setImageFailed(true)}
       />
@@ -61,7 +63,7 @@ export function RafflePrizeImage({
         </button>
         <ImageLightbox
           src={imageUrl}
-          alt={name}
+          alt={imageAlt}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
         />

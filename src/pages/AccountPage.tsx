@@ -76,10 +76,11 @@ export function AccountPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 max-md:pb-[calc(14rem+env(safe-area-inset-bottom,0px))]">
       <div className="mx-auto max-w-2xl px-6">
+        <section aria-labelledby="account-heading">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs tracking-[0.4em] text-amber-glow/60">MEMBER</p>
-            <h1 className="mt-2 font-display text-4xl text-white">會員中心</h1>
+            <h1 id="account-heading" className="mt-2 font-display text-4xl text-white">會員中心</h1>
             <p className="mt-2 text-sm text-white/50">
               {profile.real_name} · {formatPhoneDisplay(profile.phone)}
             </p>
@@ -219,6 +220,7 @@ export function AccountPage() {
             </ul>
           )}
         </GlassPanel>
+        </section>
       </div>
     </div>
   )

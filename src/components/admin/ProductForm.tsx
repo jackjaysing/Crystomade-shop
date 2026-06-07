@@ -18,6 +18,7 @@ import { moveListItem } from '../../lib/reorderList'
 import { GlassPanel } from '../ui/GlassPanel'
 import { IntegerField } from '../ui/IntegerField'
 import { parseIntegerInput } from '../../lib/parseIntegerInput'
+import { productPhotoAlt } from '../../lib/imageAlt'
 
 interface ProductFormProps {
   open: boolean
@@ -391,7 +392,7 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
             {coverPreview ? (
               <img
                 src={coverPreview}
-                alt="封面預覽"
+                alt={productPhotoAlt(form.name || '新商品封面')}
                 className="max-h-48 rounded object-cover"
               />
             ) : (
@@ -411,6 +412,7 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
             詳情相簿（可選，點進商品後可切換瀏覽；可用箭頭調整順序）
           </p>
           <AdminProductGalleryEditor
+            productName={form.name || '新商品'}
             items={galleryPreviews.map((url) => ({
               key: url,
               previewSrc: url,

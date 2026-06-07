@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useRef, type ChangeEvent } from 'react'
+import { productGalleryThumbAlt } from '../../lib/imageAlt'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
 
 export interface GalleryEditorItem {
@@ -16,6 +17,7 @@ interface AdminProductGalleryEditorProps {
   onDownload: (index: number) => Promise<void>
   onAppendFiles: (files: File[]) => void
   appendLabel?: string
+  productName?: string
 }
 
 /** 後台商品相簿：追加、單張更換、排序、移除 */
@@ -27,6 +29,7 @@ export function AdminProductGalleryEditor({
   onDownload,
   onAppendFiles,
   appendLabel = '追加相簿照片',
+  productName = '商品',
 }: AdminProductGalleryEditorProps) {
   const replaceInputRef = useRef<HTMLInputElement>(null)
   const replaceIndexRef = useRef<number | null>(null)
@@ -78,7 +81,7 @@ export function AdminProductGalleryEditor({
               >
                 <img
                   src={item.previewSrc}
-                  alt=""
+                  alt={productGalleryThumbAlt(productName, index, index === 0)}
                   className={`h-16 w-16 rounded object-cover transition group-hover:opacity-80 ${
                     item.isNew ? 'ring-2 ring-amber-glow/50' : ''
                   }`}

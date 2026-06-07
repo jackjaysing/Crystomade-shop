@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { productGalleryThumbAlt, productPhotoAlt } from '../../lib/imageAlt'
 import { getProductImages } from '../../lib/productImages'
 import type { Product } from '../../lib/types'
 import { ProductImageBadges } from './ProductImageBadges'
@@ -46,7 +47,7 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
       >
         <ProductImageMagnifier
           src={activeSrc}
-          alt={`${product.name} ${activeIndex + 1}`}
+          alt={productPhotoAlt(product.name)}
           className={imageClassName}
           enabled={!isSold || peeking}
         />
@@ -103,7 +104,7 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
             >
               <img
                 src={url}
-                alt=""
+                alt={productGalleryThumbAlt(product.name, index, index === 0)}
                 className="h-full w-full object-contain"
               />
               {index === 0 && (

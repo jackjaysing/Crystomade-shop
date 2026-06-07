@@ -1,6 +1,7 @@
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
+import { cartItemPhotoAlt } from '../../lib/imageAlt'
 import { FreeShippingProgress } from './FreeShippingProgress'
 import { CartItemSizeEditor } from './CartItemSizeEditor'
 import { CartPointShopSection } from './CartPointShopSection'
@@ -125,7 +126,14 @@ export function CartDrawer() {
                       <div className="relative shrink-0">
                         <img
                           src={item.image_url}
-                          alt=""
+                          alt={cartItemPhotoAlt(
+                            item.name,
+                            isRaffleGiftItem(item)
+                              ? 'gift'
+                              : isPointRedemptionItem(item)
+                                ? 'point'
+                                : 'product'
+                          )}
                           className={`h-20 w-20 rounded-lg object-cover ${
                             isFullySnatched ? 'grayscale' : ''
                           }`}

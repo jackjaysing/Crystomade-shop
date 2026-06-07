@@ -38,8 +38,9 @@ export function WishBoardPage() {
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-3xl px-6">
+        <section aria-labelledby="wish-board-heading">
         <p className="text-xs tracking-[0.4em] text-amber-glow/60">WISH BOARD</p>
-        <h1 className="mt-2 font-display text-4xl text-white sm:text-5xl">許願留言板</h1>
+        <h1 id="wish-board-heading" className="mt-2 font-display text-4xl text-white sm:text-5xl">許願留言板</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/50">
           版上找不到想要的商品？登入會員後告訴我們你的心願，我們會依需求規劃上架。
         </p>
@@ -107,6 +108,7 @@ export function WishBoardPage() {
             <MemberAuthForm variant="page" />
           </div>
         )}
+        </section>
       </div>
     </div>
   )

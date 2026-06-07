@@ -15,6 +15,7 @@ import {
   softDeleteOrderGroup,
   unshipOrderGroup,
 } from '../../lib/api/orders'
+import { adminProductThumbAlt } from '../../lib/imageAlt'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
 import {
@@ -652,7 +653,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
-                          alt=""
+                          alt={adminProductThumbAlt(item.productName)}
                           className="h-14 w-14 shrink-0 rounded-lg object-cover"
                         />
                       ) : (

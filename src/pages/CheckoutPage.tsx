@@ -22,6 +22,7 @@ import { profileToOrderPrefill, syncMemberProfileFromCheckout } from '../lib/api
 import { createOrdersFromCart } from '../lib/api/orders'
 import { validateOrderForm } from '../lib/normalizeOrder'
 import type { OrderFormData } from '../lib/types'
+import { cartItemPhotoAlt } from '../lib/imageAlt'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import { MetalDivider } from '../components/ui/MetalDivider'
 
@@ -194,8 +195,9 @@ export function CheckoutPage() {
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-2xl px-6">
+        <section aria-labelledby="checkout-heading">
         <p className="text-xs tracking-[0.4em] text-amber-glow/60">CHECKOUT</p>
-        <h1 className="mt-2 font-display text-4xl text-white">確認訂單</h1>
+        <h1 id="checkout-heading" className="mt-2 font-display text-4xl text-white">確認訂單</h1>
 
         <GlassPanel className="mt-8 p-6 sm:p-8">
           <h2 className="text-sm tracking-widest text-white/50">訂購明細</h2>
@@ -230,7 +232,14 @@ export function CheckoutPage() {
                   <div className="relative shrink-0">
                     <img
                       src={item.image_url}
-                      alt=""
+                      alt={cartItemPhotoAlt(
+                        item.name,
+                        isRaffleGiftItem(item)
+                          ? 'gift'
+                          : isPointRedemptionItem(item)
+                            ? 'point'
+                            : 'product'
+                      )}
                       className={`h-16 w-16 rounded-lg object-cover ${
                         isFullySnatched ? 'grayscale' : ''
                       }`}
@@ -458,6 +467,7 @@ export function CheckoutPage() {
             </button>
           </GlassPanel>
         </form>
+        </section>
       </div>
 
       {showSuccess && <OrderSuccessModal orderNumber={successOrderNumber} />}

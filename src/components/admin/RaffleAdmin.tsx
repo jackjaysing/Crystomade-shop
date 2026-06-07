@@ -21,6 +21,7 @@ import { getNextRaffleListedCode } from '../../lib/raffleListedCode'
 import type { RaffleFormData, RaffleWithMeta } from '../../lib/types'
 import { formatPhoneDisplay } from '../../lib/api/adminCustomers'
 import { RaffleListedCode } from '../raffle/RaffleListedCode'
+import { giftImageAlt } from '../../lib/imageAlt'
 import { RafflePrizeImage, prizeName, prizeNameRaw } from '../raffle/RafflePrizeImage'
 import { GlassPanel } from '../ui/GlassPanel'
 
@@ -280,7 +281,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                 isBrowserDisplayableImageUrl(form.prize_image_url)) && (
                 <img
                   src={prizeImagePreview ?? form.prize_image_url ?? ''}
-                  alt=""
+                  alt={giftImageAlt(form.prize_title || '抽獎禮物')}
                   className="h-20 w-20 rounded-lg object-cover"
                 />
               )}

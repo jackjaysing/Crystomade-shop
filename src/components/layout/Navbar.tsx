@@ -45,14 +45,15 @@ export function Navbar() {
           >
             <img
               src="/logomark.png"
-              alt=""
+              alt="晶刻 Crystomade 品牌標誌"
               width={40}
               height={40}
               className="block h-9 w-9 shrink-0 object-contain sm:h-11 sm:w-11"
             />
             <img
               src="/logoword.png"
-              alt="晶刻 Crystomade"
+              alt=""
+              aria-hidden="true"
               className="hidden h-[2.125rem] w-auto max-w-[6.75rem] shrink-0 object-contain object-left min-[400px]:block sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>

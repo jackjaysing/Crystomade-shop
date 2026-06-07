@@ -3,6 +3,7 @@ import {
   getPointRedeemButtonLabel,
   type PointRedeemButtonState,
 } from '../../hooks/usePointRedeemState'
+import { pointProductPhotoAlt } from '../../lib/imageAlt'
 import type { PointProduct } from '../../lib/types'
 
 interface PointProductCardProps {
@@ -37,7 +38,7 @@ export function PointProductCard({
       <div className="relative aspect-square overflow-hidden bg-void/50">
         <img
           src={product.image_url}
-          alt={product.name}
+          alt={pointProductPhotoAlt(product.name)}
           className="h-full w-full object-cover transition duration-500 hover:scale-105"
           loading="lazy"
         />
