@@ -198,6 +198,15 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               )}
             </div>
           </GlassPanel>
+
+          <button
+            type="button"
+            onClick={handleBackToProducts}
+            className="mt-6 inline-flex items-center gap-2 text-sm text-white/50 transition hover:text-amber-glow"
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+            返回典藏
+          </button>
         </section>
       </div>
     </div>
