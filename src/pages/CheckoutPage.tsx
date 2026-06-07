@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { CartItemSizeEditor } from '../components/cart/CartItemSizeEditor'
 import { OrderSuccessModal } from '../components/cart/OrderSuccessModal'
 import { CheckoutCouponSelect } from '../components/checkout/CheckoutCouponSelect'
+import { CheckoutLoginGate } from '../components/checkout/CheckoutLoginGate'
 import { CheckoutPointsDiscount } from '../components/checkout/CheckoutPointsDiscount'
 import { calcCouponDiscount } from '../lib/couponCalculation'
 import { fetchMemberAvailableCoupons, redeemMemberCouponAtCheckout } from '../lib/api/coupons'
@@ -36,7 +37,7 @@ const emptyForm: OrderFormData = {
 
 /** 結帳頁：購物車明細 + 運費 + 收件表單 */
 export function CheckoutPage() {
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
   const { items, clearCart } = useCart()
   const {
     resolvedItems,
@@ -86,6 +87,23 @@ export function CheckoutPage() {
     return <Navigate to="/products" replace />
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center pt-28 text-white/40">
+        載入中…
+      </div>
+    )
+  }
+
+  if (!user || !profile) {
+    return (
+      <CheckoutLoginGate
+        cartItemCount={items.length}
+        onAuthSuccess={() => void refreshProfile()}
+      />
+    )
+  }
+
   const raffleGiftBaseOk = cartHasRaffleGiftBase(items)
   const canCheckout = checkoutItemCount > 0 && raffleGiftBaseOk
   const hasPointRedemption = items.some(isPointRedemptionItem)
@@ -114,6 +132,11 @@ export function CheckoutPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+
+    if (!user?.id || !profile) {
+      setMessage({ type: 'err', text: '請先登入會員後再結帳' })
+      return
+    }
 
     if (!canCheckout) {
       setMessage({
@@ -155,12 +178,12 @@ export function CheckoutPage() {
         latest.checkoutItems,
         form,
         latest.shippingFee,
-        user?.id ?? null,
-        user ? clampedPointsToUse : 0
+        user.id,
+        clampedPointsToUse
       )
 
       const checkoutId = createdOrders[0]?.checkout_id
-      if (user?.id && selectedCouponId && checkoutId && subtotal > 0) {
+      if (selectedCouponId && checkoutId && subtotal > 0) {
         await redeemMemberCouponAtCheckout(
           selectedCouponId,
           checkoutId,
@@ -168,14 +191,8 @@ export function CheckoutPage() {
         )
       }
 
-      if (user?.id) {
-        await syncMemberProfileFromCheckout(
-          user.id,
-          form.buyer_name,
-          form.phone
-        )
-        await refreshProfile()
-      }
+      await syncMemberProfileFromCheckout(user.id, form.buyer_name, form.phone)
+      await refreshProfile()
       clearCart()
       setPointsToUse(0)
       setSelectedCouponId(null)

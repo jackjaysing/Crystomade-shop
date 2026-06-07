@@ -161,16 +161,32 @@ export function MemberAuthForm({
 
       {mode === 'register' && (
         <div className="mt-3 space-y-2">
-          {activeReferralCode && (
-            <p className="rounded-lg border border-amber-glow/25 bg-amber-glow/10 px-3 py-2 text-xs leading-relaxed text-amber-glow/90">
-              使用推薦碼 <span className="font-medium">{activeReferralCode}</span>{' '}
-              註冊，完成註冊即贈 {REFERRAL_WELCOME_BONUS_POINTS} 點能量點數！
-            </p>
-          )}
-          <p className="text-xs leading-relaxed text-white/40">
-            只需填寫真實姓名、生日、手機與密碼。註冊贈{' '}
-            {activeReferralCode ? REFERRAL_WELCOME_BONUS_POINTS : WELCOME_BONUS_POINTS}{' '}
-            點；消費滿 NT${POINTS_PER_NTD_EARN} 累積 1 點，已付款或已出貨後入帳。
+          <p className="text-xs leading-relaxed text-white/45">
+            完成註冊即贈{' '}
+            <span className="text-white/70">{WELCOME_BONUS_POINTS} 點</span>
+            迎新禮金。
+            {activeReferralCode ? (
+              <>
+                {' '}
+                已填寫推薦碼，迎新禮金雙倍為{' '}
+                <span className="font-medium text-amber-glow">
+                  {REFERRAL_WELCOME_BONUS_POINTS} 點
+                </span>
+                。
+              </>
+            ) : (
+              <>
+                {' '}
+                若有好友推薦碼，填寫後可升級為{' '}
+                <span className="font-medium text-amber-glow">
+                  {REFERRAL_WELCOME_BONUS_POINTS} 點
+                </span>
+                。
+              </>
+            )}
+          </p>
+          <p className="text-xs leading-relaxed text-white/35">
+            消費滿 NT${POINTS_PER_NTD_EARN} 累積 1 點，已付款或已出貨後入帳。
           </p>
         </div>
       )}
@@ -182,6 +198,61 @@ export function MemberAuthForm({
       >
         {mode === 'register' ? (
           <>
+            <div
+              className={
+                compact
+                  ? undefined
+                  : 'rounded-xl border border-amber-glow/30 bg-amber-glow/[0.06] p-4'
+              }
+            >
+              {!compact && (
+                <p className="text-xs font-medium tracking-wide text-amber-glow/90">
+                  尊榮加碼・好友推薦碼
+                </p>
+              )}
+              <label
+                className={`block text-xs ${
+                  compact ? 'text-white/45' : 'mt-1 text-white/55'
+                }`}
+                htmlFor="register-referral-code"
+              >
+                {compact ? '好友推薦碼（選填）' : '填寫推薦碼，迎新禮金 100 點 → 200 點（選填）'}
+              </label>
+              <input
+                id="register-referral-code"
+                type="text"
+                inputMode="text"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="例：JK8888"
+                value={referralCodeInput}
+                onChange={(e) =>
+                  setReferralCodeInput(sanitizeReferralInput(e.target.value))
+                }
+                className={`input-field uppercase tracking-widest ${
+                  compact ? '' : 'mt-2 border-amber-glow/25 bg-void/40'
+                }`}
+                autoComplete="off"
+                maxLength={12}
+              />
+              {activeReferralCode ? (
+                <p className="mt-2 text-[11px] text-amber-glow/85">
+                  已套用推薦碼 {activeReferralCode}，註冊完成即享{' '}
+                  {REFERRAL_WELCOME_BONUS_POINTS} 點迎新禮金。
+                </p>
+              ) : referralCodeInput ? (
+                <p className="mt-2 text-[11px] text-white/35">
+                  推薦碼為 4–12 碼英數字
+                </p>
+              ) : (
+                !compact && (
+                  <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+                    從好友推薦連結進入會自動帶入；亦可手動輸入。
+                  </p>
+                )
+              )}
+            </div>
+
             <input
               required
               placeholder="真實姓名 *"
@@ -216,30 +287,6 @@ export function MemberAuthForm({
               onBlur={revealPasswordFields}
               className="input-field"
             />
-            <div>
-              <label className="mb-1 block text-xs text-white/45">
-                好友推薦碼（選填）
-              </label>
-              <input
-                type="text"
-                inputMode="text"
-                autoCapitalize="characters"
-                spellCheck={false}
-                placeholder="例：JK8888"
-                value={referralCodeInput}
-                onChange={(e) =>
-                  setReferralCodeInput(sanitizeReferralInput(e.target.value))
-                }
-                className="input-field uppercase tracking-widest"
-                autoComplete="off"
-                maxLength={12}
-              />
-              {referralCodeInput && !activeReferralCode && (
-                <p className="mt-1 text-[11px] text-white/35">
-                  推薦碼為 4–12 碼英數字
-                </p>
-              )}
-            </div>
             {showPasswordFields && (
               <>
                 <input

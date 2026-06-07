@@ -21,7 +21,8 @@ import { useQuickAddProducts } from '../../hooks/useQuickAddProducts'
 /** 側邊滑出購物車 Drawer */
 export function CartDrawer() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const isMemberReady = Boolean(user && profile)
   const {
     items,
     itemCount,
@@ -315,7 +316,7 @@ export function CartDrawer() {
                 }}
                 className="block w-full rounded-lg bg-amber-glow/90 py-3.5 text-center text-sm font-medium tracking-widest text-void transition hover:bg-amber-glow"
               >
-                前往結帳
+                {isMemberReady ? '前往結帳' : '登入後結帳'}
               </Link>
             ) : (
               <button

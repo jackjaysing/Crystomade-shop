@@ -156,7 +156,7 @@ export async function createMemberCheckoutFromCart(
   return rows.map((row) => normalizeOrder(row as Record<string, unknown>))
 }
 
-/** 購物車批次下單（運費計入第一筆訂單） */
+/** 購物車批次下單（須為已登入會員） */
 export async function createOrdersFromCart(
   items: CartItem[],
   form: OrderFormData,
@@ -164,63 +164,30 @@ export async function createOrdersFromCart(
   userId?: string | null,
   pointsForDiscount = 0
 ): Promise<Order[]> {
-  const paidItems = items.filter(isPaidCartItem)
-  const pointItems = items.filter(isPointRedemptionItem)
-  const giftItems = items.filter(isRaffleGiftItem)
+  if (!userId) {
+    throw new Error('請先登入會員後再結帳')
+  }
 
-  if (giftItems.length > 0 && !cartHasRaffleGiftBase(items)) {
+  if (items.length === 0) {
+    throw new Error('購物車是空的，無法下單')
+  }
+
+  if (
+    items.some(isRaffleGiftItem) &&
+    !cartHasRaffleGiftBase(items)
+  ) {
     throw new Error(
       '抽獎禮物券需與付費商品或點數兌換品一同結帳，無法單獨出貨'
     )
   }
 
-  if (
-    userId &&
-    (pointsForDiscount > 0 ||
-      pointItems.length > 0 ||
-      paidItems.length > 0 ||
-      giftItems.length > 0)
-  ) {
-    return createMemberCheckoutFromCart(
-      items,
-      form,
-      shippingFee,
-      userId,
-      pointsForDiscount
-    )
-  }
-
-  const orders: Order[] = []
-  let shippingAssigned = false
-  const checkoutId = crypto.randomUUID()
-
-  for (const item of paidItems) {
-    for (let i = 0; i < item.quantity; i++) {
-      const includeShipping = !shippingAssigned && shippingFee > 0
-      const amount = item.price + (includeShipping ? shippingFee : 0)
-      if (includeShipping) shippingAssigned = true
-
-      const order = await createOrder(
-        item.productId,
-        amount,
-        form,
-        checkoutId,
-        item.selectedSize,
-        userId
-      )
-      orders.push(order)
-    }
-  }
-
-  if (paidItems.length === 0 && (pointItems.length > 0 || giftItems.length > 0)) {
-    throw new Error('訪客結帳無法使用點數兌換或禮物券，請先登入會員')
-  }
-
-  if (!shippingAssigned && shippingFee > 0 && orders.length === 0) {
-    throw new Error('購物車是空的，無法下單')
-  }
-
-  return orders
+  return createMemberCheckoutFromCart(
+    items,
+    form,
+    shippingFee,
+    userId,
+    pointsForDiscount
+  )
 }
 
 const ORDER_SELECT = `

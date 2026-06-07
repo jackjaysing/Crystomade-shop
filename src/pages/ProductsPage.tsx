@@ -46,7 +46,11 @@ import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
 
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 
+import { WelcomeRegisterModal } from '../components/welcome/WelcomeRegisterModal'
+
 import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
+
+import { useWelcomeRegisterPopup } from '../hooks/useWelcomeRegisterPopup'
 
 import { useBanners } from '../hooks/useBanners'
 
@@ -75,6 +79,9 @@ export function ProductsPage() {
   const { products, loading, error } = useStorefrontProducts()
 
   const { banners } = useBanners()
+
+  const { open: welcomePopupOpen, dismiss: dismissWelcomePopup } =
+    useWelcomeRegisterPopup()
 
   const [initialSession] = useState(() => loadPendingProductsListRestore())
 
@@ -620,6 +627,11 @@ export function ProductsPage() {
 
         title="回到商品頂部"
 
+      />
+
+      <WelcomeRegisterModal
+        open={welcomePopupOpen}
+        onClose={dismissWelcomePopup}
       />
 
     </div>

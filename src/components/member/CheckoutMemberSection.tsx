@@ -59,7 +59,7 @@ export function CheckoutMemberSection() {
   return (
     <div className="space-y-3">
       <p className="text-xs tracking-widest text-white/40">
-        會員專區（選填 · 登入或註冊可累積點數）
+        結帳須先登入會員
       </p>
       <MemberAuthForm variant="checkout" />
     </div>
