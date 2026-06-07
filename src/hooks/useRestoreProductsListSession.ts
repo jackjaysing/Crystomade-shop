@@ -4,6 +4,7 @@ import {
   loadPendingProductsListRestore,
   markProductsListSessionRestored,
 } from '../lib/productsListSession'
+import { subscribeProductsListReset } from '../lib/productsListReset'
 
 const VERTICAL_RESTORE_DELAYS_MS = [0, 50, 150, 300, 600, 1000]
 const CAROUSEL_POLL_DELAYS_MS = [0, 80, 160, 320, 500, 800, 1200, 1600]
@@ -12,6 +13,8 @@ const CAROUSEL_POLL_DELAYS_MS = [0, 80, 160, 320, 500, 800, 1200, 1600]
 export function useRestoreProductsListScroll(ready: boolean) {
   const sessionContext = useContext(ProductsListSessionContext)
   const startedRef = useRef(false)
+  const abortedRef = useRef(false)
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const scrollTargetRef = useRef<number | null>(null)
   const hasCarouselRestoreRef = useRef(false)
 
@@ -22,6 +25,14 @@ export function useRestoreProductsListScroll(ready: boolean) {
       session && Object.keys(session.carouselScrollLeft).length > 0
     )
   }
+
+  useEffect(() => {
+    return subscribeProductsListReset(() => {
+      abortedRef.current = true
+      timersRef.current.forEach((timer) => clearTimeout(timer))
+      timersRef.current = []
+    })
+  }, [])
 
   useEffect(() => {
     if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
@@ -42,35 +53,37 @@ export function useRestoreProductsListScroll(ready: boolean) {
     if (scrollY == null && !shouldRestoreCarousel) return
 
     startedRef.current = true
-    const timers: ReturnType<typeof setTimeout>[] = []
 
     const restoreVertical = () => {
-      if (scrollY == null) return
+      if (abortedRef.current || scrollY == null) return
       window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' })
     }
 
     for (const delay of VERTICAL_RESTORE_DELAYS_MS) {
-      timers.push(window.setTimeout(restoreVertical, delay))
+      timersRef.current.push(window.setTimeout(restoreVertical, delay))
     }
 
     if (shouldRestoreCarousel) {
       for (const delay of CAROUSEL_POLL_DELAYS_MS) {
-        timers.push(
+        timersRef.current.push(
           window.setTimeout(() => {
+            if (abortedRef.current) return
             sessionContext?.restorePendingCarousels()
           }, delay)
         )
       }
     }
 
-    timers.push(
+    timersRef.current.push(
       window.setTimeout(() => {
+        if (abortedRef.current) return
         markProductsListSessionRestored()
       }, 1800)
     )
 
     return () => {
-      timers.forEach((timer) => clearTimeout(timer))
+      timersRef.current.forEach((timer) => clearTimeout(timer))
+      timersRef.current = []
     }
   }, [ready, sessionContext])
 }

@@ -1,5 +1,9 @@
 import { LayoutDashboard, ShoppingCart, Store, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import {
+  PRODUCTS_LIST_RESET_STATE,
+  requestProductsListReset,
+} from '../../lib/productsListReset'
 import { CartDrawer } from '../cart/CartDrawer'
 import { MemberPointsBadge } from '../member/MemberPointsBadge'
 import { useAuth } from '../../contexts/AuthContext'
@@ -31,6 +35,15 @@ export function Navbar() {
   const { openCart } = useCart()
   const { checkoutItemCount } = useCartAvailability()
 
+  const productsLinkState = { [PRODUCTS_LIST_RESET_STATE]: true }
+
+  const handleProductsNavClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === '/products') {
+      event.preventDefault()
+      requestProductsListReset()
+    }
+  }
+
   return (
     <>
       <header
@@ -40,6 +53,8 @@ export function Navbar() {
         <div className="mx-auto flex h-full w-full min-w-0 max-w-7xl items-center gap-1.5 px-3 sm:gap-3 sm:px-6">
           <Link
             to="/products"
+            state={productsLinkState}
+            onClick={handleProductsNavClick}
             className="group flex min-w-0 shrink items-center gap-1 transition hover:opacity-90 sm:gap-1.5"
             aria-label="晶刻 Crystomade"
           >
@@ -65,6 +80,8 @@ export function Navbar() {
               <div className="hidden items-center gap-6 md:flex">
                 <Link
                   to="/products"
+                  state={productsLinkState}
+                  onClick={handleProductsNavClick}
                   className={`tracking-wide transition ${
                     isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
@@ -107,6 +124,8 @@ export function Navbar() {
               <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:hidden`}>
                 <Link
                   to="/products"
+                  state={productsLinkState}
+                  onClick={handleProductsNavClick}
                   className={`shrink-0 tracking-wide transition ${
                     isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}

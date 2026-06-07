@@ -18,6 +18,7 @@ import { getBraceletStyleLabel } from '../../constants/braceletStyles'
 import { getCategoryLabel } from '../../constants/categories'
 
 import { useRegisterProductsCarousel } from '../../contexts/ProductsListSessionContext'
+import { subscribeProductsListReset } from '../../lib/productsListReset'
 import type { BraceletStyle, Product, ProductCategory } from '../../lib/types'
 import { BraceletStyleFilter } from './BraceletStyleFilter'
 import { ProductCard } from './ProductCard'
@@ -408,6 +409,22 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
       animateScrollToRef.current = animateScrollTo
 
     }, [scrollByStep, animateScrollTo])
+
+
+
+    useEffect(() => {
+      return subscribeProductsListReset(() => {
+        cancelArrowAnimation()
+        wheelAccumRef.current = 0
+
+        const track = trackRef.current
+        if (!track) return
+
+        track.scrollLeft = 0
+        track.dispatchEvent(new Event('scroll'))
+        updateNavState()
+      })
+    }, [cancelArrowAnimation, updateNavState])
 
 
 

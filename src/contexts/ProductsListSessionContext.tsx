@@ -31,6 +31,7 @@ interface ProductsListSessionContextValue {
   registerCarousel: (category: ProductCategory, control: CarouselControl) => void
   unregisterCarousel: (category: ProductCategory) => void
   restorePendingCarousels: () => number
+  resetAllCarousels: () => void
 }
 
 export const ProductsListSessionContext =
@@ -42,6 +43,7 @@ interface ProductsListSessionProviderProps {
 }
 
 const CAROUSEL_RESTORE_DELAYS_MS = [0, 50, 150, 300, 600, 1000, 1600]
+const CAROUSEL_RESET_DELAYS_MS = [0, 50, 150, 300, 600, 1000]
 
 function readCarouselSnapshot(
   registry: Map<ProductCategory, CarouselControl>
@@ -86,6 +88,15 @@ export function ProductsListSessionProvider({
   const carouselRestoreTimersRef = useRef(
     new Map<ProductCategory, ReturnType<typeof setTimeout>[]>()
   )
+  const carouselResetTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  const clearAllCarouselRestoreTimers = useCallback(() => {
+    for (const category of carouselRestoreTimersRef.current.keys()) {
+      const timers = carouselRestoreTimersRef.current.get(category)
+      timers?.forEach((timer) => clearTimeout(timer))
+      carouselRestoreTimersRef.current.delete(category)
+    }
+  }, [])
 
   const clearCarouselRestoreTimers = useCallback((category: ProductCategory) => {
     const timers = carouselRestoreTimersRef.current.get(category)
@@ -152,6 +163,25 @@ export function ProductsListSessionProvider({
     [clearCarouselRestoreTimers]
   )
 
+  const resetAllCarousels = useCallback(() => {
+    clearAllCarouselRestoreTimers()
+    pendingCarouselRestoreRef.current = {}
+
+    carouselResetTimersRef.current.forEach((timer) => clearTimeout(timer))
+    carouselResetTimersRef.current = []
+
+    const applyReset = () => {
+      for (const [, control] of carouselRegistryRef.current) {
+        control.setScrollLeft(0)
+      }
+    }
+
+    applyReset()
+    carouselResetTimersRef.current = CAROUSEL_RESET_DELAYS_MS.map((delay) =>
+      window.setTimeout(applyReset, delay)
+    )
+  }, [clearAllCarouselRestoreTimers])
+
   const saveBeforeProductOpen = useCallback(() => {
     saveProductsListSession({
       ...getSnapshot(),
@@ -165,12 +195,14 @@ export function ProductsListSessionProvider({
       registerCarousel,
       unregisterCarousel,
       restorePendingCarousels,
+      resetAllCarousels,
     }),
     [
       saveBeforeProductOpen,
       registerCarousel,
       unregisterCarousel,
       restorePendingCarousels,
+      resetAllCarousels,
     ]
   )
 

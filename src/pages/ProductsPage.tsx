@@ -1,4 +1,5 @@
 import { useCategoryScrollSpy } from '../hooks/useCategoryScrollSpy'
+import { useProductsListHomeReset } from '../hooks/useProductsListHomeReset'
 import { useRestoreProductsListScroll } from '../hooks/useRestoreProductsListSession'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ProductsListSessionProvider } from '../contexts/ProductsListSessionContext'
@@ -304,6 +305,15 @@ export function ProductsPage() {
   })
 
   useRestoreProductsListScroll(!loading)
+
+  useProductsListHomeReset({
+    setActiveCategory,
+    setActiveBraceletStyle,
+    setActiveFilterId,
+    setActiveCrystalColorId,
+    setSearchQuery,
+    setSortMode,
+  })
 
   const getListSnapshot = useCallback(
     () => ({
