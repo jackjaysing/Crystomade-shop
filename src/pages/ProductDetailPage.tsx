@@ -18,6 +18,10 @@ export function ProductDetailPage() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [slug])
+
+  useEffect(() => {
     if (!slug) {
       setNotFound(true)
       setLoading(false)
