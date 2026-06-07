@@ -1,5 +1,8 @@
 import { useCategoryScrollSpy } from '../hooks/useCategoryScrollSpy'
-import { useMemo, useRef, useState } from 'react'
+import { useRestoreProductsListScroll } from '../hooks/useRestoreProductsListSession'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ProductsListSessionProvider } from '../contexts/ProductsListSessionContext'
+import { loadProductsListSession } from '../lib/productsListSession'
 
 import { TAG_FILTERS } from '../constants/tags'
 
@@ -29,8 +32,6 @@ import { StorefrontFilterBar } from '../components/products/StorefrontFilterBar'
 import { BannerCarousel } from '../components/products/BannerCarousel'
 
 import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
-
-import { ProductModal } from '../components/products/ProductModal'
 
 import { ProductSearchBar } from '../components/products/ProductSearchBar'
 
@@ -74,35 +75,47 @@ export function ProductsPage() {
 
   const { banners } = useBanners()
 
+  const [initialSession] = useState(() => loadProductsListSession())
+
   const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(
 
-    null
+    initialSession?.activeCategory ?? null
 
   )
 
   const [activeBraceletStyle, setActiveBraceletStyle] =
 
-    useState<BraceletStyle | null>(null)
+    useState<BraceletStyle | null>(initialSession?.activeBraceletStyle ?? null)
 
-  const [activeFilterId, setActiveFilterId] = useState<string | null>(null)
+  const [activeFilterId, setActiveFilterId] = useState<string | null>(
+    initialSession?.activeFilterId ?? null
+  )
 
   const [activeCrystalColorId, setActiveCrystalColorId] = useState<string | null>(
 
-    null
+    initialSession?.activeCrystalColorId ?? null
 
   )
 
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(initialSession?.searchQuery ?? '')
 
-  const [sortMode, setSortMode] = useState<ProductSortMode>('default')
+  const [sortMode, setSortMode] = useState<ProductSortMode>(
+    initialSession?.sortMode ?? 'default'
+  )
 
-  const [showSoldOut, setShowSoldOut] = useState(loadShowSoldOutProducts)
-
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [showSoldOut, setShowSoldOut] = useState(
+    () => initialSession?.showSoldOut ?? loadShowSoldOutProducts()
+  )
 
   const productSectionRef = useRef<HTMLElement>(null)
 
   const categorySectionRefs = useCategorySectionRefs()
+
+  useEffect(() => {
+    if (initialSession?.showSoldOut !== undefined) {
+      saveShowSoldOutProducts(initialSession.showSoldOut)
+    }
+  }, [initialSession?.showSoldOut])
 
 
 
@@ -290,9 +303,33 @@ export function ProductsPage() {
 
   })
 
+  useRestoreProductsListScroll(!loading)
 
+  const getListSnapshot = useCallback(
+    () => ({
+      scrollY: window.scrollY,
+      activeCategory,
+      activeBraceletStyle,
+      activeFilterId,
+      activeCrystalColorId,
+      searchQuery,
+      sortMode,
+      showSoldOut,
+    }),
+    [
+      activeCategory,
+      activeBraceletStyle,
+      activeFilterId,
+      activeCrystalColorId,
+      searchQuery,
+      sortMode,
+      showSoldOut,
+    ]
+  )
 
   return (
+
+    <ProductsListSessionProvider getSnapshot={getListSnapshot}>
 
     <div className="min-h-screen">
 
@@ -551,8 +588,6 @@ export function ProductsPage() {
 
             categoriesToShow={categoriesToShow}
 
-            onProductClick={setSelectedProduct}
-
             sectionRefs={categorySectionRefs}
 
             activeBraceletStyle={activeBraceletStyle}
@@ -567,16 +602,6 @@ export function ProductsPage() {
 
 
 
-      <ProductModal
-
-        product={selectedProduct}
-
-        onClose={() => setSelectedProduct(null)}
-
-      />
-
-
-
       <ScrollToTopFab
 
         targetRef={productSectionRef}
@@ -588,6 +613,8 @@ export function ProductsPage() {
       />
 
     </div>
+
+    </ProductsListSessionProvider>
 
   )
 

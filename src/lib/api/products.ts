@@ -80,6 +80,41 @@ export async function fetchProducts(): Promise<Product[]> {
   return mapActiveProducts((data ?? []) as Record<string, unknown>[])
 }
 
+/** 依 ID 取得單一上架商品（詳情頁用） */
+export async function fetchProductById(id: string): Promise<Product | null> {
+  if (!isSupabaseConfigured) {
+    throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
+  }
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/deleted_at|42703|column/i.test(msg)) {
+      const { data: fallback, error: fallbackError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (fallbackError) throw new Error(formatErrorMessage(fallbackError))
+      if (!fallback) return null
+      const product = normalizeProduct(fallback as Record<string, unknown>)
+      return isProductActive(product) ? product : null
+    }
+    throw new Error(msg)
+  }
+
+  if (!data) return null
+  const product = normalizeProduct(data as Record<string, unknown>)
+  return isProductActive(product) ? product : null
+}
+
 /** 購物車快捷加購推薦商品（與全站同價） */
 export async function fetchQuickAddProducts(): Promise<Product[]> {
   if (!isSupabaseConfigured) return []

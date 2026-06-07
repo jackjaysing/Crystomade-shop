@@ -1,10 +1,9 @@
+import { getPageMeta, type PageMeta } from '../constants/pageMeta'
 import {
   SITE_DESCRIPTION,
-  SITE_KEYWORDS,
   SITE_NAME,
   SITE_OG_IMAGE_ALT,
   SITE_OG_IMAGE_PATH,
-  SITE_TITLE,
 } from '../constants/siteMeta'
 
 function resolveSiteOrigin(): string {
@@ -44,9 +43,8 @@ function upsertLink(rel: string, href: string) {
   el.href = href
 }
 
-/** 套用全站預設 title／description／OG（商品彈窗關閉時還原用） */
-export function applyDefaultSiteMeta(pathname = '/products') {
-  document.title = SITE_TITLE
+function applyMetaBundle(meta: PageMeta, pathname: string, imagePath = SITE_OG_IMAGE_PATH) {
+  document.title = meta.title
 
   upsertMeta(
     'meta[name="description"]',
@@ -55,27 +53,30 @@ export function applyDefaultSiteMeta(pathname = '/products') {
       el.name = 'description'
       return el
     },
-    SITE_DESCRIPTION
+    meta.description
   )
 
-  upsertMeta(
-    'meta[name="keywords"]',
-    () => {
-      const el = document.createElement('meta')
-      el.name = 'keywords'
-      return el
-    },
-    SITE_KEYWORDS
-  )
+  if (meta.keywords) {
+    upsertMeta(
+      'meta[name="keywords"]',
+      () => {
+        const el = document.createElement('meta')
+        el.name = 'keywords'
+        return el
+      },
+      meta.keywords
+    )
+  }
 
   const pageUrl = absoluteUrl(pathname)
   upsertLink('canonical', pageUrl)
 
-  const ogImage = absoluteUrl(SITE_OG_IMAGE_PATH)
+  const ogImage = absoluteUrl(imagePath)
   const ogPairs: Array<[string, string]> = [
     ['og:site_name', SITE_NAME],
-    ['og:title', SITE_TITLE],
-    ['og:description', SITE_DESCRIPTION],
+    ['og:type', 'website'],
+    ['og:title', meta.title],
+    ['og:description', meta.description],
     ['og:url', pageUrl],
     ['og:image', ogImage],
     ['og:image:alt', SITE_OG_IMAGE_ALT],
@@ -95,8 +96,8 @@ export function applyDefaultSiteMeta(pathname = '/products') {
 
   const twitterPairs: Array<[string, string]> = [
     ['twitter:card', 'summary_large_image'],
-    ['twitter:title', SITE_TITLE],
-    ['twitter:description', SITE_DESCRIPTION],
+    ['twitter:title', meta.title],
+    ['twitter:description', meta.description],
     ['twitter:image', ogImage],
   ]
 
@@ -113,17 +114,29 @@ export function applyDefaultSiteMeta(pathname = '/products') {
   }
 }
 
+/** 套用全站預設 title／description／OG（商品彈窗關閉時還原用） */
+export function applyDefaultSiteMeta(pathname = '/products') {
+  applyMetaBundle(getPageMeta(pathname), pathname)
+}
+
+/** 依路由套用各頁 SEO 文案 */
+export function applyPageMeta(pathname: string) {
+  applyMetaBundle(getPageMeta(pathname), pathname)
+}
+
 export interface ProductShareMeta {
   name: string
   description: string
   imageUrl?: string | null
+  pathname: string
 }
 
-/** 商品詳情開啟時更新瀏覽器標題與 meta（社群爬蟲仍以靜態 OG 為主） */
+/** 商品詳情頁更新 title／description／OG／canonical */
 export function applyProductSiteMeta(product: ProductShareMeta) {
   const title = `${product.name}｜${SITE_NAME}`
   const description =
     product.description.trim().slice(0, 160) || SITE_DESCRIPTION
+  const pageUrl = absoluteUrl(product.pathname)
 
   document.title = title
 
@@ -137,46 +150,55 @@ export function applyProductSiteMeta(product: ProductShareMeta) {
     description
   )
 
-  upsertMeta(
-    'meta[property="og:title"]',
-    () => {
-      const el = document.createElement('meta')
-      el.setAttribute('property', 'og:title')
-      return el
-    },
-    title
-  )
-
-  upsertMeta(
-    'meta[property="og:description"]',
-    () => {
-      const el = document.createElement('meta')
-      el.setAttribute('property', 'og:description')
-      return el
-    },
-    description
-  )
+  upsertLink('canonical', pageUrl)
 
   const image = product.imageUrl?.trim()
-  if (image) {
-    const imageUrl = image.startsWith('http') ? image : absoluteUrl(image)
+  const ogImage = image
+    ? image.startsWith('http')
+      ? image
+      : absoluteUrl(image)
+    : absoluteUrl(SITE_OG_IMAGE_PATH)
+
+  const ogPairs: Array<[string, string]> = [
+    ['og:site_name', SITE_NAME],
+    ['og:type', 'product'],
+    ['og:title', title],
+    ['og:description', description],
+    ['og:url', pageUrl],
+    ['og:image', ogImage],
+    ['og:image:alt', `${product.name}天然水晶商品照片`],
+  ]
+
+  for (const [property, content] of ogPairs) {
     upsertMeta(
-      'meta[property="og:image"]',
+      `meta[property="${property}"]`,
       () => {
         const el = document.createElement('meta')
-        el.setAttribute('property', 'og:image')
+        el.setAttribute('property', property)
         return el
       },
-      imageUrl
+      content
     )
+  }
+
+  const twitterPairs: Array<[string, string]> = [
+    ['twitter:card', 'summary_large_image'],
+    ['twitter:title', title],
+    ['twitter:description', description],
+    ['twitter:image', ogImage],
+  ]
+
+  for (const [name, content] of twitterPairs) {
     upsertMeta(
-      'meta[name="twitter:image"]',
+      `meta[name="${name}"]`,
       () => {
         const el = document.createElement('meta')
-        el.name = 'twitter:image'
+        el.name = name
         return el
       },
-      imageUrl
+      content
     )
   }
 }
+
+export { absoluteUrl, resolveSiteOrigin }

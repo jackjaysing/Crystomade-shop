@@ -18,6 +18,7 @@ import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
 import { usePageViewStats } from '../hooks/usePageViewStats'
 import { usePageViewTimeSlotStats } from '../hooks/usePageViewTimeSlotStats'
+import { useProductShareStats } from '../hooks/useProductShareStats'
 import { useProductViewStats } from '../hooks/useProductViewStats'
 import { useAdminActivityLogs } from '../hooks/useAdminActivityLogs'
 import { useProducts } from '../hooks/useProducts'
@@ -82,6 +83,12 @@ export function AdminPage() {
     reload: reloadProductViewStats,
   } = useProductViewStats(authed)
   const {
+    statsByProductId: shareStatsByProductId,
+    loading: productShareLoading,
+    error: productShareError,
+    reload: reloadProductShareStats,
+  } = useProductShareStats(authed)
+  const {
     slots: pageViewTimeSlots,
     loading: timeSlotLoading,
     error: timeSlotError,
@@ -102,11 +109,12 @@ export function AdminPage() {
   const reloadAnalytics = () => {
     reloadPageViewStats()
     reloadProductViewStats()
+    reloadProductShareStats()
     reloadTimeSlotStats()
   }
 
   const analyticsLoading =
-    pageViewLoading || productViewLoading || timeSlotLoading
+    pageViewLoading || productViewLoading || productShareLoading || timeSlotLoading
 
   useEffect(() => {
     const ok = isAdminAuthenticated()
@@ -204,10 +212,13 @@ export function AdminPage() {
             <ProductListAdmin
               products={products}
               viewStatsByProductId={statsByProductId}
+              shareStatsByProductId={shareStatsByProductId}
               viewStatsError={productViewError}
+              shareStatsError={productShareError}
               onUpdated={() => {
                 reloadProducts()
                 reloadProductViewStats()
+                reloadProductShareStats()
               }}
             />
             <ProductForm

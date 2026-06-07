@@ -1,6 +1,9 @@
+import { Link } from 'react-router-dom'
+import { useSaveProductsListSession } from '../../contexts/ProductsListSessionContext'
 import { getProductCategoryBadgeLines } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
 import { productPhotoAlt } from '../../lib/imageAlt'
+import { productDetailPath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageBadges } from './ProductImageBadges'
@@ -8,22 +11,21 @@ import { ProductPriceDisplay } from './ProductPriceDisplay'
 
 interface ProductCardProps {
   product: Product
-  onClick: () => void
 }
 
 /** 單一商品卡片（瀑布流格內） */
-export function ProductCard({ product, onClick }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
+  const saveListSession = useSaveProductsListSession()
   const isSold = isProductSoldOut(product)
   const isHot = product.is_hot
   const categoryLines = getProductCategoryBadgeLines(product)
 
   const card = (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className={`group relative flex h-full w-full cursor-pointer flex-col overflow-hidden bg-graphite transition ${
+    <Link
+      to={productDetailPath(product)}
+      state={{ fromProductsList: true }}
+      onClick={() => saveListSession()}
+      className={`group relative flex h-full w-full flex-col overflow-hidden bg-graphite transition ${
         isHot
           ? 'rounded-[12px] hover:shadow-[0_0_24px_rgba(212,165,116,0.15)]'
           : 'rounded-xl border border-white/5 hover:border-amber-glow/30 hover:shadow-gold'
@@ -88,7 +90,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           ))}
         </div>
       </div>
-    </article>
+    </Link>
   )
 
   if (isHot) {

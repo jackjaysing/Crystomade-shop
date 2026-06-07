@@ -9,6 +9,7 @@ import { AdminPage } from './pages/AdminPage'
 import { AccountPage } from './pages/AccountPage'
 import { CheckoutPage } from './pages/CheckoutPage'
 import { PointShopPage } from './pages/PointShopPage'
+import { ProductDetailPage } from './pages/ProductDetailPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { WishBoardPage } from './pages/WishBoardPage'
 import { RaffleFloatingWidget } from './components/raffle/RaffleFloatingWidget'
@@ -28,6 +29,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/products" replace />} />
               <Route path="/products" element={<ProductsPage />} />
+              <Route path="/products/:slug" element={<ProductDetailPage />} />
               <Route path="/point-shop" element={<PointShopPage />} />
               <Route path="/wish-board" element={<WishBoardPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />

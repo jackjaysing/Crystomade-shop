@@ -5,7 +5,6 @@ import { CategoryProductRow } from './CategoryProductRow'
 interface CategoryProductSectionsProps {
   productsByCategory: Record<ProductCategory, Product[]>
   categoriesToShow: ProductCategory[]
-  onProductClick: (product: Product) => void
   sectionRefs: RefObject<Record<ProductCategory, HTMLElement | null>>
   activeBraceletStyle?: BraceletStyle | null
   onBraceletStyleSelect?: (style: BraceletStyle | null) => void
@@ -15,7 +14,6 @@ interface CategoryProductSectionsProps {
 export function CategoryProductSections({
   productsByCategory,
   categoriesToShow,
-  onProductClick,
   sectionRefs,
   activeBraceletStyle,
   onBraceletStyleSelect,
@@ -30,7 +28,6 @@ export function CategoryProductSections({
           }}
           category={categoryId}
           products={productsByCategory[categoryId]}
-          onProductClick={onProductClick}
           activeBraceletStyle={activeBraceletStyle}
           onBraceletStyleSelect={onBraceletStyleSelect}
         />

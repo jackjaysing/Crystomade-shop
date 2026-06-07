@@ -1,14 +1,20 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { applyDefaultSiteMeta } from '../../lib/siteMeta'
+import { applyPageMeta } from '../../lib/siteMeta'
+import { OrganizationStructuredData } from './OrganizationStructuredData'
 
-/** 依路由同步全站預設 title／description／OG */
+function isProductDetailPath(pathname: string): boolean {
+  return pathname.startsWith('/products/') && pathname.length > '/products/'.length
+}
+
+/** 依路由同步各頁 title／description／OG */
 export function SiteMetaSync() {
   const { pathname } = useLocation()
 
   useEffect(() => {
-    applyDefaultSiteMeta(pathname)
+    if (isProductDetailPath(pathname)) return
+    applyPageMeta(pathname)
   }, [pathname])
 
-  return null
+  return <OrganizationStructuredData />
 }

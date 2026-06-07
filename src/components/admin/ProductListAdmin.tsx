@@ -9,7 +9,7 @@ import {
   setProductHot,
   swapProductOrder,
 } from '../../lib/api/products'
-import type { ProductViewStats } from '../../lib/api/analytics'
+import type { ProductShareStats, ProductViewStats } from '../../lib/api/analytics'
 import { getProductSalePrice, hasProductDiscount } from '../../lib/productPricing'
 import { canSwapProductWithNeighbor, sortProducts } from '../../lib/sortProducts'
 import { adminProductThumbAlt } from '../../lib/imageAlt'
@@ -28,7 +28,9 @@ const ADMIN_CATEGORY_FILTERS: { id: AdminCategoryFilter; label: string }[] = [
 interface ProductListAdminProps {
   products: Product[]
   viewStatsByProductId?: Map<string, ProductViewStats>
+  shareStatsByProductId?: Map<string, ProductShareStats>
   viewStatsError?: string | null
+  shareStatsError?: string | null
   onUpdated: () => void
 }
 
@@ -36,7 +38,9 @@ interface ProductListAdminProps {
 export function ProductListAdmin({
   products,
   viewStatsByProductId,
+  shareStatsByProductId,
   viewStatsError,
+  shareStatsError,
   onUpdated,
 }: ProductListAdminProps) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -143,17 +147,35 @@ export function ProductListAdmin({
             : `上架中 · 庫存 ${p.stock} 件`}{' '}
           · {new Date(p.created_at).toLocaleDateString('zh-TW')}
         </p>
-        {!viewStatsError && (
+        {(!viewStatsError || !shareStatsError) && (
           <p className="mt-1 text-xs text-white/35">
-            今日瀏覽{' '}
-            <span className="text-amber-glow/80">
-              {(viewStatsByProductId?.get(p.id)?.todayCount ?? 0).toLocaleString('zh-TW')}
-            </span>
-            {' · '}
-            總瀏覽{' '}
-            <span className="text-white/55">
-              {(viewStatsByProductId?.get(p.id)?.totalCount ?? 0).toLocaleString('zh-TW')}
-            </span>
+            {!viewStatsError && (
+              <>
+                今日瀏覽{' '}
+                <span className="text-amber-glow/80">
+                  {(viewStatsByProductId?.get(p.id)?.todayCount ?? 0).toLocaleString('zh-TW')}
+                </span>
+                {' · '}
+                總瀏覽{' '}
+                <span className="text-white/55">
+                  {(viewStatsByProductId?.get(p.id)?.totalCount ?? 0).toLocaleString('zh-TW')}
+                </span>
+              </>
+            )}
+            {!viewStatsError && !shareStatsError && ' · '}
+            {!shareStatsError && (
+              <>
+                今日分享{' '}
+                <span className="text-sky-300/80">
+                  {(shareStatsByProductId?.get(p.id)?.todayCount ?? 0).toLocaleString('zh-TW')}
+                </span>
+                {' · '}
+                總分享{' '}
+                <span className="text-white/55">
+                  {(shareStatsByProductId?.get(p.id)?.totalCount ?? 0).toLocaleString('zh-TW')}
+                </span>
+              </>
+            )}
           </p>
         )}
 
@@ -227,6 +249,11 @@ export function ProductListAdmin({
       {viewStatsError && (
         <p className="mt-2 text-xs text-amber-glow/80">
           商品瀏覽統計無法載入，請執行 migration-add-product-views.sql
+        </p>
+      )}
+      {shareStatsError && (
+        <p className="mt-2 text-xs text-amber-glow/80">
+          商品分享統計無法載入，請執行 migration-add-product-shares.sql
         </p>
       )}
       {editingProduct && (

@@ -1,0 +1,51 @@
+import {
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_TITLE,
+} from './siteMeta'
+
+export interface PageMeta {
+  title: string
+  description: string
+  keywords?: string
+}
+
+/** 各公開頁面預設 SEO 文案 */
+export const PAGE_META: Record<string, PageMeta> = {
+  '/products': {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    keywords: SITE_KEYWORDS,
+  },
+  '/point-shop': {
+    title: `點數商城｜${SITE_NAME}`,
+    description:
+      '使用會員點數兌換精選水晶好禮。晶刻 Crystomade 點數商城，消費累點、兌換加入購物車與典藏商品一併結帳。',
+    keywords: `${SITE_KEYWORDS},點數商城,點數兌換`,
+  },
+  '/wish-board': {
+    title: `許願留言板｜${SITE_NAME}`,
+    description:
+      '在晶刻 Crystomade 許願留言板告訴我們你想要的水晶商品，我們會依會員心願規劃上架與客製手串。',
+    keywords: `${SITE_KEYWORDS},許願,客製水晶`,
+  },
+  '/checkout': {
+    title: `確認訂單｜${SITE_NAME}`,
+    description: '晶刻 Crystomade 結帳確認訂單與配送資訊。',
+  },
+  '/account': {
+    title: `會員中心｜${SITE_NAME}`,
+    description: '晶刻 Crystomade 會員中心：查看訂單、點數、禮物券與會員資料。',
+  },
+}
+
+export function getPageMeta(pathname: string): PageMeta {
+  return (
+    PAGE_META[pathname] ?? {
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      keywords: SITE_KEYWORDS,
+    }
+  )
+}

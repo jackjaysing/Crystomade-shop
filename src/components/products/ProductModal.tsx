@@ -16,6 +16,7 @@ import { BraceletSizePicker } from './BraceletSizePicker'
 import { GlassPanel } from '../ui/GlassPanel'
 import { MetalDivider } from '../ui/MetalDivider'
 import { applyDefaultSiteMeta, applyProductSiteMeta } from '../../lib/siteMeta'
+import { productDetailPath } from '../../lib/productSlug'
 
 interface ProductModalProps {
   product: Product | null
@@ -42,6 +43,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
       name: product.name,
       description: product.description,
       imageUrl: product.image_url,
+      pathname: productDetailPath(product),
     })
 
     return () => applyDefaultSiteMeta('/products')

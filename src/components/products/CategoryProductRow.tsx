@@ -26,7 +26,6 @@ import { ProductCard } from './ProductCard'
 interface CategoryProductRowProps {
   category: ProductCategory
   products: Product[]
-  onProductClick: (product: Product) => void
   activeBraceletStyle?: BraceletStyle | null
   onBraceletStyleSelect?: (style: BraceletStyle | null) => void
 }
@@ -233,7 +232,6 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
     {
       category,
       products,
-      onProductClick,
       activeBraceletStyle = null,
       onBraceletStyleSelect,
     },
@@ -686,10 +684,7 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
                   data-carousel-card
                   className="w-44 shrink-0 snap-start sm:w-52 md:w-56 lg:w-60"
                 >
-                  <ProductCard
-                    product={product}
-                    onClick={() => onProductClick(product)}
-                  />
+                  <ProductCard product={product} />
                 </div>
               ))}
             </div>
