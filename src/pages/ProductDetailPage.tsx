@@ -6,6 +6,7 @@ import { parseProductIdFromSlug, productDetailPath } from '../lib/productSlug'
 import { applyProductSiteMeta } from '../lib/siteMeta'
 import type { Product } from '../lib/types'
 import { ProductDetailView } from '../components/products/ProductDetailView'
+import { BreadcrumbStructuredData } from '../components/seo/BreadcrumbStructuredData'
 import { ProductStructuredData } from '../components/seo/ProductStructuredData'
 import { GlassPanel } from '../components/ui/GlassPanel'
 
@@ -116,9 +117,15 @@ export function ProductDetailPage() {
     )
   }
 
+  const breadcrumbItems = [
+    { name: '典藏選購', path: '/products' },
+    { name: product.name, path: productDetailPath(product) },
+  ]
+
   return (
     <>
       <ProductStructuredData product={product} />
+      <BreadcrumbStructuredData items={breadcrumbItems} />
       <ProductDetailView product={product} />
     </>
   )

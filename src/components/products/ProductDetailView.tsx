@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getProductCategoryLabel } from '../../constants/categories'
 import { productRequiresBraceletSize } from '../../constants/braceletSizes'
@@ -72,10 +72,30 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <section aria-labelledby="product-detail-heading">
+          <nav aria-label="麵包屑" className="text-xs text-white/45">
+            <ol className="flex flex-wrap items-center gap-1.5">
+              <li>
+                <Link to="/products" className="transition hover:text-amber-glow">
+                  典藏選購
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li>
+                <span>{getProductCategoryLabel(product)}</span>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li>
+                <span className="text-white/70" aria-current="page">
+                  {product.name}
+                </span>
+              </li>
+            </ol>
+          </nav>
+
           <button
             type="button"
             onClick={handleBackToProducts}
-            className="inline-flex items-center gap-2 text-sm text-white/50 transition hover:text-amber-glow"
+            className="mt-3 inline-flex items-center gap-2 text-sm text-white/50 transition hover:text-amber-glow"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
             返回典藏

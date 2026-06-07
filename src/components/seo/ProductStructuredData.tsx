@@ -16,12 +16,16 @@ export function ProductStructuredData({ product }: ProductStructuredDataProps) {
   const isSold = isProductSoldOut(product)
   const price = getProductSalePrice(product)
 
+  const productUrl = absoluteUrl(productDetailPath(product))
+
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
     description: product.description.trim() || undefined,
     image: [product.image_url, ...product.gallery_urls].filter(Boolean),
+    sku: product.id,
+    url: productUrl,
     category: getProductCategoryLabel(product),
     brand: {
       '@type': 'Brand',
@@ -29,7 +33,7 @@ export function ProductStructuredData({ product }: ProductStructuredDataProps) {
     },
     offers: {
       '@type': 'Offer',
-      url: absoluteUrl(productDetailPath(product)),
+      url: productUrl,
       priceCurrency: 'TWD',
       price: String(price),
       availability: isSold

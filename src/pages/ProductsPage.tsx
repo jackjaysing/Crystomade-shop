@@ -46,6 +46,7 @@ import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
 
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 
+import { ProductsPageSeoSection } from '../components/products/ProductsPageSeoSection'
 import { ItemListStructuredData } from '../components/seo/ItemListStructuredData'
 import { WelcomeRegisterModal } from '../components/welcome/WelcomeRegisterModal'
 
@@ -363,13 +364,15 @@ export function ProductsPage() {
 
           <p className="text-xs tracking-[0.4em] text-amber-glow/60">CRYSTOMADE</p>
 
-          <h1 className="mt-4 font-display text-5xl text-white sm:text-6xl">晶刻</h1>
+          <h1 className="mt-4 font-display text-5xl text-white sm:text-6xl">
+            晶刻
+            <span className="mt-2 block font-sans text-sm font-normal tracking-wide text-amber-glow/80 sm:text-base">
+              水晶手串客製・五行平衡・量身訂做能量水晶
+            </span>
+          </h1>
 
           <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-white/50">
             - 刻定屬於您的水晶能量夥伴 -
-          </p>
-          <p className="mx-auto mt-2 max-w-xl text-xs tracking-wide text-amber-glow/75 sm:text-sm">
-            （五行平衡．量身訂做．客製化．水晶手串）
           </p>
 
         </div>
@@ -624,6 +627,8 @@ export function ProductsPage() {
       </section>
 
 
+
+      <ProductsPageSeoSection />
 
       <ScrollToTopFab
 
