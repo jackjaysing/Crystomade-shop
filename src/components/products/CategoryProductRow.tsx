@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import {
 
@@ -16,11 +17,17 @@ import {
 
 import { getBraceletStyleLabel } from '../../constants/braceletStyles'
 import { getCategoryLabel } from '../../constants/categories'
+import {
+  getSubcategoriesForCategory,
+  getSubcategoryLabel,
+  type ProductSubcategory,
+} from '../../constants/productSubcategories'
 
 import { useRegisterProductsCarousel } from '../../contexts/ProductsListSessionContext'
 import { subscribeProductsListReset } from '../../lib/productsListReset'
 import type { BraceletStyle, Product, ProductCategory } from '../../lib/types'
 import { BraceletStyleFilter } from './BraceletStyleFilter'
+import { ProductSubcategoryFilter } from './ProductSubcategoryFilter'
 import { ProductCard } from './ProductCard'
 
 
@@ -30,6 +37,8 @@ interface CategoryProductRowProps {
   products: Product[]
   activeBraceletStyle?: BraceletStyle | null
   onBraceletStyleSelect?: (style: BraceletStyle | null) => void
+  activeSubcategory?: ProductSubcategory | null
+  onSubcategorySelect?: (subcategory: ProductSubcategory | null) => void
 }
 
 
@@ -236,9 +245,12 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
       products,
       activeBraceletStyle = null,
       onBraceletStyleSelect,
+      activeSubcategory = null,
+      onSubcategorySelect,
     },
     ref
   ) {
+    const subcategoryOptions = getSubcategoriesForCategory(category)
 
     const sectionRef = useRef<HTMLElement | null>(null)
 
@@ -577,6 +589,9 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
       category === '手串' &&
       activeBraceletStyle != null &&
       activeBraceletStyle !== '通用'
+    const activeSubcategoryLabel = activeSubcategory
+      ? getSubcategoryLabel(activeSubcategory)
+      : ''
 
     const showNav = !isEmpty && (canScrollLeft || canScrollRight)
 
@@ -621,6 +636,16 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
                   variant="inline"
                   activeStyle={activeBraceletStyle}
                   onSelect={onBraceletStyleSelect}
+                />
+              </div>
+            )}
+            {subcategoryOptions && onSubcategorySelect && (
+              <div className="max-w-full overflow-x-auto no-scrollbar">
+                <ProductSubcategoryFilter
+                  variant="inline"
+                  options={subcategoryOptions}
+                  activeSubcategory={activeSubcategory}
+                  onSelect={onSubcategorySelect}
                 />
               </div>
             )}
@@ -689,6 +714,17 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
                 ) : (
                   <>目前無{activeStyleLabel}商品</>
                 )
+              ) : subcategoryOptions && activeSubcategory ? (
+                <>
+                  目前無{activeSubcategoryLabel}商品，可在
+                  <Link
+                    to="/wish-board"
+                    className="mx-1 text-amber-glow/90 underline decoration-amber-glow/40 underline-offset-2 transition hover:text-amber-glow"
+                  >
+                    許願版
+                  </Link>
+                  許願
+                </>
               ) : (
                 '目前沒有符合條件的商品'
               )}

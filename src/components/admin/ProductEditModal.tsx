@@ -6,6 +6,7 @@ import {
   BRACELET_STYLES,
   DEFAULT_BRACELET_STYLE,
 } from '../../constants/braceletStyles'
+import { defaultSubcategoryForCategory } from '../../constants/productSubcategories'
 import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
@@ -16,6 +17,7 @@ import type {
   ProductEditData,
 } from '../../lib/types'
 import { AdminFiveElementsPicker } from './AdminFiveElementsPicker'
+import { AdminProductSubcategoryPicker } from './AdminProductSubcategoryPicker'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
@@ -38,6 +40,7 @@ function toEditForm(product: Product): ProductEditData {
     name: product.name,
     category: product.category,
     bracelet_style: product.bracelet_style,
+    subcategory: product.subcategory,
     price: product.price,
     discount_zhe: product.discount_zhe,
     tags: [...product.tags],
@@ -349,16 +352,22 @@ export function ProductEditModal({
                     name="edit-category"
                     className="sr-only"
                     checked={form.category === cat.id}
-                    onChange={() =>
+                    onChange={() => {
+                      const category = cat.id as ProductCategory
                       setForm({
                         ...form,
-                        category: cat.id as ProductCategory,
+                        category,
                         bracelet_style:
-                          cat.id === '手串'
+                          category === '手串'
                             ? form.bracelet_style ?? DEFAULT_BRACELET_STYLE
                             : null,
+                        subcategory:
+                          category === '手串'
+                            ? null
+                            : form.subcategory ??
+                              defaultSubcategoryForCategory(category),
                       })
-                    }
+                    }}
                   />
                   {cat.label}
                 </label>
@@ -366,7 +375,7 @@ export function ProductEditModal({
             </div>
           </div>
 
-          {form.category === '手串' && (
+          {form.category === '手串' ? (
             <div>
               <p className="mb-2 text-xs text-white/50">手串分類</p>
               <div className="flex flex-wrap gap-2">
@@ -396,6 +405,12 @@ export function ProductEditModal({
                 ))}
               </div>
             </div>
+          ) : (
+            <AdminProductSubcategoryPicker
+              category={form.category}
+              value={form.subcategory}
+              onChange={(subcategory) => setForm({ ...form, subcategory })}
+            />
           )}
 
           <AdminFiveElementsPicker

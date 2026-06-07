@@ -8,6 +8,11 @@ import { loadPendingProductsListRestore } from '../lib/productsListSession'
 import { TAG_FILTERS } from '../constants/tags'
 
 import { PRODUCT_CATEGORIES } from '../constants/categories'
+import {
+  MINERAL_SUBCATEGORIES,
+  ORNAMENT_SUBCATEGORIES,
+  type ProductSubcategory,
+} from '../constants/productSubcategories'
 
 import {
 
@@ -18,6 +23,7 @@ import {
 } from '../constants/crystalColors'
 
 import { BraceletStyleFilter } from '../components/products/BraceletStyleFilter'
+import { ProductSubcategoryFilter } from '../components/products/ProductSubcategoryFilter'
 import { CategoryFilter } from '../components/products/CategoryFilter'
 
 import {
@@ -96,6 +102,16 @@ export function ProductsPage() {
   const [activeBraceletStyle, setActiveBraceletStyle] =
 
     useState<BraceletStyle | null>(initialSession?.activeBraceletStyle ?? null)
+
+  const [activeOrnamentSubcategory, setActiveOrnamentSubcategory] =
+    useState<ProductSubcategory | null>(
+      initialSession?.activeOrnamentSubcategory ?? null
+    )
+
+  const [activeMineralSubcategory, setActiveMineralSubcategory] =
+    useState<ProductSubcategory | null>(
+      initialSession?.activeMineralSubcategory ?? null
+    )
 
   const [activeFilterId, setActiveFilterId] = useState<string | null>(
     initialSession?.activeFilterId ?? null
@@ -267,6 +283,18 @@ export function ProductsPage() {
 
       }
 
+      if (product.category === '擺件' && activeOrnamentSubcategory) {
+
+        if (product.subcategory !== activeOrnamentSubcategory) continue
+
+      }
+
+      if (product.category === '礦石' && activeMineralSubcategory) {
+
+        if (product.subcategory !== activeMineralSubcategory) continue
+
+      }
+
       grouped[product.category].push(product)
 
     }
@@ -275,7 +303,12 @@ export function ProductsPage() {
 
     return grouped
 
-  }, [filteredProducts, activeBraceletStyle])
+  }, [
+    filteredProducts,
+    activeBraceletStyle,
+    activeOrnamentSubcategory,
+    activeMineralSubcategory,
+  ])
 
 
 
@@ -318,6 +351,8 @@ export function ProductsPage() {
   useProductsListHomeReset({
     setActiveCategory,
     setActiveBraceletStyle,
+    setActiveOrnamentSubcategory,
+    setActiveMineralSubcategory,
     setActiveFilterId,
     setActiveCrystalColorId,
     setSearchQuery,
@@ -329,6 +364,8 @@ export function ProductsPage() {
       scrollY: window.scrollY,
       activeCategory,
       activeBraceletStyle,
+      activeOrnamentSubcategory,
+      activeMineralSubcategory,
       activeFilterId,
       activeCrystalColorId,
       searchQuery,
@@ -338,6 +375,8 @@ export function ProductsPage() {
     [
       activeCategory,
       activeBraceletStyle,
+      activeOrnamentSubcategory,
+      activeMineralSubcategory,
       activeFilterId,
       activeCrystalColorId,
       searchQuery,
@@ -454,6 +493,58 @@ export function ProductsPage() {
               activeStyle={activeBraceletStyle}
 
               onSelect={setActiveBraceletStyle}
+
+            />
+
+          </div>
+
+        </div>
+
+
+
+        <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+
+          <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+
+            擺件
+
+          </span>
+
+          <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+
+            <ProductSubcategoryFilter
+
+              options={ORNAMENT_SUBCATEGORIES}
+
+              activeSubcategory={activeOrnamentSubcategory}
+
+              onSelect={setActiveOrnamentSubcategory}
+
+            />
+
+          </div>
+
+        </div>
+
+
+
+        <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+
+          <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+
+            礦石
+
+          </span>
+
+          <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+
+            <ProductSubcategoryFilter
+
+              options={MINERAL_SUBCATEGORIES}
+
+              activeSubcategory={activeMineralSubcategory}
+
+              onSelect={setActiveMineralSubcategory}
 
             />
 
@@ -619,6 +710,14 @@ export function ProductsPage() {
             activeBraceletStyle={activeBraceletStyle}
 
             onBraceletStyleSelect={setActiveBraceletStyle}
+
+            activeOrnamentSubcategory={activeOrnamentSubcategory}
+
+            onOrnamentSubcategorySelect={setActiveOrnamentSubcategory}
+
+            activeMineralSubcategory={activeMineralSubcategory}
+
+            onMineralSubcategorySelect={setActiveMineralSubcategory}
 
           />
 

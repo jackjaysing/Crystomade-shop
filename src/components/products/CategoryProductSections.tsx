@@ -1,4 +1,5 @@
 import { useRef, type RefObject } from 'react'
+import type { ProductSubcategory } from '../../constants/productSubcategories'
 import type { BraceletStyle, Product, ProductCategory } from '../../lib/types'
 import { CategoryProductRow } from './CategoryProductRow'
 
@@ -8,6 +9,10 @@ interface CategoryProductSectionsProps {
   sectionRefs: RefObject<Record<ProductCategory, HTMLElement | null>>
   activeBraceletStyle?: BraceletStyle | null
   onBraceletStyleSelect?: (style: BraceletStyle | null) => void
+  activeOrnamentSubcategory?: ProductSubcategory | null
+  onOrnamentSubcategorySelect?: (subcategory: ProductSubcategory | null) => void
+  activeMineralSubcategory?: ProductSubcategory | null
+  onMineralSubcategorySelect?: (subcategory: ProductSubcategory | null) => void
 }
 
 /** 典藏：手串／擺件／礦石分欄橫向卷軸 */
@@ -17,6 +22,10 @@ export function CategoryProductSections({
   sectionRefs,
   activeBraceletStyle,
   onBraceletStyleSelect,
+  activeOrnamentSubcategory,
+  onOrnamentSubcategorySelect,
+  activeMineralSubcategory,
+  onMineralSubcategorySelect,
 }: CategoryProductSectionsProps) {
   return (
     <div className="space-y-12 md:space-y-16">
@@ -30,6 +39,20 @@ export function CategoryProductSections({
           products={productsByCategory[categoryId]}
           activeBraceletStyle={activeBraceletStyle}
           onBraceletStyleSelect={onBraceletStyleSelect}
+          activeSubcategory={
+            categoryId === '擺件'
+              ? activeOrnamentSubcategory
+              : categoryId === '礦石'
+                ? activeMineralSubcategory
+                : null
+          }
+          onSubcategorySelect={
+            categoryId === '擺件'
+              ? onOrnamentSubcategorySelect
+              : categoryId === '礦石'
+                ? onMineralSubcategorySelect
+                : undefined
+          }
         />
       ))}
     </div>

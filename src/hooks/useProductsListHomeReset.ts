@@ -7,11 +7,14 @@ import {
 } from '../lib/productsListReset'
 import { clearProductsListSession } from '../lib/productsListSession'
 import type { ProductSortMode } from '../lib/sortProducts'
+import type { ProductSubcategory } from '../constants/productSubcategories'
 import type { BraceletStyle, ProductCategory } from '../lib/types'
 
 interface UseProductsListHomeResetOptions {
   setActiveCategory: (value: ProductCategory | null) => void
   setActiveBraceletStyle: (value: BraceletStyle | null) => void
+  setActiveOrnamentSubcategory: (value: ProductSubcategory | null) => void
+  setActiveMineralSubcategory: (value: ProductSubcategory | null) => void
   setActiveFilterId: (value: string | null) => void
   setActiveCrystalColorId: (value: string | null) => void
   setSearchQuery: (value: string) => void
@@ -22,6 +25,8 @@ interface UseProductsListHomeResetOptions {
 export function useProductsListHomeReset({
   setActiveCategory,
   setActiveBraceletStyle,
+  setActiveOrnamentSubcategory,
+  setActiveMineralSubcategory,
   setActiveFilterId,
   setActiveCrystalColorId,
   setSearchQuery,
@@ -35,6 +40,8 @@ export function useProductsListHomeReset({
     clearProductsListSession()
     setActiveCategory(null)
     setActiveBraceletStyle(null)
+    setActiveOrnamentSubcategory(null)
+    setActiveMineralSubcategory(null)
     setActiveFilterId(null)
     setActiveCrystalColorId(null)
     setSearchQuery('')
@@ -44,6 +51,8 @@ export function useProductsListHomeReset({
   }, [
     sessionContext,
     setActiveBraceletStyle,
+    setActiveOrnamentSubcategory,
+    setActiveMineralSubcategory,
     setActiveCategory,
     setActiveCrystalColorId,
     setActiveFilterId,

@@ -1,4 +1,5 @@
 import type { ProductSortMode } from './sortProducts'
+import type { ProductSubcategory } from '../constants/productSubcategories'
 import type { BraceletStyle, ProductCategory } from './types'
 
 export type CarouselScrollLeft = Partial<Record<ProductCategory, number>>
@@ -10,6 +11,8 @@ export interface ProductsListSessionState {
   carouselScrollLeft: CarouselScrollLeft
   activeCategory: ProductCategory | null
   activeBraceletStyle: BraceletStyle | null
+  activeOrnamentSubcategory: ProductSubcategory | null
+  activeMineralSubcategory: ProductSubcategory | null
   activeFilterId: string | null
   activeCrystalColorId: string | null
   searchQuery: string
@@ -53,6 +56,8 @@ export function loadProductsListSession(): ProductsListSessionState | null {
       carouselScrollLeft: normalizeCarouselScrollLeft(parsed.carouselScrollLeft),
       activeCategory: parsed.activeCategory ?? null,
       activeBraceletStyle: parsed.activeBraceletStyle ?? null,
+      activeOrnamentSubcategory: parsed.activeOrnamentSubcategory ?? null,
+      activeMineralSubcategory: parsed.activeMineralSubcategory ?? null,
       activeFilterId: parsed.activeFilterId ?? null,
       activeCrystalColorId: parsed.activeCrystalColorId ?? null,
       searchQuery: typeof parsed.searchQuery === 'string' ? parsed.searchQuery : '',

@@ -3,6 +3,7 @@ import { formatErrorMessage } from '../formatError'
 import { applyCrystomadeWatermark } from '../watermarkProductImage'
 import { normalizeProduct } from '../normalizeProduct'
 import { sanitizeFiveElements } from '../fiveElements'
+import { sanitizeSubcategoryForSave } from '../productSubcategory'
 import { sanitizeProductTags } from '../productTags'
 import { isProductActive } from '../productStock'
 import { sortProducts } from '../sortProducts'
@@ -204,6 +205,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       category: form.category,
       bracelet_style:
         form.category === '手串' ? form.bracelet_style ?? '通用' : null,
+      subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
       price: form.price,
       discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),
@@ -254,6 +256,7 @@ export async function updateProduct(
       category: form.category,
       bracelet_style:
         form.category === '手串' ? form.bracelet_style ?? '通用' : null,
+      subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
       price: form.price,
       discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),

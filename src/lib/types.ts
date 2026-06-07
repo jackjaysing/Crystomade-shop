@@ -1,6 +1,7 @@
 /** 資料庫型別定義（對應 Supabase 表格） */
 
 import type { FiveElement } from '../constants/fiveElements'
+import type { ProductSubcategory } from '../constants/productSubcategories'
 
 export type ProductStatus = 'available' | 'sold'
 export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
@@ -24,6 +25,8 @@ export interface Product {
   category: ProductCategory
   /** 手串款式；非手串為 null */
   bracelet_style: BraceletStyle | null
+  /** 擺件／礦石細項；手串為 null */
+  subcategory: ProductSubcategory | null
   /** 原價（NT$） */
   price: number
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
@@ -321,6 +324,7 @@ export interface ProductFormData {
   name: string
   category: ProductCategory
   bracelet_style: BraceletStyle | null
+  subcategory: ProductSubcategory | null
   /** 原價（NT$） */
   price: number
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
@@ -394,6 +398,7 @@ export interface ProductEditData {
   name: string
   category: ProductCategory
   bracelet_style: BraceletStyle | null
+  subcategory: ProductSubcategory | null
   /** 原價（NT$） */
   price: number
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
