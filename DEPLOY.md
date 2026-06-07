@@ -125,6 +125,26 @@
 
 ---
 
+## Email 管理員通知（選用）
+
+有人**下單**或**註冊會員**時，自動寄信到 **Crystomade@gmail.com**（可改 `ADMIN_NOTIFY_EMAIL`）。
+
+1. 至 [Resend](https://resend.com) 註冊並建立 API Key。
+2. 在 Supabase SQL Editor 執行 `supabase/migration-add-line-notify-dedupe.sql`。
+3. 部署 Edge Function `admin-email-notify` 並設定 secrets（詳見 `supabase/functions/admin-email-notify/README.txt`）。
+4. 在 Supabase **Database → Webhooks** 為 `orders`、`member_profiles` 的 **Insert** 事件指向該 Function。
+
+```bash
+supabase secrets set RESEND_API_KEY=re_你的金鑰
+supabase secrets set ADMIN_NOTIFY_EMAIL=Crystomade@gmail.com
+supabase secrets set ADMIN_EMAIL_WEBHOOK_SECRET=自訂長密碼
+supabase functions deploy admin-email-notify
+```
+
+> `RESEND_API_KEY` 只能放在 Supabase secrets，**不要**寫進 `VITE_` 或前端。
+
+---
+
 ## 自訂網域（選用）
 
 - **Vercel**：Project → Settings → Domains  

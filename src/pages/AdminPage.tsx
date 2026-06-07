@@ -27,7 +27,10 @@ import {
   isAdminAuthenticated,
   logoutAdmin,
 } from '../lib/adminAuth'
+import { AdminAlertsBar, AdminTabBadge } from '../components/admin/AdminAlertsBar'
+import { Toast } from '../components/ui/Toast'
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
+import { useAdminAlerts } from '../hooks/useAdminAlerts'
 import { Archive, Plus } from 'lucide-react'
 
 type AdminTab =
@@ -69,6 +72,24 @@ export function AdminPage() {
   const [showCreateProduct, setShowCreateProduct] = useState(false)
   const { products, reload: reloadProducts } = useProducts()
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(authed)
+  const {
+    alerts,
+    orderBadge,
+    memberBadge,
+    toast: alertToast,
+    listening,
+    desktopPermission,
+    requestDesktopNotifications,
+    clearOrderBadge,
+    clearMemberBadge,
+    dismissToast,
+    clearAlerts,
+  } = useAdminAlerts({
+    enabled: authed,
+    onNewOrders: () => void reloadOrders({ silent: true }),
+    onNewMembers: () => setCustomerReloadSignal((n) => n + 1),
+  })
+  const [customerReloadSignal, setCustomerReloadSignal] = useState(0)
   const {
     stats: pageViewStats,
     loading: pageViewLoading,
@@ -126,6 +147,14 @@ export function AdminPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeTab])
 
+  useEffect(() => {
+    if (activeTab === 'orders') clearOrderBadge()
+    if (activeTab === 'customers') {
+      clearMemberBadge()
+      setCustomerReloadSignal((n) => n + 1)
+    }
+  }, [activeTab, clearOrderBadge, clearMemberBadge])
+
   if (!authed) {
     return (
       <AdminLogin
@@ -160,12 +189,24 @@ export function AdminPage() {
         </button>
       </div>
 
+      <AdminAlertsBar
+        alerts={alerts}
+        listening={listening}
+        desktopPermission={desktopPermission}
+        onRequestDesktop={() => void requestDesktopNotifications()}
+        onClearAlerts={clearAlerts}
+        onGoOrders={() => setActiveTab('orders')}
+        onGoCustomers={() => setActiveTab('customers')}
+      />
+
       <nav
         className="mb-8 flex flex-wrap gap-2 border-b border-white/10 pb-4"
         aria-label="後台功能分頁"
       >
         {ADMIN_TABS.map((tab) => {
           const isActive = activeTab === tab.id
+          const badge =
+            tab.id === 'orders' ? orderBadge : tab.id === 'customers' ? memberBadge : 0
           return (
             <button
               key={tab.id}
@@ -180,6 +221,7 @@ export function AdminPage() {
               }`}
             >
               {tab.label}
+              <AdminTabBadge count={badge} />
             </button>
           )
         })}
@@ -246,7 +288,7 @@ export function AdminPage() {
         {activeTab === 'customers' && (
           <section>
             <h2 className="mb-4 text-lg tracking-wide text-white/80">客戶資料</h2>
-            <CustomerAdmin enabled={authed} />
+            <CustomerAdmin enabled={authed} reloadSignal={customerReloadSignal} />
           </section>
         )}
 
@@ -360,6 +402,8 @@ export function AdminPage() {
           />
         )}
       </div>
+
+      <Toast message={alertToast} onDismiss={dismissToast} durationMs={4500} />
 
       <ScrollToTopFab ariaLabel="回到後台頂部" title="回到後台頂部" />
 

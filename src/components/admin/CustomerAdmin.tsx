@@ -31,10 +31,12 @@ function parseSignedDeltaInput(raw: string): number | null {
 
 interface CustomerAdminProps {
   enabled?: boolean
+  /** 遞增時重新載入會員列表（新註冊通知用） */
+  reloadSignal?: number
 }
 
 /** 後台：客戶資料（已註冊／未註冊） */
-export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
+export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdminProps) {
   const [view, setView] = useState<CustomerView>('registered')
   const [registered, setRegistered] = useState<AdminRegisteredCustomer[]>([])
   const [guests, setGuests] = useState<AdminGuestCustomer[]>([])
@@ -73,6 +75,10 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
   useEffect(() => {
     void reload()
   }, [reload])
+
+  useEffect(() => {
+    if (reloadSignal > 0) void reload()
+  }, [reloadSignal, reload])
 
   const filteredRegistered = useMemo(() => {
     const q = search.trim().toLowerCase()
