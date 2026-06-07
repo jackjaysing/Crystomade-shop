@@ -1,5 +1,4 @@
 # 晶刻 Crystomade — 搜尋引擎與社群預覽爬蟲
-# 若有自訂網域，請將下方 Sitemap 網址改為 https://你的網域/sitemap.xml
 
 User-agent: *
 Allow: /

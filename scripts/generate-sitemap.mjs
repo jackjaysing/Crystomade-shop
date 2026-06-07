@@ -73,7 +73,15 @@ const fileEnv = {
   ...loadEnvFile(resolve(root, '.env.production')),
 }
 
-const siteUrl = (process.env.VITE_SITE_URL || fileEnv.VITE_SITE_URL || 'https://crystomade-shop.vercel.app').replace(/\/$/, '')
+function resolveSiteUrl() {
+  const fromEnv = process.env.VITE_SITE_URL || fileEnv.VITE_SITE_URL
+  if (fromEnv?.trim()) return fromEnv.trim().replace(/\/$/, '')
+  const vercelHost = process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL
+  if (vercelHost?.trim()) return `https://${vercelHost.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')}`
+  return 'https://crystomade-shop.vercel.app'
+}
+
+const siteUrl = resolveSiteUrl()
 const supabaseUrl = process.env.VITE_SUPABASE_URL || fileEnv.VITE_SUPABASE_URL
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || fileEnv.VITE_SUPABASE_ANON_KEY
 const lastmod = new Date().toISOString().slice(0, 10)
@@ -81,6 +89,7 @@ const lastmod = new Date().toISOString().slice(0, 10)
 const staticPages = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/products', changefreq: 'daily', priority: '0.9' },
+  { path: '/register', changefreq: 'monthly', priority: '0.6' },
   { path: '/point-shop', changefreq: 'weekly', priority: '0.7' },
   { path: '/wish-board', changefreq: 'weekly', priority: '0.6' },
 ]
@@ -123,3 +132,26 @@ ${body}
 const outPath = resolve(root, 'public', 'sitemap.xml')
 writeFileSync(outPath, xml, 'utf8')
 console.log(`[sitemap] 已寫入 ${outPath}（${staticPages.length + productPages.length} 個網址）`)
+
+const robotsPath = resolve(root, 'public', 'robots.txt')
+const robots = `# 晶刻 Crystomade — 搜尋引擎與社群預覽爬蟲
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /account
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Linespider
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+Sitemap: ${siteUrl}/sitemap.xml
+`
+writeFileSync(robotsPath, robots, 'utf8')
+console.log(`[sitemap] 已更新 ${robotsPath}（Sitemap: ${siteUrl}/sitemap.xml）`)

@@ -1,2 +1,3 @@
-# Netlify / 部分靜態主機：SPA 路由支援
-/*    /index.html   200
+/sitemap.xml    /sitemap.xml    200
+/robots.txt     /robots.txt     200
+/*              /index.html     200
