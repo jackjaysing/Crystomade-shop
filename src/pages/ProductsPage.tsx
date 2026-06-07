@@ -46,6 +46,7 @@ import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
 
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 
+import { ItemListStructuredData } from '../components/seo/ItemListStructuredData'
 import { WelcomeRegisterModal } from '../components/welcome/WelcomeRegisterModal'
 
 import { useStorefrontProducts } from '../hooks/useStorefrontProducts'
@@ -349,6 +350,10 @@ export function ProductsPage() {
     <ProductsListSessionProvider getSnapshot={getListSnapshot}>
 
     <div className="min-h-screen">
+
+      {!loading && products.length > 0 && (
+        <ItemListStructuredData products={products} />
+      )}
 
       <section className="relative overflow-hidden pb-0 pt-24 sm:pb-6">
 
