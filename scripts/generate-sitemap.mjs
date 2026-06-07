@@ -73,12 +73,21 @@ const fileEnv = {
   ...loadEnvFile(resolve(root, '.env.production')),
 }
 
+const DEFAULT_SITE_URL = 'https://crystomade-shop.vercel.app'
+
+function normalizeSiteUrl(value) {
+  return value.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')
+}
+
 function resolveSiteUrl() {
   const fromEnv = process.env.VITE_SITE_URL || fileEnv.VITE_SITE_URL
-  if (fromEnv?.trim()) return fromEnv.trim().replace(/\/$/, '')
-  const vercelHost = process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL
-  if (vercelHost?.trim()) return `https://${vercelHost.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')}`
-  return 'https://crystomade-shop.vercel.app'
+  if (fromEnv?.trim()) return `https://${normalizeSiteUrl(fromEnv)}`
+
+  // 勿用 VERCEL_URL：每次部署會變成 crystomade-shop-xxxx.vercel.app，GSC 無法擷取
+  const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  if (productionHost?.trim()) return `https://${normalizeSiteUrl(productionHost)}`
+
+  return DEFAULT_SITE_URL
 }
 
 const siteUrl = resolveSiteUrl()

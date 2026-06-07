@@ -106,10 +106,10 @@ supabase/schema.sql   # 資料庫 DDL + RLS
 | `VITE_SUPABASE_URL` | 是 | Supabase 專案 URL；**建置時**用來產生含商品頁的 sitemap |
 | `VITE_SUPABASE_ANON_KEY` | 是 | 可發布金鑰（`sb_publishable_` 開頭） |
 | `VITE_ADMIN_PASSWORD` | 是 | 後台登入密碼 |
-| `VITE_SITE_URL` | 建議 | 正式網域，例如 `https://www.crystomade.com`；用於 sitemap、`robots.txt`、OG／canonical 絕對網址 |
+| `VITE_SITE_URL` | 強烈建議 | 須與 **Google Search Console 資源網域完全一致**（例如 `https://crystomade-shop.vercel.app` 或自訂網域）；用於 sitemap 內每個 `<loc>`、`robots.txt`、OG／canonical |
 
 > **重要：** 線上建置**不會**讀取你本機的 `.env`，必須在 Vercel 後台手動填寫。若未設定 Supabase 變數，sitemap 只會有 5 個靜態頁（不含商品詳情）。**Vercel 線上建置**若缺少 Supabase 設定會直接失敗，避免部署出沒有商品 URL 的 sitemap。  
-> 未設定 `VITE_SITE_URL` 時，建置會改用 Vercel 網域或預設 `https://crystomade-shop.vercel.app`。變更環境變數後請 **Redeploy**。
+> 若未設定 `VITE_SITE_URL`，建置會改用 Vercel 正式網域或預設 `https://crystomade-shop.vercel.app`（**不會**再用每次部署會變的預覽網址，避免 GSC「無法擷取」）。變更環境變數後請 **Redeploy**。
 
 ### 驗證 sitemap
 
