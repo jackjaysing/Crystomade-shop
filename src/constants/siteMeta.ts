@@ -18,8 +18,11 @@ export const SITE_KEYWORDS = [
   'Crystomade',
 ].join(',')
 
-/** 建議 1200×630，置於 public/og-share.jpg */
-export const SITE_OG_IMAGE_PATH = '/og-share.jpg'
+/** LINE 手機版較適合 1:1；FB 亦支援。置於 public/og-share-square.jpg */
+export const SITE_OG_IMAGE_PATH = '/og-share-square.jpg?v=2'
+
+/** 橫式備用圖（1200×630） */
+export const SITE_OG_IMAGE_LANDSCAPE_PATH = '/og-share.jpg'
 
 export const SITE_OG_IMAGE_ALT =
   '晶刻 Crystomade 天然能量水晶與水晶手串客製'
