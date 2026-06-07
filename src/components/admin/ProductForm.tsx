@@ -10,6 +10,7 @@ import { PRODUCT_CATEGORIES } from '../../constants/categories'
 import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { ALL_PRODUCT_TAGS } from '../../constants/tags'
 import type { BraceletStyle, ProductCategory, ProductFormData } from '../../lib/types'
+import { AdminFiveElementsPicker } from './AdminFiveElementsPicker'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
@@ -36,6 +37,7 @@ const initialForm: ProductFormData = {
   is_hot: false,
   is_quick_add: false,
   tags: [],
+  five_elements: [],
   description: '',
   coverFile: null,
   galleryFiles: [],
@@ -315,6 +317,11 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
             </div>
           </div>
         )}
+
+        <AdminFiveElementsPicker
+          value={form.five_elements}
+          onChange={(five_elements) => setForm({ ...form, five_elements })}
+        />
 
         <div>
           <p className="mb-2 text-xs text-white/50">功效標籤</p>

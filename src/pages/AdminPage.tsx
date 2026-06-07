@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AdminActivityLogPanel } from '../components/admin/AdminActivityLogPanel'
 import { AdminLogin } from '../components/admin/AdminLogin'
 import { BannerAdmin } from '../components/admin/BannerAdmin'
@@ -7,6 +7,7 @@ import { PageViewStats } from '../components/admin/PageViewStats'
 import { RevenueStatsPanel } from '../components/admin/RevenueStatsPanel'
 import { DeletedOrdersPanel } from '../components/admin/DeletedOrdersPanel'
 import { OrderTable } from '../components/admin/OrderTable'
+import { ProductEditModal } from '../components/admin/ProductEditModal'
 import { ProductForm } from '../components/admin/ProductForm'
 import { CustomerAdmin } from '../components/admin/CustomerAdmin'
 import { PointShopAdmin } from '../components/admin/PointShopAdmin'
@@ -70,7 +71,13 @@ export function AdminPage() {
   const [orderListView, setOrderListView] = useState<'active' | 'deleted'>('active')
   const [showDeleted, setShowDeleted] = useState(false)
   const [showCreateProduct, setShowCreateProduct] = useState(false)
+  const [editingProductId, setEditingProductId] = useState<string | null>(null)
+  const editReopenLockRef = useRef(false)
   const { products, reload: reloadProducts } = useProducts()
+  const editingProduct = useMemo(
+    () => products.find((p) => p.id === editingProductId) ?? null,
+    [products, editingProductId]
+  )
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(authed)
   const {
     alerts,
@@ -262,7 +269,28 @@ export function AdminPage() {
                 reloadProductViewStats()
                 reloadProductShareStats()
               }}
+              onEditProduct={(product) => {
+                if (editReopenLockRef.current) return
+                setEditingProductId(product.id)
+              }}
             />
+            {editingProductId && editingProduct && (
+              <ProductEditModal
+                key={editingProductId}
+                product={editingProduct}
+                onClose={() => setEditingProductId(null)}
+                onSaved={() => {
+                  editReopenLockRef.current = true
+                  setEditingProductId(null)
+                  reloadProducts()
+                  reloadProductViewStats()
+                  reloadProductShareStats()
+                  window.setTimeout(() => {
+                    editReopenLockRef.current = false
+                  }, 400)
+                }}
+              />
+            )}
             <ProductForm
               open={showCreateProduct}
               onClose={() => setShowCreateProduct(false)}

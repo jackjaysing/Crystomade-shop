@@ -210,6 +210,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ skipped: true, reason: 'unsupported table' })
   } catch (error) {
     const message = error instanceof Error ? error.message : '未知錯誤'
+    console.error('[admin-email-notify]', table, message)
     return jsonResponse({ error: message }, 500)
   }
 })

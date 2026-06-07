@@ -13,6 +13,7 @@ import { ProductOrderPaymentNotice } from './ProductOrderPaymentNotice'
 import { ProductPriceDisplay } from './ProductPriceDisplay'
 import { ProductShareButton } from './ProductShareButton'
 import { BraceletSizePicker } from './BraceletSizePicker'
+import { FiveElementsDisplay } from './FiveElementsDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
 import { MetalDivider } from '../ui/MetalDivider'
 
@@ -137,6 +138,10 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                     {tag}
                   </span>
                 ))}
+              </div>
+
+              <div className="mt-5">
+                <FiveElementsDisplay elements={product.five_elements} />
               </div>
 
               <MetalDivider />

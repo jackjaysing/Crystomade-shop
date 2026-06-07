@@ -1,5 +1,7 @@
 /** 資料庫型別定義（對應 Supabase 表格） */
 
+import type { FiveElement } from '../constants/fiveElements'
+
 export type ProductStatus = 'available' | 'sold'
 export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
 
@@ -27,6 +29,8 @@ export interface Product {
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
   discount_zhe: number | null
   tags: string[]
+  /** 五行屬性（金木水火土，可多選） */
+  five_elements: FiveElement[]
   image_url: string
   /** 詳情頁額外圖片（不含封面） */
   gallery_urls: string[]
@@ -322,6 +326,7 @@ export interface ProductFormData {
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
   discount_zhe: number | null
   tags: string[]
+  five_elements: FiveElement[]
   description: string
   /** 上架庫存件數 */
   stock: number
@@ -394,6 +399,7 @@ export interface ProductEditData {
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
   discount_zhe: number | null
   tags: string[]
+  five_elements: FiveElement[]
   description: string
   stock: number
   /** 標記為熱門商品 */

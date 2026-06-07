@@ -1,5 +1,6 @@
 import { parseBraceletStyle } from '../constants/braceletStyles'
 import type { Product, ProductCategory } from './types'
+import { sanitizeFiveElements } from './fiveElements'
 import { parseDiscountZhe } from './productPricing'
 import { sanitizeProductTags } from './productTags'
 
@@ -39,6 +40,9 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     price: typeof price === 'number' ? price : Number(price) || 0,
     discount_zhe: parseDiscountZhe(row.discount_zhe),
     tags: sanitizeProductTags(Array.isArray(tags) ? tags.map(String) : []),
+    five_elements: sanitizeFiveElements(
+      Array.isArray(row.five_elements) ? row.five_elements.map(String) : []
+    ),
     image_url: String(row.image_url ?? ''),
     gallery_urls: Array.isArray(row.gallery_urls)
       ? row.gallery_urls.map(String)

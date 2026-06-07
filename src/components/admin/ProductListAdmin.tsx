@@ -16,7 +16,6 @@ import { adminProductThumbAlt } from '../../lib/imageAlt'
 import type { Product, ProductCategory } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
 import { HotProductBadge } from '../products/HotProductBadge'
-import { ProductEditModal } from './ProductEditModal'
 
 type AdminCategoryFilter = 'all' | ProductCategory
 
@@ -32,6 +31,7 @@ interface ProductListAdminProps {
   viewStatsError?: string | null
   shareStatsError?: string | null
   onUpdated: () => void
+  onEditProduct: (product: Product) => void
 }
 
 /** 後台：現有商品列表、編輯與一鍵設為已售出 */
@@ -42,8 +42,8 @@ export function ProductListAdmin({
   viewStatsError,
   shareStatsError,
   onUpdated,
+  onEditProduct,
 }: ProductListAdminProps) {
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [hotUpdatingId, setHotUpdatingId] = useState<string | null>(null)
   const [movingId, setMovingId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<AdminCategoryFilter>('all')
@@ -220,7 +220,7 @@ export function ProductListAdmin({
           </button>
           <button
             type="button"
-            onClick={() => setEditingProduct(p)}
+            onClick={() => onEditProduct(p)}
             className="rounded border border-amber-glow/40 px-4 py-2 text-xs text-amber-glow transition hover:bg-amber-glow/10"
           >
             編輯
@@ -255,13 +255,6 @@ export function ProductListAdmin({
         <p className="mt-2 text-xs text-amber-glow/80">
           商品分享統計無法載入，請執行 migration-add-product-shares.sql
         </p>
-      )}
-      {editingProduct && (
-        <ProductEditModal
-          product={editingProduct}
-          onClose={() => setEditingProduct(null)}
-          onSaved={onUpdated}
-        />
       )}
       <div className="mt-4 flex flex-wrap gap-2">
         {ADMIN_CATEGORY_FILTERS.map((filter) => {

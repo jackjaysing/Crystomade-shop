@@ -15,6 +15,7 @@ import type {
   ProductCategory,
   ProductEditData,
 } from '../../lib/types'
+import { AdminFiveElementsPicker } from './AdminFiveElementsPicker'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
@@ -40,6 +41,7 @@ function toEditForm(product: Product): ProductEditData {
     price: product.price,
     discount_zhe: product.discount_zhe,
     tags: [...product.tags],
+    five_elements: [...product.five_elements],
     description: product.description,
     stock: product.stock,
     is_hot: product.is_hot,
@@ -209,10 +211,9 @@ export function ProductEditModal({
         product.image_url
       )
       onSaved()
-      onClose()
+      return
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '更新失敗')
-    } finally {
       setSubmitting(false)
     }
   }
@@ -231,10 +232,9 @@ export function ProductEditModal({
     try {
       await deleteProduct(product.id)
       onSaved()
-      onClose()
+      return
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '刪除失敗')
-    } finally {
       setDeleting(false)
     }
   }
@@ -277,7 +277,6 @@ export function ProductEditModal({
         </div>
 
         <form
-          id="product-edit-form"
           onSubmit={handleSubmit}
           className="flex min-h-0 flex-1 flex-col"
         >
@@ -398,6 +397,11 @@ export function ProductEditModal({
               </div>
             </div>
           )}
+
+          <AdminFiveElementsPicker
+            value={form.five_elements}
+            onChange={(five_elements) => setForm({ ...form, five_elements })}
+          />
 
           <div>
             <p className="mb-2 text-xs text-white/50">功效標籤</p>
@@ -524,28 +528,27 @@ export function ProductEditModal({
               </p>
             </div>
           </div>
-        </form>
 
-        <div className="shrink-0 border-t border-white/10 bg-black/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:px-6">
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={busy}
-              className="flex-1 rounded-lg border border-white/20 py-3 text-sm text-white/60 transition hover:text-white disabled:opacity-50"
-            >
-              取消
-            </button>
-            <button
-              type="submit"
-              form="product-edit-form"
-              disabled={busy}
-              className="flex-1 rounded-lg bg-amber-glow/90 py-3 text-sm tracking-widest text-void disabled:opacity-50"
-            >
-              {submitting ? '儲存中…' : '儲存更新'}
-            </button>
+          <div className="shrink-0 border-t border-white/10 bg-black/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:px-6">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={busy}
+                className="flex-1 rounded-lg border border-white/20 py-3 text-sm text-white/60 transition hover:text-white disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                disabled={busy}
+                className="flex-1 rounded-lg bg-amber-glow/90 py-3 text-sm tracking-widest text-void disabled:opacity-50"
+              >
+                {submitting ? '儲存中…' : '儲存更新'}
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
       </GlassPanel>
     </div>,
     document.body

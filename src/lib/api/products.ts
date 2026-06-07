@@ -2,6 +2,7 @@ import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { applyCrystomadeWatermark } from '../watermarkProductImage'
 import { normalizeProduct } from '../normalizeProduct'
+import { sanitizeFiveElements } from '../fiveElements'
 import { sanitizeProductTags } from '../productTags'
 import { isProductActive } from '../productStock'
 import { sortProducts } from '../sortProducts'
@@ -206,6 +207,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       price: form.price,
       discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),
+      five_elements: sanitizeFiveElements(form.five_elements),
       image_url,
       gallery_urls,
       description: form.description,
@@ -255,6 +257,7 @@ export async function updateProduct(
       price: form.price,
       discount_zhe: form.discount_zhe,
       tags: sanitizeProductTags(form.tags),
+      five_elements: sanitizeFiveElements(form.five_elements),
       image_url,
       gallery_urls,
       description: form.description,
