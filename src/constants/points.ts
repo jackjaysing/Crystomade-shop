@@ -4,6 +4,12 @@ export const POINTS_PER_NTD_EARN = 10
 /** 新會員註冊贈點 */
 export const WELCOME_BONUS_POINTS = 100
 
+/** 透過推薦連結註冊贈點 */
+export const REFERRAL_WELCOME_BONUS_POINTS = 200
+
+/** 好友完成首購後，推薦人獲得點數 */
+export const REFERRAL_REFERRER_BONUS_POINTS = 500
+
 /** 折抵：每 10 點折 NT$1 */
 export const POINTS_PER_NTD_DISCOUNT = 10
 

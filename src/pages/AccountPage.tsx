@@ -5,6 +5,8 @@ import { AdminAccessSection } from '../components/account/AdminAccessSection'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import { MemberCouponsPanel } from '../components/member/MemberCouponsPanel'
 import { MemberGiftCouponsPanel } from '../components/member/MemberGiftCouponsPanel'
+import { MemberClaimReferralPanel } from '../components/member/MemberClaimReferralPanel'
+import { MemberReferralPanel } from '../components/member/MemberReferralPanel'
 import { MetalDivider } from '../components/ui/MetalDivider'
 import { POINTS_PER_NTD_DISCOUNT, POINTS_PER_NTD_EARN } from '../constants/points'
 import { useAuth } from '../contexts/AuthContext'
@@ -73,6 +75,17 @@ export function AccountPage() {
 
   const orderGroups = groupOrders(orders)
 
+  const refreshAccountData = async () => {
+    if (!user?.id) return
+    const [orderRows, historyRows] = await Promise.all([
+      fetchMemberOrders(user.id),
+      fetchPointsHistory(user.id),
+      refreshProfile(),
+    ])
+    setOrders(orderRows)
+    setHistory(historyRows)
+  }
+
   return (
     <div className="min-h-screen pt-24 pb-16 max-md:pb-[calc(14rem+env(safe-area-inset-bottom,0px))]">
       <div className="mx-auto max-w-2xl px-6">
@@ -119,6 +132,14 @@ export function AccountPage() {
             </Link>
           </div>
         </GlassPanel>
+
+        <MemberClaimReferralPanel
+          userId={user.id}
+          profile={profile}
+          onClaimed={refreshAccountData}
+        />
+
+        <MemberReferralPanel profile={profile} />
 
         <MemberCouponsPanel userId={user.id} />
         <MemberGiftCouponsPanel userId={user.id} />

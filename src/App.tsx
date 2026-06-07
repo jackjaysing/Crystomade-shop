@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { PageViewTracker } from './components/analytics/PageViewTracker'
 import { AuthProvider } from './contexts/AuthContext'
 import { CartProvider } from './contexts/CartContext'
@@ -14,6 +14,18 @@ import { ProductsPage } from './pages/ProductsPage'
 import { WishBoardPage } from './pages/WishBoardPage'
 import { RaffleFloatingWidget } from './components/raffle/RaffleFloatingWidget'
 import { SiteMetaSync } from './components/seo/SiteMetaSync'
+
+/** /register?ref= 導向會員中心註冊（保留查詢字串） */
+function RegisterRedirect() {
+  const { search } = useLocation()
+  return (
+    <Navigate
+      to={{ pathname: '/account', search }}
+      replace
+      state={{ register: true }}
+    />
+  )
+}
 
 /** 應用程式路由 */
 export default function App() {
@@ -33,6 +45,7 @@ export default function App() {
               <Route path="/point-shop" element={<PointShopPage />} />
               <Route path="/wish-board" element={<WishBoardPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/register" element={<RegisterRedirect />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>

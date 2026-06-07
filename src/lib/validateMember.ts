@@ -6,6 +6,8 @@ export interface MemberRegisterInput {
   phone: string
   password: string
   confirmPassword: string
+  /** 好友推薦碼（選填） */
+  referralCode?: string | null
 }
 
 export interface MemberLoginInput {
@@ -51,9 +53,11 @@ export function validateMemberLogin(input: MemberLoginInput): string | null {
 }
 
 export function memberRegisterMetadata(input: MemberRegisterInput) {
+  const referralCode = input.referralCode?.trim().toUpperCase()
   return {
     phone: normalizePhone(input.phone),
     real_name: input.realName.trim(),
     birthday: input.birthday,
+    ...(referralCode ? { referral_code: referralCode } : {}),
   }
 }

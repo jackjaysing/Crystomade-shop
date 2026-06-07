@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { AdminLogin } from '../admin/AdminLogin'
 import { AdminAccessSection } from './AdminAccessSection'
 import { MemberAuthForm } from '../member/MemberAuthForm'
@@ -11,6 +11,11 @@ type LoginKind = 'member' | 'admin'
 export function AccountGate() {
   const [kind, setKind] = useState<LoginKind>('member')
   const { authed: adminAuthed, refresh } = useAdminSession()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const openRegister =
+    Boolean(searchParams.get('ref')) ||
+    (location.state as { register?: boolean } | null)?.register === true
 
   useEffect(() => {
     if (adminAuthed) setKind('member')
@@ -37,7 +42,10 @@ export function AccountGate() {
           <div className="mt-6">
             <p className="text-sm tracking-wide text-white/50">一般登入</p>
             <div className="mt-4">
-              <MemberAuthForm variant="page" />
+              <MemberAuthForm
+                variant="page"
+                initialMode={openRegister ? 'register' : 'login'}
+              />
             </div>
           </div>
         ) : (
@@ -69,7 +77,10 @@ export function AccountGate() {
 
             <div className="mt-4">
               {kind === 'member' ? (
-                <MemberAuthForm variant="page" />
+                <MemberAuthForm
+                  variant="page"
+                  initialMode={openRegister ? 'register' : 'login'}
+                />
               ) : (
                 <AdminLogin variant="embed" onSuccess={refresh} />
               )}

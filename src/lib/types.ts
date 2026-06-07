@@ -99,6 +99,10 @@ export interface MemberProfile {
   phone: string
   birthday: string
   points: number
+  /** 專屬推薦碼（6 碼英數） */
+  referral_code: string | null
+  /** 推薦人會員 ID */
+  referred_by: string | null
   created_at: string
   updated_at: string
 }

@@ -17,12 +17,15 @@ import {
 } from '../validateMember'
 
 function normalizeProfile(row: Record<string, unknown>): MemberProfile {
+  const referralCode = row.referral_code != null ? String(row.referral_code).trim() : ''
   return {
     id: String(row.id ?? ''),
     real_name: String(row.real_name ?? ''),
     phone: String(row.phone ?? ''),
     birthday: String(row.birthday ?? '').slice(0, 10),
     points: typeof row.points === 'number' ? row.points : Number(row.points) || 0,
+    referral_code: referralCode || null,
+    referred_by: row.referred_by != null ? String(row.referred_by) : null,
     created_at: String(row.created_at ?? ''),
     updated_at: String(row.updated_at ?? ''),
   }
@@ -72,18 +75,21 @@ async function ensureMemberProfile(
 ): Promise<void> {
   const phone = normalizePhone(input.phone)
 
+  const referralCode = input.referralCode?.trim().toUpperCase() || null
+
   const { error } = await supabase.rpc('member_register_finalize', {
     p_user_id: user.id,
     p_real_name: input.realName.trim(),
     p_phone: phone,
     p_birthday: input.birthday,
+    p_referral_code: referralCode,
   })
 
   if (error) {
     const msg = formatErrorMessage(error)
     if (/member_register_finalize|function/i.test(msg)) {
       throw new Error(
-        '註冊贈點功能未啟用，請在 Supabase SQL Editor 執行 supabase/migration-fix-member-welcome-bonus.sql'
+        '註冊贈點功能未啟用，請在 Supabase SQL Editor 執行 supabase/migration-add-referral-system.sql'
       )
     }
     if (msg.includes('member_profiles') || msg.includes('relation')) {
@@ -123,6 +129,56 @@ export async function signOutMember(): Promise<void> {
   if (error) throw new Error(formatErrorMessage(error))
 }
 
+async function ensureMemberReferralCode(
+  profile: MemberProfile
+): Promise<MemberProfile> {
+  if (profile.referral_code) return profile
+
+  const { data, error } = await supabase.rpc('ensure_member_referral_code', {
+    p_user_id: profile.id,
+  })
+
+  if (error) {
+    console.warn('ensure_member_referral_code', formatErrorMessage(error))
+    return profile
+  }
+
+  if (!data) return profile
+  return normalizeProfile(data as Record<string, unknown>)
+}
+
+export async function claimMemberReferralCode(
+  userId: string,
+  referralCode: string
+): Promise<MemberProfile> {
+  const code = referralCode.trim().toUpperCase()
+  if (!code) throw new Error('請輸入推薦碼')
+
+  const { data, error } = await supabase.rpc('claim_member_referral_code', {
+    p_user_id: userId,
+    p_referral_code: code,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/claim_member_referral_code|function/i.test(msg)) {
+      throw new Error(
+        '補填推薦碼功能未啟用，請在 Supabase SQL Editor 執行 supabase/migration-add-claim-referral-code.sql'
+      )
+    }
+    if (msg.includes('已綁定過推薦碼')) {
+      throw new Error('您已綁定過推薦碼，無法重複填寫')
+    }
+    if (msg.includes('推薦碼無效')) {
+      throw new Error('推薦碼無效，請確認後再試')
+    }
+    throw new Error(msg)
+  }
+
+  if (!data) throw new Error('綁定推薦碼失敗，請稍後再試')
+  return normalizeProfile(data as Record<string, unknown>)
+}
+
 export async function fetchMemberProfile(
   userId: string
 ): Promise<MemberProfile | null> {
@@ -140,7 +196,8 @@ export async function fetchMemberProfile(
     throw new Error(msg)
   }
   if (!data) return null
-  return normalizeProfile(data as Record<string, unknown>)
+  const profile = normalizeProfile(data as Record<string, unknown>)
+  return ensureMemberReferralCode(profile)
 }
 
 export async function fetchPointsHistory(

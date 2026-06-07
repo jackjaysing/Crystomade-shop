@@ -5,12 +5,15 @@ import { supabase } from '../supabase'
 import type { AdminGuestCustomer, AdminRegisteredCustomer } from '../types'
 
 function normalizeMemberRow(row: Record<string, unknown>): AdminRegisteredCustomer {
+  const referralCode = row.referral_code != null ? String(row.referral_code).trim() : ''
   return {
     id: String(row.id ?? ''),
     real_name: String(row.real_name ?? ''),
     phone: String(row.phone ?? ''),
     birthday: String(row.birthday ?? '').slice(0, 10),
     points: typeof row.points === 'number' ? row.points : Number(row.points) || 0,
+    referral_code: referralCode || null,
+    referred_by: row.referred_by != null ? String(row.referred_by) : null,
     created_at: String(row.created_at ?? ''),
     updated_at: String(row.updated_at ?? ''),
     order_count: 0,
