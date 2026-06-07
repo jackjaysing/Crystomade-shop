@@ -29,6 +29,8 @@ npm install
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 VITE_ADMIN_PASSWORD=你的後台密碼
+# 選填：正式網域（OG／canonical／sitemap 絕對網址）
+VITE_SITE_URL=https://your-domain.com
 ```
 
 ### 3. 啟動開發伺服器
@@ -90,6 +92,33 @@ supabase/schema.sql   # 資料庫 DDL + RLS
 - 後台請改用 **Supabase Auth** 或 **Edge Functions**，勿僅依賴前端密碼
 - 收緊 RLS：禁止 anon 直接 UPDATE products/orders
 - 為 Storage 上傳加上檔案大小與 MIME 限制
+
+## Sitemap 與建置（Vercel 環境變數）
+
+`npm run build` 會先執行 `scripts/generate-sitemap.mjs`，從 Supabase 讀取**所有未軟刪除商品**（`deleted_at IS NULL`），寫入 `public/sitemap.xml` 與 `public/robots.txt`。商品詳情頁 URL 與前台 `productDetailPath` 一致。
+
+### Vercel 必設環境變數
+
+在 **Vercel → Project → Settings → Environment Variables** 新增（建議勾選 **Production** 與 **Preview**）：
+
+| 變數 | 必填 | 說明 |
+|------|------|------|
+| `VITE_SUPABASE_URL` | 是 | Supabase 專案 URL；**建置時**用來產生含商品頁的 sitemap |
+| `VITE_SUPABASE_ANON_KEY` | 是 | 可發布金鑰（`sb_publishable_` 開頭） |
+| `VITE_ADMIN_PASSWORD` | 是 | 後台登入密碼 |
+| `VITE_SITE_URL` | 建議 | 正式網域，例如 `https://www.crystomade.com`；用於 sitemap、`robots.txt`、OG／canonical 絕對網址 |
+
+> **重要：** 線上建置**不會**讀取你本機的 `.env`，必須在 Vercel 後台手動填寫。若未設定 Supabase 變數，sitemap 只會有 5 個靜態頁（不含商品詳情）。**Vercel 線上建置**若缺少 Supabase 設定會直接失敗，避免部署出沒有商品 URL 的 sitemap。  
+> 未設定 `VITE_SITE_URL` 時，建置會改用 Vercel 網域或預設 `https://crystomade-shop.vercel.app`。變更環境變數後請 **Redeploy**。
+
+### 驗證 sitemap
+
+```bash
+# 本地（需 .env 已填 Supabase）
+npm run sitemap
+```
+
+部署後開啟 `https://你的網域/sitemap.xml`，網址數應為 **5 個靜態頁 + 商品數**（建置 log 會顯示 `已納入 N 個商品頁`）。
 
 ## 部署上線
 

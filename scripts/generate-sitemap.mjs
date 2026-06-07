@@ -84,7 +84,13 @@ function resolveSiteUrl() {
 const siteUrl = resolveSiteUrl()
 const supabaseUrl = process.env.VITE_SUPABASE_URL || fileEnv.VITE_SUPABASE_URL
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || fileEnv.VITE_SUPABASE_ANON_KEY
+const isVercelBuild = process.env.VERCEL === '1'
 const lastmod = new Date().toISOString().slice(0, 10)
+
+function failSitemapBuild(message) {
+  console.error(`[sitemap] ${message}`)
+  if (isVercelBuild) process.exit(1)
+}
 
 const staticPages = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
@@ -96,13 +102,29 @@ const staticPages = [
 
 let productPages = []
 
-if (supabaseUrl && supabaseKey) {
-  const supabase = createClient(supabaseUrl, supabaseKey)
-  const { data, error } = await supabase
+async function fetchProductRows(supabase) {
+  const primary = await supabase
     .from('products')
     .select('id,name,created_at')
     .is('deleted_at', null)
     .order('sort_order', { ascending: true })
+
+  if (!primary.error) return primary
+
+  if (/sort_order|42703|column/i.test(primary.error.message)) {
+    return supabase
+      .from('products')
+      .select('id,name,created_at')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+  }
+
+  return primary
+}
+
+if (supabaseUrl && supabaseKey) {
+  const supabase = createClient(supabaseUrl, supabaseKey)
+  const { data, error } = await fetchProductRows(supabase)
 
   if (!error && Array.isArray(data)) {
     productPages = data.map((row) => ({
@@ -111,11 +133,14 @@ if (supabaseUrl && supabaseKey) {
       priority: '0.8',
       lastmod: (row.created_at || lastmod).slice(0, 10),
     }))
+    console.log(`[sitemap] 已納入 ${productPages.length} 個商品頁`)
   } else if (error) {
-    console.warn('[sitemap] 無法讀取商品，僅輸出靜態頁面：', error.message)
+    failSitemapBuild(`無法讀取商品，僅輸出靜態頁面：${error.message}`)
   }
 } else {
-  console.warn('[sitemap] 未設定 Supabase，僅輸出靜態頁面')
+  failSitemapBuild(
+    '未設定 Supabase（VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY），僅輸出靜態頁面'
+  )
 }
 
 const body = [
@@ -131,7 +156,15 @@ ${body}
 
 const outPath = resolve(root, 'public', 'sitemap.xml')
 writeFileSync(outPath, xml, 'utf8')
-console.log(`[sitemap] 已寫入 ${outPath}（${staticPages.length + productPages.length} 個網址）`)
+const totalUrls = staticPages.length + productPages.length
+console.log(
+  `[sitemap] 已寫入 ${outPath}（${totalUrls} 個網址：${staticPages.length} 靜態 + ${productPages.length} 商品）`
+)
+if (!process.env.VITE_SITE_URL && !fileEnv.VITE_SITE_URL) {
+  console.warn(
+    `[sitemap] 未設定 VITE_SITE_URL，Sitemap 使用 ${siteUrl}（建議在 Vercel 設定正式網域）`
+  )
+}
 
 const robotsPath = resolve(root, 'public', 'robots.txt')
 const robots = `# 晶刻 Crystomade — 搜尋引擎與社群預覽爬蟲
