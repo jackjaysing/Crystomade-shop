@@ -361,9 +361,10 @@ export function ProductsPage() {
           <h1 className="mt-4 font-display text-5xl text-white sm:text-6xl">晶刻</h1>
 
           <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-white/50">
-
             - 刻定屬於您的水晶能量夥伴 -
-
+          </p>
+          <p className="mx-auto mt-2 max-w-xl text-xs tracking-wide text-amber-glow/75 sm:text-sm">
+            （五行平衡．量身訂做．客製化．水晶手串）
           </p>
 
         </div>
