@@ -3,6 +3,7 @@ import { PageViewTracker } from './components/analytics/PageViewTracker'
 import { AuthProvider } from './contexts/AuthContext'
 import { CartProvider } from './contexts/CartContext'
 import { Navbar } from './components/layout/Navbar'
+import { ScrollToTopOnNavigate } from './components/layout/ScrollToTopOnNavigate'
 import { SiteFooter } from './components/layout/SiteFooter'
 import { EnvSetupBanner } from './components/ui/EnvSetupBanner'
 import { AdminPage } from './pages/AdminPage'
@@ -37,6 +38,7 @@ export default function App() {
           <Navbar />
           <PageViewTracker />
           <SiteMetaSync />
+          <ScrollToTopOnNavigate />
           <main id="main-content" className="flex-1">
             <Routes>
               <Route path="/" element={<Navigate to="/products" replace />} />
