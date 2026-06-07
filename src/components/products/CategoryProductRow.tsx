@@ -17,6 +17,7 @@ import {
 import { getBraceletStyleLabel } from '../../constants/braceletStyles'
 import { getCategoryLabel } from '../../constants/categories'
 
+import { useRegisterProductsCarousel } from '../../contexts/ProductsListSessionContext'
 import type { BraceletStyle, Product, ProductCategory } from '../../lib/types'
 import { BraceletStyleFilter } from './BraceletStyleFilter'
 import { ProductCard } from './ProductCard'
@@ -241,6 +242,8 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
     const sectionRef = useRef<HTMLElement | null>(null)
 
     const trackRef = useRef<HTMLDivElement>(null)
+
+    useRegisterProductsCarousel(category, trackRef)
 
     const scrollRafRef = useRef<number | null>(null)
 

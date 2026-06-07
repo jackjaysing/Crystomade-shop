@@ -2,7 +2,7 @@ import { useCategoryScrollSpy } from '../hooks/useCategoryScrollSpy'
 import { useRestoreProductsListScroll } from '../hooks/useRestoreProductsListSession'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ProductsListSessionProvider } from '../contexts/ProductsListSessionContext'
-import { loadProductsListSession } from '../lib/productsListSession'
+import { loadPendingProductsListRestore } from '../lib/productsListSession'
 
 import { TAG_FILTERS } from '../constants/tags'
 
@@ -75,7 +75,7 @@ export function ProductsPage() {
 
   const { banners } = useBanners()
 
-  const [initialSession] = useState(() => loadProductsListSession())
+  const [initialSession] = useState(() => loadPendingProductsListRestore())
 
   const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(
 
