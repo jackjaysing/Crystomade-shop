@@ -12,6 +12,7 @@ import { PointShopPage } from './pages/PointShopPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { WishBoardPage } from './pages/WishBoardPage'
 import { RaffleFloatingWidget } from './components/raffle/RaffleFloatingWidget'
+import { SiteMetaSync } from './components/seo/SiteMetaSync'
 
 /** 應用程式路由 */
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <EnvSetupBanner />
           <Navbar />
           <PageViewTracker />
+          <SiteMetaSync />
           <div className="flex-1">
             <Routes>
               <Route path="/" element={<Navigate to="/products" replace />} />

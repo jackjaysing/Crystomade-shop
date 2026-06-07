@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getProductCategoryLabel } from '../../constants/categories'
 import {
@@ -15,6 +15,7 @@ import { ProductPriceDisplay } from './ProductPriceDisplay'
 import { BraceletSizePicker } from './BraceletSizePicker'
 import { GlassPanel } from '../ui/GlassPanel'
 import { MetalDivider } from '../ui/MetalDivider'
+import { applyDefaultSiteMeta, applyProductSiteMeta } from '../../lib/siteMeta'
 
 interface ProductModalProps {
   product: Product | null
@@ -30,6 +31,21 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   const [sizeError, setSizeError] = useState<string | null>(null)
 
   useProductViewTracker(product?.id)
+
+  useEffect(() => {
+    if (!product) {
+      applyDefaultSiteMeta('/products')
+      return
+    }
+
+    applyProductSiteMeta({
+      name: product.name,
+      description: product.description,
+      imageUrl: product.image_url,
+    })
+
+    return () => applyDefaultSiteMeta('/products')
+  }, [product])
 
   if (!product) return null
 
