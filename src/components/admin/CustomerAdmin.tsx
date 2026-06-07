@@ -11,6 +11,23 @@ import { DeleteMemberConfirmModal } from './DeleteMemberConfirmModal'
 import { GlassPanel } from '../ui/GlassPanel'
 
 type CustomerView = 'registered' | 'guest'
+type PointsEditMode = 'set' | 'adjust'
+
+function parseNonNegativePointsInput(raw: string): number | null {
+  const trimmed = raw.trim()
+  if (trimmed === '') return null
+  const value = Number(trimmed)
+  if (!Number.isFinite(value)) return null
+  return Math.max(0, Math.floor(value))
+}
+
+function parseSignedDeltaInput(raw: string): number | null {
+  const trimmed = raw.trim()
+  if (trimmed === '' || trimmed === '-' || trimmed === '+') return 0
+  const value = Number(trimmed)
+  if (!Number.isFinite(value)) return null
+  return Math.floor(value)
+}
 
 interface CustomerAdminProps {
   enabled?: boolean
@@ -26,7 +43,9 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
   const [search, setSearch] = useState('')
 
   const [editing, setEditing] = useState<AdminRegisteredCustomer | null>(null)
-  const [editPoints, setEditPoints] = useState(0)
+  const [pointsEditMode, setPointsEditMode] = useState<PointsEditMode>('set')
+  const [editPointsInput, setEditPointsInput] = useState('')
+  const [editDeltaInput, setEditDeltaInput] = useState('')
   const [editReason, setEditReason] = useState('')
   const [saving, setSaving] = useState(false)
   const [deletingMember, setDeletingMember] =
@@ -79,9 +98,22 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
 
   const openEdit = (customer: AdminRegisteredCustomer) => {
     setEditing(customer)
-    setEditPoints(customer.points)
+    setPointsEditMode('set')
+    setEditPointsInput(String(customer.points))
+    setEditDeltaInput('')
     setEditReason('')
   }
+
+  const parsedSetPoints = parseNonNegativePointsInput(editPointsInput)
+  const parsedDelta = parseSignedDeltaInput(editDeltaInput)
+
+  const resolvedEditPoints = editing
+    ? pointsEditMode === 'set'
+      ? parsedSetPoints ?? editing.points
+      : parsedDelta === null
+        ? editing.points
+        : Math.max(0, editing.points + parsedDelta)
+    : 0
 
   const handleDeleteMember = async () => {
     if (!deletingMember) return
@@ -107,10 +139,29 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
 
   const handleSavePoints = async () => {
     if (!editing) return
+
+    if (pointsEditMode === 'set') {
+      if (parsedSetPoints === null) {
+        setMessage('請輸入有效的點數總數')
+        return
+      }
+    } else if (parsedDelta === null) {
+      setMessage('請輸入有效的加減點數')
+      return
+    } else if (editing.points + parsedDelta < 0) {
+      setMessage('加減後點數不可為負數')
+      return
+    }
+
+    if (resolvedEditPoints === editing.points) {
+      setMessage('點數未變更')
+      return
+    }
+
     setSaving(true)
     setMessage('')
     try {
-      await adminUpdateMemberPoints(editing.id, editPoints, editReason, {
+      await adminUpdateMemberPoints(editing.id, resolvedEditPoints, editReason, {
         realName: editing.real_name,
         phone: editing.phone,
         previousPoints: editing.points,
@@ -326,15 +377,89 @@ export function CustomerAdmin({ enabled = true }: CustomerAdminProps) {
 
             <div className="mt-5 space-y-4">
               <div>
-                <label className="mb-1 block text-xs text-white/50">新點數 *</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={editPoints}
-                  onChange={(e) => setEditPoints(Number(e.target.value))}
-                  className="input-field"
-                />
+                <p className="mb-2 text-xs text-white/50">調整方式</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPointsEditMode('set')}
+                    className={`flex-1 rounded-lg border py-2 text-sm tracking-wide transition ${
+                      pointsEditMode === 'set'
+                        ? 'border-amber-glow/50 bg-amber-glow/10 text-amber-glow'
+                        : 'border-white/10 text-white/50 hover:text-white/80'
+                    }`}
+                  >
+                    設定總數
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPointsEditMode('adjust')}
+                    className={`flex-1 rounded-lg border py-2 text-sm tracking-wide transition ${
+                      pointsEditMode === 'adjust'
+                        ? 'border-amber-glow/50 bg-amber-glow/10 text-amber-glow'
+                        : 'border-white/10 text-white/50 hover:text-white/80'
+                    }`}
+                  >
+                    加減點數
+                  </button>
+                </div>
               </div>
+
+              {pointsEditMode === 'set' ? (
+                <div>
+                  <label className="mb-1 block text-xs text-white/50">點數總數 *</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={editPointsInput}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      if (next === '' || /^\d+$/.test(next)) {
+                        setEditPointsInput(next)
+                      }
+                    }}
+                    className="input-field"
+                  />
+                  <p className="mt-1 text-[11px] text-white/35">
+                    直接設定會員目前的點數總額
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="mb-1 block text-xs text-white/50">加減點數 *</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={editDeltaInput}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      if (next === '' || /^[+-]?\d*$/.test(next)) {
+                        setEditDeltaInput(next)
+                      }
+                    }}
+                    className="input-field"
+                    placeholder="例：100 或 -50"
+                  />
+                  <p className="mt-1 text-[11px] text-white/35">
+                    可填正數加點、負數扣點（例：100、-30）
+                  </p>
+                </div>
+              )}
+
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm">
+                <span className="text-white/45">調整後點數：</span>
+                <span className="font-medium text-amber-glow">{resolvedEditPoints}</span>
+                {editing.points !== resolvedEditPoints &&
+                  (pointsEditMode === 'set'
+                    ? parsedSetPoints !== null
+                    : parsedDelta !== null) && (
+                  <span className="ml-2 text-xs text-white/40">
+                    （{editing.points}{' '}
+                    {resolvedEditPoints - editing.points >= 0 ? '+' : ''}
+                    {resolvedEditPoints - editing.points}）
+                  </span>
+                )}
+              </div>
+
               <div>
                 <label className="mb-1 block text-xs text-white/50">
                   備註（寫入點數紀錄）
