@@ -1,4 +1,5 @@
 import { isCartRaffleGiftCoupon } from '../../constants/coupons'
+import { recordAdminActivity } from './adminActivityLog'
 import { assertBrowserDisplayableImageFile } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
 import { supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
@@ -142,7 +143,15 @@ export async function createGiftCoupon(data: GiftCouponFormData): Promise<Coupon
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeCoupon(row as Record<string, unknown>)
+  const coupon = normalizeCoupon(row as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'create',
+    entityType: 'coupon',
+    entityId: coupon.id,
+    entityLabel: coupon.title,
+    summary: `新增禮物券「${coupon.title}」`,
+  })
+  return coupon
 }
 
 export async function updateGiftCoupon(
@@ -158,7 +167,15 @@ export async function updateGiftCoupon(
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeCoupon(row as Record<string, unknown>)
+  const coupon = normalizeCoupon(row as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'coupon',
+    entityId: coupon.id,
+    entityLabel: coupon.title,
+    summary: `更新禮物券「${coupon.title}」`,
+  })
+  return coupon
 }
 
 export async function createCoupon(data: CouponFormData): Promise<Coupon> {
@@ -169,7 +186,15 @@ export async function createCoupon(data: CouponFormData): Promise<Coupon> {
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeCoupon(row as Record<string, unknown>)
+  const coupon = normalizeCoupon(row as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'create',
+    entityType: 'coupon',
+    entityId: coupon.id,
+    entityLabel: coupon.title,
+    summary: `新增優惠券「${coupon.title}」`,
+  })
+  return coupon
 }
 
 export async function updateCoupon(
@@ -184,12 +209,35 @@ export async function updateCoupon(
     .single()
 
   if (error) throw new Error(formatErrorMessage(error))
-  return normalizeCoupon(row as Record<string, unknown>)
+  const coupon = normalizeCoupon(row as Record<string, unknown>)
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'coupon',
+    entityId: coupon.id,
+    entityLabel: coupon.title,
+    summary: `更新優惠券「${coupon.title}」`,
+  })
+  return coupon
 }
 
 export async function deleteCoupon(id: string): Promise<void> {
+  const { data: row } = await supabase
+    .from('coupons')
+    .select('title')
+    .eq('id', id)
+    .single()
+
   const { error } = await supabase.from('coupons').delete().eq('id', id)
   if (error) throw new Error(formatErrorMessage(error))
+
+  const title = row?.title ? String(row.title) : id
+  void recordAdminActivity({
+    action: 'delete',
+    entityType: 'coupon',
+    entityId: id,
+    entityLabel: title,
+    summary: `刪除優惠券「${title}」`,
+  })
 }
 
 /** 後台：發放給單一會員 */
@@ -213,7 +261,21 @@ export async function issueCouponToMember(
   }
 
   const row = Array.isArray(data) ? data[0] : data
-  return normalizeMemberCoupon(row as Record<string, unknown>)
+  const issued = normalizeMemberCoupon(row as Record<string, unknown>)
+  const { data: couponRow } = await supabase
+    .from('coupons')
+    .select('title')
+    .eq('id', couponId)
+    .single()
+  const title = couponRow?.title ? String(couponRow.title) : couponId
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'coupon',
+    entityId: couponId,
+    entityLabel: title,
+    summary: `發放優惠券「${title}」給單一會員`,
+  })
+  return issued
 }
 
 /** 後台：一鍵發放給全部會員 */
@@ -234,7 +296,21 @@ export async function issueCouponToAllMembers(
     throw new Error(msg)
   }
 
-  return typeof data === 'number' ? data : Number(data) || 0
+  const count = typeof data === 'number' ? data : Number(data) || 0
+  const { data: couponRow } = await supabase
+    .from('coupons')
+    .select('title')
+    .eq('id', couponId)
+    .single()
+  const title = couponRow?.title ? String(couponRow.title) : couponId
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'coupon',
+    entityId: couponId,
+    entityLabel: title,
+    summary: `一鍵發放優惠券「${title}」給 ${count} 位會員`,
+  })
+  return count
 }
 
 /** 會員：可用優惠券（含範本） */

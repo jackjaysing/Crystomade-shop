@@ -3,6 +3,7 @@ import {
   RAFFLE_GIFT_DESCRIPTION,
   RAFFLE_GIFT_VALID_DAYS,
 } from '../../constants/raffles'
+import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { buildRaffleListedCodes, raffleDayKey } from '../raffleListedCode'
 import { supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
@@ -334,7 +335,16 @@ export async function createRaffle(data: RaffleFormData): Promise<Raffle> {
     .select('*')
     .single()
   if (updErr) throw new Error(formatErrorMessage(updErr))
-  return normalizeRaffle(updated as Record<string, unknown>)
+  const created = normalizeRaffle(updated as Record<string, unknown>)
+  const prizeName = created.prize_title?.trim() || created.title.trim() || created.id
+  void recordAdminActivity({
+    action: 'create',
+    entityType: 'raffle',
+    entityId: created.id,
+    entityLabel: prizeName,
+    summary: `新增抽獎「${prizeName}」`,
+  })
+  return created
 }
 
 export async function updateRaffle(
@@ -363,15 +373,42 @@ export async function updateRaffle(
     throw new Error(hint ?? formatErrorMessage(error))
   }
 
-  return normalizeRaffle(row as Record<string, unknown>)
+  const updated = normalizeRaffle(row as Record<string, unknown>)
+  const prizeName = updated.prize_title?.trim() || updated.title.trim() || updated.id
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'raffle',
+    entityId: updated.id,
+    entityLabel: prizeName,
+    summary: `更新抽獎「${prizeName}」`,
+  })
+  return updated
 }
 
 export async function deleteRaffle(id: string): Promise<void> {
+  const { data: row } = await supabase
+    .from('raffles')
+    .select('title, prize_title')
+    .eq('id', id)
+    .single()
+
   const { error } = await supabase.from('raffles').delete().eq('id', id)
   if (error) {
     const hint = migrationHint(formatErrorMessage(error))
     throw new Error(hint ?? formatErrorMessage(error))
   }
+
+  const prizeName =
+    (row?.prize_title && String(row.prize_title).trim()) ||
+    (row?.title && String(row.title).trim()) ||
+    id
+  void recordAdminActivity({
+    action: 'delete',
+    entityType: 'raffle',
+    entityId: id,
+    entityLabel: prizeName,
+    summary: `刪除抽獎「${prizeName}」`,
+  })
 }
 
 /** 會員報名 */
@@ -409,7 +446,16 @@ export async function drawRaffleWinner(raffleId: string): Promise<Raffle> {
     throw new Error(hint ?? formatErrorMessage(error))
   }
 
-  return normalizeRaffle(data as Record<string, unknown>)
+  const drawn = normalizeRaffle(data as Record<string, unknown>)
+  const prizeName = drawn.prize_title?.trim() || drawn.title.trim() || drawn.id
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'raffle',
+    entityId: drawn.id,
+    entityLabel: prizeName,
+    summary: `抽獎開獎「${prizeName}」`,
+  })
+  return drawn
 }
 
 /** 後台：報名名單 */

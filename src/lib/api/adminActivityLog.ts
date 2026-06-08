@@ -1,4 +1,5 @@
-import { getAdminDisplayName } from '../adminAuth'
+import { ADMIN_ROLE_LABELS, type AdminRole } from '../../constants/adminAccounts'
+import { getAdminDisplayName, getAdminRole } from '../adminAuth'
 import { formatErrorMessage } from '../formatError'
 import { isSupabaseConfigured, supabase } from '../supabase'
 
@@ -9,6 +10,8 @@ export type AdminActivityAction =
   | 'restore'
   | 'sort'
   | 'status'
+  | 'login'
+  | 'logout'
 
 export type AdminActivityEntityType =
   | 'product'
@@ -16,8 +19,10 @@ export type AdminActivityEntityType =
   | 'banner'
   | 'member'
   | 'coupon'
+  | 'raffle'
   | 'wish_message'
   | 'fortune_consultation'
+  | 'admin_session'
 
 export interface AdminActivityLog {
   id: string
@@ -70,6 +75,40 @@ export async function recordAdminActivity(
   if (error) {
     console.warn('[晶刻] 後台日誌寫入失敗:', formatErrorMessage(error))
   }
+}
+
+function sessionEventSummary(
+  action: 'login' | 'logout',
+  displayName: string,
+  role: AdminRole
+): string {
+  const roleLabel = ADMIN_ROLE_LABELS[role]
+  const verb = action === 'login' ? '登入' : '登出'
+  return `${roleLabel} ${displayName} ${verb}後台`
+}
+
+/** 記錄管理者登入（於 session 寫入後呼叫） */
+export function recordAdminLogin(): void {
+  const displayName = getAdminDisplayName()
+  if (!displayName) return
+  void recordAdminActivity({
+    action: 'login',
+    entityType: 'admin_session',
+    entityLabel: displayName,
+    summary: sessionEventSummary('login', displayName, getAdminRole()),
+  })
+}
+
+/** 記錄管理者登出（於 session 清除前呼叫） */
+export function recordAdminLogout(): void {
+  const displayName = getAdminDisplayName()
+  if (!displayName) return
+  void recordAdminActivity({
+    action: 'logout',
+    entityType: 'admin_session',
+    entityLabel: displayName,
+    summary: sessionEventSummary('logout', displayName, getAdminRole()),
+  })
 }
 
 /** 後台：取得操作日誌（最新優先） */

@@ -25,6 +25,7 @@ import { useAdminActivityLogs } from '../hooks/useAdminActivityLogs'
 import { useProducts } from '../hooks/useProducts'
 import { ADMIN_ROLE_LABELS } from '../constants/adminAccounts'
 import { useAdminSession } from '../hooks/useAdminSession'
+import { recordAdminLogout } from '../lib/api/adminActivityLog'
 import { getAdminDisplayName, logoutAdmin } from '../lib/adminAuth'
 import { AdminAlertsBar, AdminTabBadge } from '../components/admin/AdminAlertsBar'
 import { Toast } from '../components/ui/Toast'
@@ -188,6 +189,7 @@ export function AdminPage() {
         <button
           type="button"
           onClick={() => {
+            recordAdminLogout()
             logoutAdmin()
             refresh()
           }}

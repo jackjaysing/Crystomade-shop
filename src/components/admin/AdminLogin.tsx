@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { recordAdminLogin } from '../../lib/api/adminActivityLog'
 import { loginAdmin } from '../../lib/adminAuth'
 import { GlassPanel } from '../ui/GlassPanel'
 import { PasswordInput } from '../ui/PasswordInput'
@@ -17,6 +18,7 @@ export function AdminLogin({ onSuccess, variant = 'page' }: AdminLoginProps) {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (loginAdmin(password)) {
+      recordAdminLogin()
       setPassword('')
       setError('')
       onSuccess()

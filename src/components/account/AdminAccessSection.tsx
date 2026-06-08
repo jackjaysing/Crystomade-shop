@@ -4,6 +4,7 @@ import { AdminLogin } from '../admin/AdminLogin'
 import { GlassPanel } from '../ui/GlassPanel'
 import { ADMIN_ROLE_LABELS } from '../../constants/adminAccounts'
 import { useAdminSession } from '../../hooks/useAdminSession'
+import { recordAdminLogout } from '../../lib/api/adminActivityLog'
 import { logoutAdmin } from '../../lib/adminAuth'
 
 /** 管理登入／已登入管理狀態（會員中心、未登入閘道共用） */
@@ -27,6 +28,7 @@ export function AdminAccessSection() {
           <button
             type="button"
             onClick={() => {
+              recordAdminLogout()
               logoutAdmin()
               refresh()
             }}

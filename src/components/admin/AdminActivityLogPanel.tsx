@@ -27,6 +27,8 @@ const ACTION_LABEL: Record<string, string> = {
   restore: '還原',
   sort: '排序',
   status: '狀態',
+  login: '登入',
+  logout: '登出',
 }
 
 const ENTITY_LABEL: Record<string, string> = {
@@ -38,6 +40,7 @@ const ENTITY_LABEL: Record<string, string> = {
   raffle: '抽獎',
   wish_message: '許願留言',
   fortune_consultation: '命理諮詢',
+  admin_session: '後台登入',
 }
 
 /** 後台操作日誌列表 */
@@ -91,11 +94,15 @@ export function AdminActivityLogPanel({
                   <span className="text-amber-glow/80">{log.admin_name}</span>
                   <span aria-hidden>·</span>
                   <span>
-                    {ACTION_LABEL[log.action] ?? log.action}
-                    {ENTITY_LABEL[log.entity_type] ?? log.entity_type}
+                    {log.entity_type === 'admin_session'
+                      ? (ACTION_LABEL[log.action] ?? log.action)
+                      : `${ACTION_LABEL[log.action] ?? log.action}${
+                          ENTITY_LABEL[log.entity_type] ?? log.entity_type
+                        }`}
                   </span>
                 </div>
-                {log.entity_label && log.entity_type === 'member' && (
+                {log.entity_label &&
+                  (log.entity_type === 'member' || log.entity_type === 'admin_session') && (
                   <p className="mt-2 text-sm font-medium text-white/85">
                     {log.entity_label}
                   </p>
