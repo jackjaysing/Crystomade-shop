@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { ExternalLink, MoonStar } from 'lucide-react'
+import { MemberAuthForm } from '../member/MemberAuthForm'
 import { GlassPanel } from '../ui/GlassPanel'
 import { useAuth } from '../../contexts/AuthContext'
 import { submitFortuneConsultation } from '../../lib/api/fortuneConsultation'
@@ -21,7 +22,7 @@ export function FortuneConsultationPanel({
   open,
   onClose,
 }: FortuneConsultationPanelProps) {
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [question, setQuestion] = useState('')
   const [lineId, setLineId] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -29,6 +30,7 @@ export function FortuneConsultationPanel({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (!user?.id || !profile) return
 
     setSubmitting(true)
     setSubmitMessage('')
@@ -36,8 +38,8 @@ export function FortuneConsultationPanel({
       await submitFortuneConsultation({
         question,
         lineId,
-        displayName: profile?.real_name ?? null,
-        memberId: user?.id ?? null,
+        displayName: profile.real_name,
+        memberId: user.id,
       })
       setQuestion('')
       setLineId('')
@@ -88,93 +90,104 @@ export function FortuneConsultationPanel({
             </button>
           </div>
 
-          <div className="mb-5 rounded-xl border border-amber-glow/20 bg-amber-glow/5 p-4">
-            <p className="text-sm font-medium text-amber-glow/90">
-              命理老師 {FORTUNE_TEACHER_NAME}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-white/50">
-              歡迎追蹤 Instagram 了解更多，或直接填寫下方表單，老師將透過 Line 與您聯絡。
-            </p>
-            <a
-              href={FORTUNE_IG_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-glow/35 bg-amber-glow/10 px-4 py-2.5 text-sm text-amber-glow transition hover:border-amber-glow/60 hover:bg-amber-glow/15"
-            >
-              <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              前往 {FORTUNE_TEACHER_NAME} Instagram
-            </a>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {profile && (
-              <p className="text-xs text-white/45">
-                會員「{profile.real_name}」送出（選填姓名已帶入後台參考）
+          {authLoading ? (
+            <p className="text-sm text-white/40">載入中…</p>
+          ) : !profile ? (
+            <div className="space-y-4">
+              <p className="text-sm text-white/60">
+                命理諮詢僅開放給登入會員。請先登入或註冊，即可填寫諮詢表單。
               </p>
-            )}
-
-            <div>
-              <label
-                htmlFor="fortune-panel-question"
-                className="mb-2 block text-xs text-white/50"
-              >
-                諮詢問題 *
-              </label>
-              <textarea
-                id="fortune-panel-question"
-                required
-                rows={5}
-                maxLength={MAX_QUESTION_LEN}
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder="請描述您想諮詢的命理問題…"
-                className="w-full resize-y rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm leading-relaxed text-white placeholder:text-white/25 focus:border-amber-glow/40 focus:outline-none"
-              />
-              <p className="mt-1 text-right text-xs text-white/30">
-                {question.length}/{MAX_QUESTION_LEN}
-              </p>
+              <MemberAuthForm variant="checkout" />
             </div>
+          ) : (
+            <>
+              <div className="mb-5 rounded-xl border border-amber-glow/20 bg-amber-glow/5 p-4">
+                <p className="text-sm font-medium text-amber-glow/90">
+                  命理老師 {FORTUNE_TEACHER_NAME}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-white/50">
+                  歡迎追蹤 Instagram 了解更多，或直接填寫下方表單，老師將透過 Line 與您聯絡。
+                </p>
+                <a
+                  href={FORTUNE_IG_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-glow/35 bg-amber-glow/10 px-4 py-2.5 text-sm text-amber-glow transition hover:border-amber-glow/60 hover:bg-amber-glow/15"
+                >
+                  <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  前往 {FORTUNE_TEACHER_NAME} Instagram
+                </a>
+              </div>
 
-            <div>
-              <label
-                htmlFor="fortune-panel-line-id"
-                className="mb-2 block text-xs text-white/50"
-              >
-                Line ID *
-              </label>
-              <input
-                id="fortune-panel-line-id"
-                type="text"
-                required
-                maxLength={MAX_LINE_ID_LEN}
-                value={lineId}
-                onChange={(e) => setLineId(e.target.value)}
-                placeholder="請填寫您的 Line ID，方便老師與您聯絡"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-amber-glow/40 focus:outline-none"
-              />
-            </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <p className="text-xs text-white/45">
+                  會員「{profile.real_name}」送出（選填姓名已帶入後台參考）
+                </p>
 
-            <button
-              type="submit"
-              disabled={submitting || !question.trim() || !lineId.trim()}
-              className="w-full rounded-lg bg-amber-glow/90 px-4 py-3 text-sm font-medium tracking-wide text-void transition hover:bg-amber-glow disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
-            >
-              {submitting ? '送出中…' : '送出諮詢'}
-            </button>
+                <div>
+                  <label
+                    htmlFor="fortune-panel-question"
+                    className="mb-2 block text-xs text-white/50"
+                  >
+                    諮詢問題 *
+                  </label>
+                  <textarea
+                    id="fortune-panel-question"
+                    required
+                    rows={5}
+                    maxLength={MAX_QUESTION_LEN}
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    placeholder="請描述您想諮詢的命理問題…"
+                    className="w-full resize-y rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm leading-relaxed text-white placeholder:text-white/25 focus:border-amber-glow/40 focus:outline-none"
+                  />
+                  <p className="mt-1 text-right text-xs text-white/30">
+                    {question.length}/{MAX_QUESTION_LEN}
+                  </p>
+                </div>
 
-            {submitMessage && (
-              <p
-                className={`text-sm ${
-                  submitMessage.includes('已送出')
-                    ? 'text-amber-glow/90'
-                    : 'text-red-300/90'
-                }`}
-                role="status"
-              >
-                {submitMessage}
-              </p>
-            )}
-          </form>
+                <div>
+                  <label
+                    htmlFor="fortune-panel-line-id"
+                    className="mb-2 block text-xs text-white/50"
+                  >
+                    Line ID *
+                  </label>
+                  <input
+                    id="fortune-panel-line-id"
+                    type="text"
+                    required
+                    maxLength={MAX_LINE_ID_LEN}
+                    value={lineId}
+                    onChange={(e) => setLineId(e.target.value)}
+                    placeholder="請填寫您的 Line ID，方便老師與您聯絡"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-amber-glow/40 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting || !question.trim() || !lineId.trim()}
+                  className="w-full rounded-lg bg-amber-glow/90 px-4 py-3 text-sm font-medium tracking-wide text-void transition hover:bg-amber-glow disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
+                >
+                  {submitting ? '送出中…' : '送出諮詢'}
+                </button>
+
+                {submitMessage && (
+                  <p
+                    className={`text-sm ${
+                      submitMessage.includes('已送出')
+                        ? 'text-amber-glow/90'
+                        : 'text-red-300/90'
+                    }`}
+                    role="status"
+                  >
+                    {submitMessage}
+                  </p>
+                )}
+              </form>
+            </>
+          )}
         </GlassPanel>
       </div>
     </div>

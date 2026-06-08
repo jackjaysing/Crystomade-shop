@@ -44,13 +44,15 @@ export interface SubmitFortuneConsultationInput {
   memberId?: string | null
 }
 
-/** 提交命理諮詢（訪客或會員皆可） */
+/** 提交命理諮詢（僅登入會員） */
 export async function submitFortuneConsultation(
   input: SubmitFortuneConsultationInput
 ): Promise<void> {
   if (!isSupabaseConfigured) {
     throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
   }
+
+  if (!input.memberId) throw new Error('請先登入會員')
 
   const question = input.question.trim()
   if (!question) throw new Error('請填寫諮詢問題')

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { MemberAuthForm } from '../member/MemberAuthForm'
 import { fetchMemberCartGiftCoupons } from '../../lib/api/coupons'
 import { fetchPublicRaffles, registerForRaffle } from '../../lib/api/raffles'
 import { RaffleGiftRedeemButton } from '../member/RaffleGiftRedeemButton'
@@ -31,7 +31,7 @@ function isRegistrationOpen(r: RaffleWithMeta): boolean {
 
 /** 抽獎活動列表、報名與個人開獎結果 */
 export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps) {
-  const { user, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [raffles, setRaffles] = useState<RaffleWithMeta[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -62,9 +62,9 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
   }, [user?.id])
 
   useEffect(() => {
-    if (!open) return
+    if (!open || !user?.id) return
     void reload()
-  }, [open, reload])
+  }, [open, reload, user?.id])
 
   const myDrawnResults = useMemo(
     () =>
@@ -80,7 +80,7 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
   }, [open, myDrawnResults])
 
   const handleRegister = async (raffleId: string) => {
-    if (!user) return
+    if (!user?.id) return
     setRegisteringId(raffleId)
     setMessage('')
     try {
@@ -135,7 +135,16 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
             </p>
           )}
 
-          {loading || authLoading ? (
+          {authLoading ? (
+            <p className="text-sm text-white/40">載入中…</p>
+          ) : !profile ? (
+            <div className="space-y-4">
+              <p className="text-sm text-white/60">
+                抽獎活動僅開放給登入會員。請先登入或註冊，即可報名參加抽獎。
+              </p>
+              <MemberAuthForm variant="checkout" />
+            </div>
+          ) : loading ? (
             <p className="text-sm text-white/40">載入中…</p>
           ) : (
             <>
@@ -205,17 +214,6 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
                         {r.user_entered ? (
                           <p className="mt-3 text-sm text-emerald-300/90">
                             您已報名參加
-                          </p>
-                        ) : !user ? (
-                          <p className="mt-3 text-sm text-white/50">
-                            <Link
-                              to="/account"
-                              className="text-amber-glow underline-offset-2 hover:underline"
-                              onClick={onClose}
-                            >
-                              登入會員
-                            </Link>
-                            後即可報名參加
                           </p>
                         ) : (
                           <button

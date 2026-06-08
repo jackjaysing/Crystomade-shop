@@ -9,7 +9,7 @@ const MAX_CONTENT_LEN = 500
 
 /** 前台許願留言板（僅登入會員可許願） */
 export function WishBoardPage() {
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState('')
@@ -45,7 +45,11 @@ export function WishBoardPage() {
           版上找不到想要的商品？登入會員後告訴我們你的心願，我們會依需求規劃上架。
         </p>
 
-        {profile ? (
+        {authLoading ? (
+          <GlassPanel className="mt-8 p-6 sm:p-8">
+            <p className="text-sm text-white/40">載入中…</p>
+          </GlassPanel>
+        ) : profile ? (
           <GlassPanel className="mt-8 p-6 sm:p-8">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-amber-glow/30 bg-amber-glow/10">
