@@ -1,4 +1,4 @@
-/** 高級管理員：後台全部功能；一般管理員：不可刪除／取消、無收入統計與後台日誌 */
+/** 高級管理員：後台全部功能；一般管理員：不可刪除／取消、不可編輯會員點數、無收入統計與後台日誌 */
 export type AdminRole = 'super' | 'standard'
 
 export interface AdminAccount {

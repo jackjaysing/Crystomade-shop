@@ -269,7 +269,9 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                     <th className="px-4 py-3 font-medium">點數</th>
                     <th className="px-4 py-3 font-medium">訂單</th>
                     <th className="px-4 py-3 font-medium">註冊日</th>
-                    <th className="px-4 py-3 font-medium">操作</th>
+                    {isSuperAdmin && (
+                      <th className="px-4 py-3 font-medium">操作</th>
+                    )}
                   </>
                 ) : (
                   <>
@@ -309,16 +311,16 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                       <td className="px-4 py-3 text-xs text-white/50">
                         {new Date(c.created_at).toLocaleDateString('zh-TW')}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(c)}
-                            className="rounded border border-amber-glow/35 px-3 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/10"
-                          >
-                            編輯點數
-                          </button>
-                          {isSuperAdmin && (
+                      {isSuperAdmin && (
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEdit(c)}
+                              className="rounded border border-amber-glow/35 px-3 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/10"
+                            >
+                              編輯點數
+                            </button>
                             <button
                               type="button"
                               onClick={() => setDeletingMember(c)}
@@ -326,9 +328,9 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                             >
                               刪除註冊
                             </button>
-                          )}
-                        </div>
-                      </td>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 : filteredGuests.map((c) => (
@@ -374,7 +376,7 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         />
       )}
 
-      {editing && (
+      {isSuperAdmin && editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-void/80 p-4 backdrop-blur-sm">
           <GlassPanel className="w-full max-w-md p-6 sm:p-8">
             <h3 className="font-display text-xl text-white">調整會員點數</h3>
