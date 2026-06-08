@@ -1,6 +1,12 @@
 import { COUPON_TYPE_LABELS } from '../constants/coupons'
-import { formatDiscountZheLabel } from './productPricing'
-import { calcSalePrice } from './productPricing'
+import { sanitizeFiveElements } from './fiveElements'
+import { sanitizeSubcategoryForSave } from './productSubcategory'
+import { sanitizeProductTags } from './productTags'
+import {
+  calcSalePrice,
+  formatDiscountZheLabel,
+  parseDiscountZhe,
+} from './productPricing'
 import type {
   AnnouncementBanner,
   Coupon,
@@ -70,8 +76,35 @@ export function joinAdminChangeSummary(
   entityLabel: string,
   prefix = '更新'
 ): string {
-  if (changes.length === 0) return `${prefix}${entityLabel}`
+  if (changes.length === 0) return `${prefix}${entityLabel}（無欄位變更）`
   return `${prefix}${entityLabel}：${changes.join('；')}`
+}
+
+/** 將日誌摘要拆成標題與變更明細，供後台日誌 UI 顯示 */
+export function parseAdminLogSummary(summary: string): {
+  headline: string
+  changes: string[]
+} {
+  const splitAt = summary.indexOf('：')
+  if (splitAt === -1) {
+    return { headline: summary, changes: [] }
+  }
+
+  const headline = summary.slice(0, splitAt).trim()
+  const body = summary.slice(splitAt + 1).trim()
+  if (!body) return { headline: summary, changes: [] }
+
+  if (body.includes('→') || body.includes('；')) {
+    return {
+      headline,
+      changes: body
+        .split('；')
+        .map((part) => part.trim())
+        .filter(Boolean),
+    }
+  }
+
+  return { headline, changes: [body] }
 }
 
 export function isProductGalleryChanged(
@@ -90,40 +123,56 @@ export function buildProductUpdateSummary(
   form: ProductEditData
 ): string {
   const changes: string[] = []
-  const name = form.name.trim() || before.name
-  const nextStock = Math.max(0, form.stock)
+  const afterName = form.name.trim()
+  const name = afterName || before.name
+  const nextStock = Math.max(0, Math.floor(form.stock))
+  const afterCategory = form.category
+  const afterTags = sanitizeProductTags(form.tags)
+  const afterFive = sanitizeFiveElements(form.five_elements)
+  const afterSubcategory =
+    sanitizeSubcategoryForSave(afterCategory, form.subcategory) ?? '—'
+  const beforeSubcategory = before.subcategory ?? '—'
+  const beforeDiscountZhe = parseDiscountZhe(before.discount_zhe)
+  const afterDiscountZhe = parseDiscountZhe(form.discount_zhe)
 
-  pushTextChange(changes, '名稱', before.name, form.name.trim())
-  pushTextChange(changes, '品類', before.category, form.category)
+  pushTextChange(changes, '名稱', before.name, afterName)
+  pushTextChange(changes, '品類', before.category, afterCategory)
 
   const beforeBracelet =
     before.category === '手串' ? before.bracelet_style ?? '通用' : '—'
   const afterBracelet =
-    form.category === '手串' ? form.bracelet_style ?? '通用' : '—'
+    afterCategory === '手串' ? form.bracelet_style ?? '通用' : '—'
   pushTextChange(changes, '手串款式', beforeBracelet, afterBracelet)
 
-  const beforeSubcategory = before.subcategory ?? '—'
-  const afterSubcategory = form.subcategory ?? '—'
   pushTextChange(changes, '細項分類', beforeSubcategory, afterSubcategory)
 
-  pushNumberChange(changes, '原價', before.price, form.price, formatAdminMoney)
+  pushNumberChange(
+    changes,
+    '原價',
+    Math.round(before.price),
+    Math.round(form.price),
+    formatAdminMoney
+  )
 
-  const beforeDiscount = formatAdminDiscount(before.discount_zhe)
-  const afterDiscount = formatAdminDiscount(form.discount_zhe)
-  pushTextChange(changes, '折扣', beforeDiscount, afterDiscount)
+  pushTextChange(
+    changes,
+    '折扣',
+    formatAdminDiscount(beforeDiscountZhe),
+    formatAdminDiscount(afterDiscountZhe)
+  )
 
-  const beforeSale = calcSalePrice(before.price, before.discount_zhe)
-  const afterSale = calcSalePrice(form.price, form.discount_zhe)
+  const beforeSale = calcSalePrice(before.price, beforeDiscountZhe)
+  const afterSale = calcSalePrice(form.price, afterDiscountZhe)
   pushNumberChange(changes, '特價', beforeSale, afterSale, formatAdminMoney)
 
   pushNumberChange(changes, '庫存', before.stock, nextStock, (value) => `${value} 件`)
 
-  if (before.description !== form.description) {
+  if (before.description.trim() !== form.description.trim()) {
     changes.push('商品介紹已更新')
   }
 
-  pushArrayChange(changes, '標籤', before.tags, form.tags)
-  pushArrayChange(changes, '五行', before.five_elements, form.five_elements)
+  pushArrayChange(changes, '標籤', before.tags, afterTags)
+  pushArrayChange(changes, '五行', before.five_elements, afterFive)
 
   if (before.is_hot !== form.is_hot) {
     pushTextChange(
@@ -178,12 +227,18 @@ export function buildPointProductUpdateSummary(
       changes,
       '所需點數',
       before.required_points,
-      patch.required_points,
+      Math.max(1, Math.floor(patch.required_points)),
       (value) => `${value} 點`
     )
   }
   if (patch.stock != null) {
-    pushNumberChange(changes, '庫存', before.stock, patch.stock, (value) => `${value} 件`)
+    pushNumberChange(
+      changes,
+      '庫存',
+      before.stock,
+      Math.max(0, Math.floor(patch.stock)),
+      (value) => `${value} 件`
+    )
   }
 
   return joinAdminChangeSummary(changes, `點數商品「${name}」`)

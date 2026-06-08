@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react'
 import type { AdminActivityLog } from '../../lib/api/adminActivityLog'
+import { parseAdminLogSummary } from '../../lib/adminChangeSummary'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface AdminActivityLogPanelProps {
@@ -42,6 +43,59 @@ const ENTITY_LABEL: Record<string, string> = {
   wish_message: '許願留言',
   fortune_consultation: '命理諮詢',
   admin_session: '後台登入',
+}
+
+function renderChangeText(change: string) {
+  const arrowAt = change.indexOf('→')
+  if (arrowAt === -1) return change
+
+  const before = change.slice(0, arrowAt).trim()
+  const after = change.slice(arrowAt + 1).trim()
+  return (
+    <>
+      <span className="text-white/70">{before} → </span>
+      <span className="font-medium text-amber-glow/95">{after}</span>
+    </>
+  )
+}
+
+function AdminLogEntry({ log }: { log: AdminActivityLog }) {
+  const { headline, changes } = parseAdminLogSummary(log.summary)
+  const actionLabel =
+    log.entity_type === 'admin_session'
+      ? (ACTION_LABEL[log.action] ?? log.action)
+      : `${ACTION_LABEL[log.action] ?? log.action}${
+          ENTITY_LABEL[log.entity_type] ?? log.entity_type
+        }`
+
+  return (
+    <GlassPanel className="border-white/5 p-4">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-white/45">
+        <time dateTime={log.created_at}>{formatLogTime(log.created_at)}</time>
+        <span aria-hidden>·</span>
+        <span className="text-amber-glow/80">{log.admin_name}</span>
+        <span aria-hidden>·</span>
+        <span>{actionLabel}</span>
+      </div>
+
+      <p className="mt-2 text-sm font-medium text-white/90">{headline}</p>
+
+      {changes.length > 0 ? (
+        <ul className="mt-2 space-y-1.5 rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2.5">
+          {changes.map((change) => (
+            <li key={change} className="flex gap-2 text-sm leading-relaxed text-white/80">
+              <span className="shrink-0 text-amber-glow/60">›</span>
+              <span>{renderChangeText(change)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        log.summary !== headline && (
+          <p className="mt-1 text-sm leading-relaxed text-white/70">{log.summary}</p>
+        )
+      )}
+    </GlassPanel>
+  )
 }
 
 /** 後台操作日誌列表 */
@@ -88,36 +142,7 @@ export function AdminActivityLogPanel({
         <ul className="space-y-2">
           {logs.map((log) => (
             <li key={log.id}>
-              <GlassPanel className="border-white/5 p-4">
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-white/45">
-                  <time dateTime={log.created_at}>{formatLogTime(log.created_at)}</time>
-                  <span aria-hidden>·</span>
-                  <span className="text-amber-glow/80">{log.admin_name}</span>
-                  <span aria-hidden>·</span>
-                  <span>
-                    {log.entity_type === 'admin_session'
-                      ? (ACTION_LABEL[log.action] ?? log.action)
-                      : `${ACTION_LABEL[log.action] ?? log.action}${
-                          ENTITY_LABEL[log.entity_type] ?? log.entity_type
-                        }`}
-                  </span>
-                </div>
-                {log.entity_label &&
-                  (log.entity_type === 'member' || log.entity_type === 'admin_session') && (
-                  <p className="mt-2 text-sm font-medium text-white/85">
-                    {log.entity_label}
-                  </p>
-                )}
-                <p
-                  className={`text-sm leading-relaxed text-white/75 ${
-                    log.entity_label && log.entity_type === 'member'
-                      ? 'mt-1'
-                      : 'mt-2'
-                  }`}
-                >
-                  {log.summary}
-                </p>
-              </GlassPanel>
+              <AdminLogEntry log={log} />
             </li>
           ))}
         </ul>

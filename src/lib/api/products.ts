@@ -1,4 +1,7 @@
-import { buildProductUpdateSummary } from '../adminChangeSummary'
+import {
+  buildProductUpdateSummary,
+  formatAdminMoney,
+} from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { applyCrystomadeWatermark } from '../watermarkProductImage'
@@ -230,7 +233,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
     entityType: 'product',
     entityId: product.id,
     entityLabel: product.name,
-    summary: `新增商品「${product.name}」`,
+    summary: `新增商品「${product.name}」：原價 ${formatAdminMoney(product.price)}；庫存 ${product.stock} 件`,
   })
   return product
 }

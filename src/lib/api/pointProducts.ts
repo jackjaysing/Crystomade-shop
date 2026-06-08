@@ -153,7 +153,7 @@ export async function createPointProduct(
     entityType: 'point_product',
     entityId: product.id,
     entityLabel: product.name,
-    summary: `新增點數商品「${product.name}」`,
+    summary: `新增點數商品「${product.name}」：所需點數 ${product.required_points} 點；庫存 ${product.stock} 件`,
   })
   return product
 }
