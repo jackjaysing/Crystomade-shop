@@ -7,6 +7,7 @@ const TABLE = 'fortune_consultation_requests'
 const MAX_QUESTION_LEN = 500
 const MAX_LINE_ID_LEN = 50
 const MAX_NAME_LEN = 30
+const MAX_ADMIN_NOTES_LEN = 500
 
 function normalizeRow(row: Record<string, unknown>): FortuneConsultationRequest {
   return {
@@ -43,6 +44,10 @@ function normalizeRow(row: Record<string, unknown>): FortuneConsultationRequest 
     paid_at:
       row.paid_at != null && String(row.paid_at).trim() !== ''
         ? String(row.paid_at)
+        : null,
+    admin_notes:
+      row.admin_notes != null && String(row.admin_notes).trim() !== ''
+        ? String(row.admin_notes)
         : null,
   }
 }
@@ -127,12 +132,13 @@ const FORTUNE_DELETE_RPC_MISSING =
   '命理諮詢刪除權限未設定完成，請在 Supabase SQL Editor 執行 supabase/migration-fix-fortune-consultation-delete.sql'
 
 const FORTUNE_UPDATE_RPC_MISSING =
-  '命理諮詢更新權限未設定完成，請在 Supabase SQL Editor 執行 supabase/migration-add-fortune-consultation-admin-fields.sql'
+  '命理諮詢更新權限未設定完成，請在 Supabase SQL Editor 執行 supabase/migration-add-fortune-consultation-admin-notes.sql'
 
 export interface UpdateFortuneConsultationAdminInput {
   estimatedFee?: number | null
   contacted?: boolean
   paid?: boolean
+  adminNotes?: string | null
 }
 
 function formatFortuneFeeSummary(fee: number | null | undefined): string {
@@ -154,6 +160,9 @@ export async function updateFortuneConsultationAdmin(
     patch.estimatedFee == null
       ? null
       : Math.max(0, Math.floor(patch.estimatedFee))
+  const updateAdminNotes = patch.adminNotes !== undefined
+  const adminNotes =
+    patch.adminNotes == null ? null : patch.adminNotes.trim().slice(0, MAX_ADMIN_NOTES_LEN)
 
   const { data: updated, error: rpcError } = await supabase.rpc(
     'update_fortune_consultation_admin',
@@ -163,6 +172,8 @@ export async function updateFortuneConsultationAdmin(
       p_update_estimated_fee: updateEstimatedFee,
       p_contacted: patch.contacted ?? null,
       p_paid: patch.paid ?? null,
+      p_admin_notes: adminNotes,
+      p_update_admin_notes: updateAdminNotes,
     }
   )
 
@@ -188,6 +199,7 @@ export async function updateFortuneConsultationAdmin(
   if (patch.contacted === false) summaries.push('取消已聯繫')
   if (patch.paid === true) summaries.push('標記已付款')
   if (patch.paid === false) summaries.push('取消已付款')
+  if (updateAdminNotes) summaries.push('更新命理師備註')
 
   if (summaries.length > 0) {
     const contact = row.member_real_name || row.display_name || '會員'

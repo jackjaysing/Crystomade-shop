@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS fortune_consultation_requests (
   estimated_fee INTEGER,
   contacted_at TIMESTAMPTZ,
   paid_at TIMESTAMPTZ,
+  admin_notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT fortune_consultation_question_len
     CHECK (char_length(trim(question)) BETWEEN 1 AND 500),
@@ -20,7 +21,9 @@ CREATE TABLE IF NOT EXISTS fortune_consultation_requests (
   CONSTRAINT fortune_consultation_display_name_len
     CHECK (display_name IS NULL OR char_length(trim(display_name)) BETWEEN 1 AND 30),
   CONSTRAINT fortune_consultation_estimated_fee_nonneg
-    CHECK (estimated_fee IS NULL OR estimated_fee >= 0)
+    CHECK (estimated_fee IS NULL OR estimated_fee >= 0),
+  CONSTRAINT fortune_consultation_admin_notes_len
+    CHECK (admin_notes IS NULL OR char_length(admin_notes) <= 500)
 );
 
 COMMENT ON TABLE fortune_consultation_requests IS '命理諮詢留言（含 Line ID，僅後台查看）';
@@ -73,13 +76,16 @@ $$;
 GRANT EXECUTE ON FUNCTION delete_fortune_consultation_admin(uuid) TO anon, authenticated;
 
 DROP FUNCTION IF EXISTS update_fortune_consultation_admin(uuid, integer, boolean, boolean, boolean);
+DROP FUNCTION IF EXISTS update_fortune_consultation_admin(uuid, integer, boolean, boolean, boolean, text, boolean);
 
 CREATE OR REPLACE FUNCTION update_fortune_consultation_admin(
   p_id uuid,
   p_estimated_fee integer DEFAULT NULL,
   p_update_estimated_fee boolean DEFAULT false,
   p_contacted boolean DEFAULT NULL,
-  p_paid boolean DEFAULT NULL
+  p_paid boolean DEFAULT NULL,
+  p_admin_notes text DEFAULT NULL,
+  p_update_admin_notes boolean DEFAULT false
 )
 RETURNS boolean
 LANGUAGE plpgsql
@@ -102,6 +108,10 @@ BEGIN
       WHEN p_paid IS TRUE THEN now()
       WHEN p_paid IS FALSE THEN NULL
       ELSE paid_at
+    END,
+    admin_notes = CASE
+      WHEN p_update_admin_notes THEN NULLIF(trim(p_admin_notes), '')
+      ELSE admin_notes
     END
   WHERE id = p_id;
 
@@ -109,7 +119,7 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION update_fortune_consultation_admin(uuid, integer, boolean, boolean, boolean)
+GRANT EXECUTE ON FUNCTION update_fortune_consultation_admin(uuid, integer, boolean, boolean, boolean, text, boolean)
   TO anon, authenticated;
 
 DROP FUNCTION IF EXISTS fetch_all_fortune_consultations_admin();
@@ -126,7 +136,8 @@ RETURNS TABLE (
   member_real_name TEXT,
   estimated_fee INTEGER,
   contacted_at TIMESTAMPTZ,
-  paid_at TIMESTAMPTZ
+  paid_at TIMESTAMPTZ,
+  admin_notes TEXT
 )
 LANGUAGE sql
 SECURITY DEFINER
@@ -143,7 +154,8 @@ AS $$
     mp.real_name AS member_real_name,
     f.estimated_fee,
     f.contacted_at,
-    f.paid_at
+    f.paid_at,
+    f.admin_notes
   FROM fortune_consultation_requests f
   LEFT JOIN member_profiles mp ON mp.id = f.member_id
   ORDER BY f.created_at DESC;

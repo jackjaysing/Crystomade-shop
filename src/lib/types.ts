@@ -397,6 +397,8 @@ export interface FortuneConsultationRequest {
   contacted_at: string | null
   /** 後台標記：已付款時間 */
   paid_at: string | null
+  /** 後台填寫：命理師備註 */
+  admin_notes: string | null
 }
 
 /** 後台編輯商品表單 */

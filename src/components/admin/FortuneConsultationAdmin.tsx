@@ -30,6 +30,8 @@ function formatFee(fee: number | null): string {
   return `NT$ ${fee.toLocaleString()}`
 }
 
+const MAX_ADMIN_NOTES_LEN = 500
+
 interface FortuneConsultationAdminProps {
   enabled: boolean
   reloadSignal?: number
@@ -47,8 +49,9 @@ export function FortuneConsultationAdmin({
   const [busyId, setBusyId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const [feeDrafts, setFeeDrafts] = useState<Record<string, string>>({})
+  const [notesDrafts, setNotesDrafts] = useState<Record<string, string>>({})
 
-  const syncFeeDrafts = useCallback((data: FortuneConsultationRequest[]) => {
+  const syncDrafts = useCallback((data: FortuneConsultationRequest[]) => {
     setFeeDrafts(
       Object.fromEntries(
         data.map((row) => [
@@ -56,6 +59,9 @@ export function FortuneConsultationAdmin({
           row.estimated_fee != null ? String(row.estimated_fee) : '',
         ])
       )
+    )
+    setNotesDrafts(
+      Object.fromEntries(data.map((row) => [row.id, row.admin_notes ?? '']))
     )
   }, [])
 
@@ -66,6 +72,10 @@ export function FortuneConsultationAdmin({
       [updated.id]:
         updated.estimated_fee != null ? String(updated.estimated_fee) : '',
     }))
+    setNotesDrafts((prev) => ({
+      ...prev,
+      [updated.id]: updated.admin_notes ?? '',
+    }))
   }, [])
 
   const reload = useCallback(async () => {
@@ -75,13 +85,13 @@ export function FortuneConsultationAdmin({
     try {
       const data = await fetchAllFortuneConsultationsAdmin()
       setRows(data)
-      syncFeeDrafts(data)
+      syncDrafts(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : '載入失敗')
     } finally {
       setLoading(false)
     }
-  }, [enabled, syncFeeDrafts])
+  }, [enabled, syncDrafts])
 
   useEffect(() => {
     void reload()
@@ -111,6 +121,15 @@ export function FortuneConsultationAdmin({
     await runUpdate(row, { estimatedFee: fee }, '已儲存預估諮詢費用')
   }
 
+  const handleSaveNotes = async (row: FortuneConsultationRequest) => {
+    const notes = (notesDrafts[row.id] ?? '').trim()
+    await runUpdate(
+      row,
+      { adminNotes: notes === '' ? null : notes },
+      '已儲存命理師備註'
+    )
+  }
+
   const handleToggleContacted = async (row: FortuneConsultationRequest) => {
     const next = !row.contacted_at
     await runUpdate(
@@ -136,6 +155,11 @@ export function FortuneConsultationAdmin({
       await deleteFortuneConsultation(row.id)
       setRows((prev) => prev.filter((item) => item.id !== row.id))
       setFeeDrafts((prev) => {
+        const next = { ...prev }
+        delete next[row.id]
+        return next
+      })
+      setNotesDrafts((prev) => {
         const next = { ...prev }
         delete next[row.id]
         return next
@@ -206,6 +230,11 @@ export function FortuneConsultationAdmin({
                   {row.estimated_fee != null && (
                     <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] text-white/60">
                       預估 {formatFee(row.estimated_fee)}
+                    </span>
+                  )}
+                  {row.admin_notes && (
+                    <span className="rounded-full border border-violet-300/25 bg-violet-300/10 px-2.5 py-0.5 text-[11px] text-violet-200/90">
+                      有備註
                     </span>
                   )}
                 </div>
@@ -294,6 +323,43 @@ export function FortuneConsultationAdmin({
                         刪除
                       </button>
                     )}
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-white/8 pt-4">
+                  <label
+                    htmlFor={`fortune-notes-${row.id}`}
+                    className="mb-1.5 block text-xs text-white/50"
+                  >
+                    命理師備註（僅後台可見）
+                  </label>
+                  <textarea
+                    id={`fortune-notes-${row.id}`}
+                    rows={4}
+                    maxLength={MAX_ADMIN_NOTES_LEN}
+                    value={notesDrafts[row.id] ?? ''}
+                    onChange={(e) =>
+                      setNotesDrafts((prev) => ({
+                        ...prev,
+                        [row.id]: e.target.value,
+                      }))
+                    }
+                    placeholder="記錄諮詢重點、回覆內容、後續追蹤事項…"
+                    disabled={busy}
+                    className="w-full resize-y rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm leading-relaxed text-white placeholder:text-white/25 focus:border-amber-glow/40 focus:outline-none disabled:opacity-50"
+                  />
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-white/30">
+                      {(notesDrafts[row.id] ?? '').length}/{MAX_ADMIN_NOTES_LEN}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleSaveNotes(row)}
+                      className="rounded-lg border border-violet-300/30 bg-violet-300/10 px-3 py-2 text-xs text-violet-200/90 transition hover:bg-violet-300/15 disabled:opacity-50"
+                    >
+                      儲存備註
+                    </button>
                   </div>
                 </div>
               </GlassPanel>
