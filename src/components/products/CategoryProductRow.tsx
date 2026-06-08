@@ -626,7 +626,7 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
       >
 
         <div className="mb-4 flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
-          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
             <h2 className="font-display text-2xl text-white md:text-3xl">
               {getCategoryLabel(category)}
             </h2>
