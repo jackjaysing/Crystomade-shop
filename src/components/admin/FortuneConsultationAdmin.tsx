@@ -39,6 +39,7 @@ export function FortuneConsultationAdmin({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [message, setMessage] = useState('')
 
   const reload = useCallback(async () => {
     if (!enabled) return
@@ -59,13 +60,18 @@ export function FortuneConsultationAdmin({
   }, [reload, reloadSignal])
 
   const handleDelete = async (row: FortuneConsultationRequest) => {
-    if (!confirm(`確定刪除此諮詢？\n「${row.question.slice(0, 40)}…」`)) return
+    const preview =
+      row.question.length > 40 ? `${row.question.slice(0, 40)}…` : row.question
+    if (!confirm(`確定刪除此諮詢？\n「${preview}」`)) return
+
     setBusyId(row.id)
+    setMessage('')
     try {
       await deleteFortuneConsultation(row.id)
-      await reload()
+      setRows((prev) => prev.filter((item) => item.id !== row.id))
+      setMessage('已刪除諮詢')
     } catch (err) {
-      alert(err instanceof Error ? err.message : '刪除失敗')
+      setMessage(err instanceof Error ? err.message : '刪除失敗')
     } finally {
       setBusyId(null)
     }
@@ -88,6 +94,16 @@ export function FortuneConsultationAdmin({
       </div>
 
       {error && <p className="text-sm text-amber-glow/90">{error}</p>}
+      {message && (
+        <p
+          className={`text-sm ${
+            message === '已刪除諮詢' ? 'text-emerald-300/90' : 'text-amber-glow/90'
+          }`}
+          role="status"
+        >
+          {message}
+        </p>
+      )}
 
       {!loading && !error && rows.length === 0 && (
         <GlassPanel className="p-8 text-center text-sm text-white/50">

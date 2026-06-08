@@ -109,14 +109,44 @@ export async function fetchAllFortuneConsultationsAdmin(): Promise<
   return (data ?? []).map((row: Record<string, unknown>) => normalizeRow(row))
 }
 
+const FORTUNE_DELETE_RPC_MISSING =
+  '命理諮詢刪除權限未設定完成，請在 Supabase SQL Editor 執行 supabase/migration-fix-fortune-consultation-delete.sql'
+
 /** 後台：刪除命理諮詢 */
 export async function deleteFortuneConsultation(id: string): Promise<void> {
   if (!isSupabaseConfigured) {
     throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
   }
 
-  const { error } = await supabase.from(TABLE).delete().eq('id', id)
+  const { data: deleted, error: rpcError } = await supabase.rpc(
+    'delete_fortune_consultation_admin',
+    { p_id: id }
+  )
+
+  if (!rpcError) {
+    if (!deleted) throw new Error('刪除失敗，找不到該則諮詢')
+    await recordAdminActivity({
+      action: 'delete',
+      entityType: 'fortune_consultation',
+      entityId: id,
+      summary: '刪除命理諮詢留言',
+    })
+    return
+  }
+
+  const rpcMsg = formatErrorMessage(rpcError)
+  if (!/delete_fortune_consultation_admin|42883|42P01/i.test(rpcMsg)) {
+    throw new Error(rpcMsg)
+  }
+
+  const { data: rows, error } = await supabase
+    .from(TABLE)
+    .delete()
+    .eq('id', id)
+    .select('id')
+
   if (error) throw new Error(formatErrorMessage(error))
+  if (!rows?.length) throw new Error(FORTUNE_DELETE_RPC_MISSING)
 
   await recordAdminActivity({
     action: 'delete',

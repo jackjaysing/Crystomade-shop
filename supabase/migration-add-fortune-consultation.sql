@@ -45,7 +45,27 @@ CREATE POLICY "提交命理諮詢"
 DROP POLICY IF EXISTS "刪除命理諮詢" ON fortune_consultation_requests;
 CREATE POLICY "刪除命理諮詢"
   ON fortune_consultation_requests FOR DELETE
+  TO anon, authenticated
   USING (true);
+
+DROP FUNCTION IF EXISTS delete_fortune_consultation_admin(uuid);
+
+CREATE OR REPLACE FUNCTION delete_fortune_consultation_admin(p_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  deleted_count int;
+BEGIN
+  DELETE FROM fortune_consultation_requests WHERE id = p_id;
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count > 0;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION delete_fortune_consultation_admin(uuid) TO anon, authenticated;
 
 DROP FUNCTION IF EXISTS fetch_all_fortune_consultations_admin();
 
