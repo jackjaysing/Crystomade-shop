@@ -23,6 +23,7 @@ import { formatPhoneDisplay } from '../../lib/api/adminCustomers'
 import { RaffleListedCode } from '../raffle/RaffleListedCode'
 import { giftImageAlt } from '../../lib/imageAlt'
 import { RafflePrizeImage, prizeName, prizeNameRaw } from '../raffle/RafflePrizeImage'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 
 const emptyForm: RaffleFormData = {
@@ -63,6 +64,7 @@ interface RaffleAdminProps {
 
 /** 後台：抽獎活動管理 */
 export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [raffles, setRaffles] = useState<RaffleWithMeta[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -422,13 +424,15 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                           編輯
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => void handleDelete(r)}
-                        className="rounded border border-red-400/30 px-3 py-1.5 text-xs text-red-300/80 hover:bg-red-400/10"
-                      >
-                        刪除
-                      </button>
+                      {isSuperAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => void handleDelete(r)}
+                          className="rounded border border-red-400/30 px-3 py-1.5 text-xs text-red-300/80 hover:bg-red-400/10"
+                        >
+                          刪除
+                        </button>
+                      )}
                     </div>
                   </div>
                 </GlassPanel>

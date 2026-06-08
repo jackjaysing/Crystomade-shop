@@ -6,6 +6,7 @@ import {
   updateBanner,
 } from '../../lib/api/banners'
 import type { AnnouncementBanner } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { BannerEditModal } from './BannerEditModal'
 import { GlassPanel } from '../ui/GlassPanel'
 
@@ -20,6 +21,7 @@ function displayBannerName(name: string): string {
 
 /** 後台：公告橫幅上傳與管理 */
 export function BannerAdmin({ banners, onUpdated }: BannerAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [name, setName] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -202,13 +204,15 @@ export function BannerAdmin({ banners, onUpdated }: BannerAdminProps) {
                 >
                   {banner.is_active ? '停用' : '啟用'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(banner)}
-                  className="rounded border border-red-400/30 px-3 py-1.5 text-xs text-red-300"
-                >
-                  刪除
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(banner)}
+                    className="rounded border border-red-400/30 px-3 py-1.5 text-xs text-red-300"
+                  >
+                    刪除
+                  </button>
+                )}
               </div>
             </li>
           ))}

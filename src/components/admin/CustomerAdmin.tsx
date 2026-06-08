@@ -7,6 +7,7 @@ import {
   formatPhoneDisplay,
 } from '../../lib/api/adminCustomers'
 import type { AdminGuestCustomer, AdminRegisteredCustomer } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { DeleteMemberConfirmModal } from './DeleteMemberConfirmModal'
 import { GlassPanel } from '../ui/GlassPanel'
 
@@ -37,6 +38,7 @@ interface CustomerAdminProps {
 
 /** 後台：客戶資料（已註冊／未註冊） */
 export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [view, setView] = useState<CustomerView>('registered')
   const [registered, setRegistered] = useState<AdminRegisteredCustomer[]>([])
   const [guests, setGuests] = useState<AdminGuestCustomer[]>([])
@@ -316,13 +318,15 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                           >
                             編輯點數
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeletingMember(c)}
-                            className="rounded border border-red-400/35 px-3 py-1 text-xs text-red-300 transition hover:bg-red-500/10"
-                          >
-                            刪除註冊
-                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingMember(c)}
+                              className="rounded border border-red-400/35 px-3 py-1 text-xs text-red-300 transition hover:bg-red-500/10"
+                            >
+                              刪除註冊
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

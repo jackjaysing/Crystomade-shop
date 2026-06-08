@@ -5,6 +5,7 @@ import {
   fetchAllFortuneConsultationsAdmin,
 } from '../../lib/api/fortuneConsultation'
 import type { FortuneConsultationRequest } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 
 function formatDateTime(iso: string): string {
@@ -29,6 +30,7 @@ interface FortuneConsultationAdminProps {
 
 /** 後台：命理諮詢列表 */
 export function FortuneConsultationAdmin({ enabled }: FortuneConsultationAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [rows, setRows] = useState<FortuneConsultationRequest[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -107,14 +109,16 @@ export function FortuneConsultationAdmin({ enabled }: FortuneConsultationAdminPr
                     )}
                     <span>{formatDateTime(row.created_at)}</span>
                   </div>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void handleDelete(row)}
-                    className="rounded-lg border border-red-400/20 px-3 py-1.5 text-xs text-red-300/80 transition hover:border-red-400/40 disabled:opacity-50"
-                  >
-                    刪除
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleDelete(row)}
+                      className="rounded-lg border border-red-400/20 px-3 py-1.5 text-xs text-red-300/80 transition hover:border-red-400/40 disabled:opacity-50"
+                    >
+                      刪除
+                    </button>
+                  )}
                 </div>
               </GlassPanel>
             </li>

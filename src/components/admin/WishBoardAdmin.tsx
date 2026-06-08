@@ -5,6 +5,7 @@ import {
   fetchAllWishMessagesAdmin,
 } from '../../lib/api/wishBoard'
 import type { WishMessage } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 
 function formatDateTime(iso: string): string {
@@ -23,6 +24,7 @@ interface WishBoardAdminProps {
 
 /** 後台：許願留言列表 */
 export function WishBoardAdmin({ enabled }: WishBoardAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [wishes, setWishes] = useState<WishMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -100,14 +102,16 @@ export function WishBoardAdmin({ enabled }: WishBoardAdminProps) {
                     )}
                     <span>{formatDateTime(wish.created_at)}</span>
                   </div>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void handleDelete(wish)}
-                    className="rounded-lg border border-red-400/20 px-3 py-1.5 text-xs text-red-300/80 transition hover:border-red-400/40 disabled:opacity-50"
-                  >
-                    刪除
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleDelete(wish)}
+                      className="rounded-lg border border-red-400/20 px-3 py-1.5 text-xs text-red-300/80 transition hover:border-red-400/40 disabled:opacity-50"
+                    >
+                      刪除
+                    </button>
+                  )}
                 </div>
               </GlassPanel>
             </li>

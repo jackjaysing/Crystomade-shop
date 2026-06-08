@@ -11,6 +11,7 @@ import {
 import { fetchRegisteredCustomers } from '../../lib/api/adminCustomers'
 import { giftImageAlt } from '../../lib/imageAlt'
 import type { AdminRegisteredCustomer, Coupon, GiftCouponFormData } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { IssueCouponMemberModal } from './IssueCouponMemberModal'
 
@@ -29,6 +30,7 @@ interface GiftCouponAdminProps {
 
 /** 後台：禮物券範本（兌換入購物車）與發放 */
 export function GiftCouponAdmin({ enabled = true }: GiftCouponAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [members, setMembers] = useState<AdminRegisteredCustomer[]>([])
   const [loading, setLoading] = useState(false)
@@ -370,7 +372,7 @@ export function GiftCouponAdmin({ enabled = true }: GiftCouponAdminProps) {
                       >
                         一鍵全發
                       </button>
-                      {!raffleLinked && (
+                      {isSuperAdmin && !raffleLinked && (
                         <button
                           type="button"
                           onClick={() => void handleDelete(c)}

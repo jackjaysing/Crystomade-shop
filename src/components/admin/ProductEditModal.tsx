@@ -24,6 +24,7 @@ import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton
 import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
 import type { ProductGalleryEditItem } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { IntegerField } from '../ui/IntegerField'
 import { parseIntegerInput } from '../../lib/parseIntegerInput'
@@ -69,6 +70,7 @@ export function ProductEditModal({
   onClose,
   onSaved,
 }: ProductEditModalProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [form, setForm] = useState<ProductEditData>(() => toEditForm(product))
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -529,19 +531,21 @@ export function ProductEditModal({
               </p>
             )}
 
-            <div className="border-t border-white/10 pt-4">
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={busy}
-                className="w-full rounded-lg border border-red-400/40 py-3 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
-              >
-                {deleting ? '刪除中…' : '刪除此商品'}
-              </button>
-              <p className="mt-2 text-center text-[11px] text-white/35">
-                若已有訂單紀錄則無法刪除
-              </p>
-            </div>
+            {isSuperAdmin && (
+              <div className="border-t border-white/10 pt-4">
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={busy}
+                  className="w-full rounded-lg border border-red-400/40 py-3 text-sm text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+                >
+                  {deleting ? '刪除中…' : '刪除此商品'}
+                </button>
+                <p className="mt-2 text-center text-[11px] text-white/35">
+                  若已有訂單紀錄則無法刪除
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="shrink-0 border-t border-white/10 bg-black/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:px-6">

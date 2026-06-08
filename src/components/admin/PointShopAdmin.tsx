@@ -7,10 +7,12 @@ import {
 } from '../../lib/api/pointProducts'
 import { adminProductThumbAlt, pointProductPhotoAlt } from '../../lib/imageAlt'
 import type { PointProduct } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 
 /** 後台：點數商城編輯 */
 export function PointShopAdmin() {
+  const { isSuperAdmin } = useAdminSession()
   const [products, setProducts] = useState<PointProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
@@ -238,13 +240,15 @@ export function PointShopAdmin() {
                   >
                     {p.is_active ? '下架' : '上架'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleDelete(p)}
-                    className="rounded-lg border border-red-400/30 px-3 py-1.5 text-xs text-red-300"
-                  >
-                    刪除
-                  </button>
+                  {isSuperAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(p)}
+                      className="rounded-lg border border-red-400/30 px-3 py-1.5 text-xs text-red-300"
+                    >
+                      刪除
+                    </button>
+                  )}
                 </div>
               </li>
             ))}

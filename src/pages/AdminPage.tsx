@@ -23,11 +23,9 @@ import { useProductShareStats } from '../hooks/useProductShareStats'
 import { useProductViewStats } from '../hooks/useProductViewStats'
 import { useAdminActivityLogs } from '../hooks/useAdminActivityLogs'
 import { useProducts } from '../hooks/useProducts'
-import {
-  getAdminDisplayName,
-  isAdminAuthenticated,
-  logoutAdmin,
-} from '../lib/adminAuth'
+import { ADMIN_ROLE_LABELS } from '../constants/adminAccounts'
+import { useAdminSession } from '../hooks/useAdminSession'
+import { getAdminDisplayName, logoutAdmin } from '../lib/adminAuth'
 import { AdminAlertsBar, AdminTabBadge } from '../components/admin/AdminAlertsBar'
 import { Toast } from '../components/ui/Toast'
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
@@ -47,7 +45,7 @@ type AdminTab =
   | 'analytics'
   | 'logs'
 
-const ADMIN_TABS: { id: AdminTab; label: string }[] = [
+const ALL_ADMIN_TABS: { id: AdminTab; label: string; superOnly?: boolean }[] = [
   { id: 'products', label: '商品管理' },
   { id: 'point_shop', label: '點數商城' },
   { id: 'promotions', label: '優惠活動' },
@@ -57,16 +55,14 @@ const ADMIN_TABS: { id: AdminTab; label: string }[] = [
   { id: 'wish_board', label: '許願留言' },
   { id: 'fortune_consultation', label: '命理諮詢' },
   { id: 'analytics', label: '瀏覽統計' },
-  { id: 'revenue', label: '收入統計' },
-  { id: 'logs', label: '後台日誌' },
+  { id: 'revenue', label: '收入統計', superOnly: true },
+  { id: 'logs', label: '後台日誌', superOnly: true },
 ]
 
 /** 賣家後台管理頁 */
 export function AdminPage() {
-  const [authed, setAuthed] = useState(isAdminAuthenticated)
-  const [adminName, setAdminName] = useState<string | null>(() =>
-    isAdminAuthenticated() ? getAdminDisplayName() : null
-  )
+  const { authed, displayName: adminName, role, isSuperAdmin, refresh } =
+    useAdminSession()
   const [activeTab, setActiveTab] = useState<AdminTab>('products')
   const [orderListView, setOrderListView] = useState<'active' | 'deleted'>('active')
   const [showDeleted, setShowDeleted] = useState(false)
@@ -144,11 +140,22 @@ export function AdminPage() {
   const analyticsLoading =
     pageViewLoading || productViewLoading || productShareLoading || timeSlotLoading
 
+  const adminTabs = useMemo(
+    () => ALL_ADMIN_TABS.filter((tab) => isSuperAdmin || !tab.superOnly),
+    [isSuperAdmin]
+  )
+
   useEffect(() => {
-    const ok = isAdminAuthenticated()
-    setAuthed(ok)
-    if (ok) setAdminName(getAdminDisplayName())
-  }, [])
+    if (!isSuperAdmin && (activeTab === 'revenue' || activeTab === 'logs')) {
+      setActiveTab('products')
+    }
+  }, [isSuperAdmin, activeTab])
+
+  useEffect(() => {
+    if (!isSuperAdmin && orderListView === 'deleted') {
+      setOrderListView('active')
+    }
+  }, [isSuperAdmin, orderListView])
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -163,14 +170,7 @@ export function AdminPage() {
   }, [activeTab, clearOrderBadge, clearMemberBadge])
 
   if (!authed) {
-    return (
-      <AdminLogin
-        onSuccess={() => {
-          setAuthed(true)
-          setAdminName(getAdminDisplayName())
-        }}
-      />
-    )
+    return <AdminLogin onSuccess={refresh} />
   }
 
   return (
@@ -181,14 +181,15 @@ export function AdminPage() {
           <p className="mt-2 text-base text-amber-glow/90">
             Hi，{adminName ?? getAdminDisplayName() ?? '管理者'}
           </p>
-          <p className="mt-1 text-sm text-white/50">Crystomade · 訂單與商品管理</p>
+          <p className="mt-1 text-sm text-white/50">
+            {ADMIN_ROLE_LABELS[role]} · Crystomade · 訂單與商品管理
+          </p>
         </div>
         <button
           type="button"
           onClick={() => {
             logoutAdmin()
-            setAuthed(false)
-            setAdminName(null)
+            refresh()
           }}
           className="text-sm text-white/40 hover:text-white/70"
         >
@@ -210,7 +211,7 @@ export function AdminPage() {
         className="mb-8 flex flex-wrap gap-2 border-b border-white/10 pb-4"
         aria-label="後台功能分頁"
       >
-        {ADMIN_TABS.map((tab) => {
+        {adminTabs.map((tab) => {
           const isActive = activeTab === tab.id
           const badge =
             tab.id === 'orders' ? orderBadge : tab.id === 'customers' ? memberBadge : 0
@@ -248,14 +249,16 @@ export function AdminPage() {
                   <Plus className="h-4 w-4" strokeWidth={2} />
                   新增商品
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleted(true)}
-                  className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
-                >
-                  <Archive className="h-4 w-4" strokeWidth={1.5} />
-                  已刪除物品
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleted(true)}
+                    className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow"
+                  >
+                    <Archive className="h-4 w-4" strokeWidth={1.5} />
+                    已刪除物品
+                  </button>
+                )}
               </div>
             </div>
             <ProductListAdmin
@@ -336,17 +339,19 @@ export function AdminPage() {
                 >
                   訂單明細
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setOrderListView('deleted')}
-                  className={`rounded-full border px-4 py-2 text-sm tracking-wide transition ${
-                    orderListView === 'deleted'
-                      ? 'border-amber-glow/60 bg-amber-glow/15 text-amber-glow'
-                      : 'border-white/15 text-white/55 hover:border-amber-glow/40 hover:text-amber-glow'
-                  }`}
-                >
-                  已刪除訂單
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setOrderListView('deleted')}
+                    className={`rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+                      orderListView === 'deleted'
+                        ? 'border-amber-glow/60 bg-amber-glow/15 text-amber-glow'
+                        : 'border-white/15 text-white/55 hover:border-amber-glow/40 hover:text-amber-glow'
+                    }`}
+                  >
+                    已刪除訂單
+                  </button>
+                )}
               </div>
             </div>
 
@@ -413,7 +418,7 @@ export function AdminPage() {
           />
         )}
 
-        {activeTab === 'revenue' && (
+        {isSuperAdmin && activeTab === 'revenue' && (
           <RevenueStatsPanel
             orders={orders}
             loading={ordersLoading}
@@ -421,7 +426,7 @@ export function AdminPage() {
           />
         )}
 
-        {activeTab === 'logs' && (
+        {isSuperAdmin && activeTab === 'logs' && (
           <AdminActivityLogPanel
             logs={activityLogs}
             loading={activityLogsLoading}
@@ -435,7 +440,7 @@ export function AdminPage() {
 
       <ScrollToTopFab ariaLabel="回到後台頂部" title="回到後台頂部" />
 
-      {showDeleted && (
+      {isSuperAdmin && showDeleted && (
         <DeletedProductsModal
           onClose={() => setShowDeleted(false)}
           onRestored={reloadProducts}

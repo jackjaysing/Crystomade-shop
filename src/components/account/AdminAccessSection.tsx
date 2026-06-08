@@ -2,18 +2,20 @@ import { Link } from 'react-router-dom'
 import { LayoutDashboard, LogOut } from 'lucide-react'
 import { AdminLogin } from '../admin/AdminLogin'
 import { GlassPanel } from '../ui/GlassPanel'
+import { ADMIN_ROLE_LABELS } from '../../constants/adminAccounts'
 import { useAdminSession } from '../../hooks/useAdminSession'
 import { logoutAdmin } from '../../lib/adminAuth'
 
 /** 管理登入／已登入管理狀態（會員中心、未登入閘道共用） */
 export function AdminAccessSection() {
-  const { authed, displayName, refresh } = useAdminSession()
+  const { authed, displayName, role, refresh } = useAdminSession()
 
   if (authed) {
     return (
       <GlassPanel className="border-amber-glow/25 p-5">
         <p className="text-xs tracking-wide text-white/45">已登入管理</p>
         <p className="mt-1 text-sm text-amber-glow">{displayName ?? '管理者'}</p>
+        <p className="mt-0.5 text-xs text-white/40">{ADMIN_ROLE_LABELS[role]}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             to="/admin"

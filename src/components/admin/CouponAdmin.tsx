@@ -15,6 +15,7 @@ import {
 } from '../../constants/coupons'
 import { parseDiscountZhe } from '../../lib/productPricing'
 import type { AdminRegisteredCustomer, Coupon, CouponFormData, CouponType } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { IssueCouponMemberModal } from './IssueCouponMemberModal'
 
@@ -36,6 +37,7 @@ interface CouponAdminProps {
 
 /** 後台：優惠券範本與發放 */
 export function CouponAdmin({ enabled = true }: CouponAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [members, setMembers] = useState<AdminRegisteredCustomer[]>([])
   const [loading, setLoading] = useState(false)
@@ -442,13 +444,15 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
                     >
                       一鍵全發
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleDelete(c)}
-                      className="rounded border border-red-400/35 px-3 py-1 text-xs text-red-300"
-                    >
-                      刪除
-                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(c)}
+                        className="rounded border border-red-400/35 px-3 py-1 text-xs text-red-300"
+                      >
+                        刪除
+                      </button>
+                    )}
                   </div>
                 </div>
               </li>

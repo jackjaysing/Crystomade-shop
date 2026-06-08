@@ -36,6 +36,7 @@ import {
   ORDER_MONTH_ALL,
 } from '../../lib/orderGroupFilters'
 import type { Order, OrderPaymentStatus } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { Toast } from '../ui/Toast'
 
@@ -110,6 +111,7 @@ function OrderNumberBlock({ orderNumber }: { orderNumber: string | null }) {
 
 /** 訂單明細（同一結帳合併 · 點擊展開細項） */
 export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTableProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [shippingId, setShippingId] = useState<string | null>(null)
   const [unshippingId, setUnshippingId] = useState<string | null>(null)
@@ -271,7 +273,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
   )
 
   const renderDeleteButton = (group: ReturnType<typeof groupOrders>[number]) => {
-    if (!canDeleteGroup(group)) return null
+    if (!isSuperAdmin || !canDeleteGroup(group)) return null
     return (
       <button
         type="button"
@@ -367,7 +369,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
             {isUnshipping ? '處理中…' : '改回未出貨'}
           </button>
         )}
-        {group.pendingOrderIds.length > 0 && (
+        {isSuperAdmin && group.pendingOrderIds.length > 0 && (
           <button
             type="button"
             disabled={isCancelling}

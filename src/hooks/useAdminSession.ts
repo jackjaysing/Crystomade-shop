@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { AdminRole } from '../constants/adminAccounts'
 import {
   getAdminDisplayName,
+  getAdminRole,
   isAdminAuthenticated,
+  isSuperAdmin,
 } from '../lib/adminAuth'
 
 const ADMIN_SESSION_EVENT = 'admin-session-change'
@@ -12,11 +15,19 @@ export function useAdminSession() {
   const [displayName, setDisplayName] = useState<string | null>(() =>
     isAdminAuthenticated() ? getAdminDisplayName() : null
   )
+  const [role, setRole] = useState<AdminRole>(() =>
+    isAdminAuthenticated() ? getAdminRole() : 'super'
+  )
+  const [superAdmin, setSuperAdmin] = useState(() =>
+    isAdminAuthenticated() ? isSuperAdmin() : false
+  )
 
   const refresh = useCallback(() => {
     const ok = isAdminAuthenticated()
     setAuthed(ok)
     setDisplayName(ok ? getAdminDisplayName() : null)
+    setRole(ok ? getAdminRole() : 'super')
+    setSuperAdmin(ok ? isSuperAdmin() : false)
   }, [])
 
   useEffect(() => {
@@ -25,5 +36,5 @@ export function useAdminSession() {
     return () => window.removeEventListener(ADMIN_SESSION_EVENT, refresh)
   }, [refresh])
 
-  return { authed, displayName, refresh }
+  return { authed, displayName, role, isSuperAdmin: superAdmin, refresh }
 }
