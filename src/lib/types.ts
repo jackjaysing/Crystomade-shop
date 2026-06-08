@@ -13,7 +13,7 @@ export type OrderPaymentStatus = 'unpaid' | 'paid' | 'partial'
 export type CvsBrand = '7-11' | '全家'
 
 /** 商品品類 */
-export type ProductCategory = '手串' | '擺件' | '礦石'
+export type ProductCategory = '手串' | '配飾' | '擺件' | '礦石'
 
 /** 手串款式（僅品類為手串時使用） */
 export type BraceletStyle = '通用' | '男款' | '女款' | '兒童款'
@@ -25,7 +25,7 @@ export interface Product {
   category: ProductCategory
   /** 手串款式；非手串為 null */
   bracelet_style: BraceletStyle | null
-  /** 擺件／礦石細項；手串為 null */
+  /** 配飾／擺件／礦石細項；手串為 null */
   subcategory: ProductSubcategory | null
   /** 原價（NT$） */
   price: number

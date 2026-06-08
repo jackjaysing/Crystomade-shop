@@ -9,19 +9,47 @@ interface CategoryProductSectionsProps {
   sectionRefs: RefObject<Record<ProductCategory, HTMLElement | null>>
   activeBraceletStyle?: BraceletStyle | null
   onBraceletStyleSelect?: (style: BraceletStyle | null) => void
+  activeAccessorySubcategory?: ProductSubcategory | null
+  onAccessorySubcategorySelect?: (subcategory: ProductSubcategory | null) => void
   activeOrnamentSubcategory?: ProductSubcategory | null
   onOrnamentSubcategorySelect?: (subcategory: ProductSubcategory | null) => void
   activeMineralSubcategory?: ProductSubcategory | null
   onMineralSubcategorySelect?: (subcategory: ProductSubcategory | null) => void
 }
 
-/** 典藏：手串／擺件／礦石分欄橫向卷軸 */
+function getActiveSubcategory(
+  categoryId: ProductCategory,
+  accessory: ProductSubcategory | null | undefined,
+  ornament: ProductSubcategory | null | undefined,
+  mineral: ProductSubcategory | null | undefined
+): ProductSubcategory | null | undefined {
+  if (categoryId === '配飾') return accessory
+  if (categoryId === '擺件') return ornament
+  if (categoryId === '礦石') return mineral
+  return null
+}
+
+function getSubcategorySelectHandler(
+  categoryId: ProductCategory,
+  onAccessory?: (subcategory: ProductSubcategory | null) => void,
+  onOrnament?: (subcategory: ProductSubcategory | null) => void,
+  onMineral?: (subcategory: ProductSubcategory | null) => void
+) {
+  if (categoryId === '配飾') return onAccessory
+  if (categoryId === '擺件') return onOrnament
+  if (categoryId === '礦石') return onMineral
+  return undefined
+}
+
+/** 典藏：手串／配飾／擺件／礦石分欄橫向卷軸 */
 export function CategoryProductSections({
   productsByCategory,
   categoriesToShow,
   sectionRefs,
   activeBraceletStyle,
   onBraceletStyleSelect,
+  activeAccessorySubcategory,
+  onAccessorySubcategorySelect,
   activeOrnamentSubcategory,
   onOrnamentSubcategorySelect,
   activeMineralSubcategory,
@@ -39,20 +67,18 @@ export function CategoryProductSections({
           products={productsByCategory[categoryId]}
           activeBraceletStyle={activeBraceletStyle}
           onBraceletStyleSelect={onBraceletStyleSelect}
-          activeSubcategory={
-            categoryId === '擺件'
-              ? activeOrnamentSubcategory
-              : categoryId === '礦石'
-                ? activeMineralSubcategory
-                : null
-          }
-          onSubcategorySelect={
-            categoryId === '擺件'
-              ? onOrnamentSubcategorySelect
-              : categoryId === '礦石'
-                ? onMineralSubcategorySelect
-                : undefined
-          }
+          activeSubcategory={getActiveSubcategory(
+            categoryId,
+            activeAccessorySubcategory,
+            activeOrnamentSubcategory,
+            activeMineralSubcategory
+          )}
+          onSubcategorySelect={getSubcategorySelectHandler(
+            categoryId,
+            onAccessorySubcategorySelect,
+            onOrnamentSubcategorySelect,
+            onMineralSubcategorySelect
+          )}
         />
       ))}
     </div>
@@ -63,6 +89,7 @@ export function CategoryProductSections({
 export function useCategorySectionRefs() {
   return useRef<Record<ProductCategory, HTMLElement | null>>({
     手串: null,
+    配飾: null,
     擺件: null,
     礦石: null,
   })

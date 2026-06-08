@@ -13,6 +13,7 @@ import type { BraceletStyle, ProductCategory } from '../lib/types'
 interface UseProductsListHomeResetOptions {
   setActiveCategory: (value: ProductCategory | null) => void
   setActiveBraceletStyle: (value: BraceletStyle | null) => void
+  setActiveAccessorySubcategory: (value: ProductSubcategory | null) => void
   setActiveOrnamentSubcategory: (value: ProductSubcategory | null) => void
   setActiveMineralSubcategory: (value: ProductSubcategory | null) => void
   setActiveFilterId: (value: string | null) => void
@@ -25,6 +26,7 @@ interface UseProductsListHomeResetOptions {
 export function useProductsListHomeReset({
   setActiveCategory,
   setActiveBraceletStyle,
+  setActiveAccessorySubcategory,
   setActiveOrnamentSubcategory,
   setActiveMineralSubcategory,
   setActiveFilterId,
@@ -40,6 +42,7 @@ export function useProductsListHomeReset({
     clearProductsListSession()
     setActiveCategory(null)
     setActiveBraceletStyle(null)
+    setActiveAccessorySubcategory(null)
     setActiveOrnamentSubcategory(null)
     setActiveMineralSubcategory(null)
     setActiveFilterId(null)
@@ -51,6 +54,7 @@ export function useProductsListHomeReset({
   }, [
     sessionContext,
     setActiveBraceletStyle,
+    setActiveAccessorySubcategory,
     setActiveOrnamentSubcategory,
     setActiveMineralSubcategory,
     setActiveCategory,

@@ -8,9 +8,10 @@ export interface CategoryOption {
   label: string
 }
 
-/** 前台品類篩選：手串、擺件、礦石 */
+/** 前台品類篩選：手串、配飾、擺件、礦石 */
 export const PRODUCT_CATEGORIES: CategoryOption[] = [
   { id: '手串', label: '手串' },
+  { id: '配飾', label: '配飾' },
   { id: '擺件', label: '擺件' },
   { id: '礦石', label: '礦石' },
 ]
@@ -20,7 +21,7 @@ export function getCategoryLabel(category: ProductCategory): string {
   return PRODUCT_CATEGORIES.find((c) => c.id === category)?.label ?? category
 }
 
-/** 前台／後台品類標籤（手串含款式；擺件／礦石含細項） */
+/** 前台／後台品類標籤（手串含款式；配飾／擺件／礦石含細項） */
 export function getProductCategoryLabel(
   product: Pick<Product, 'category' | 'bracelet_style' | 'subcategory'>
 ): string {

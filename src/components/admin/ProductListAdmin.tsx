@@ -51,6 +51,7 @@ export function ProductListAdmin({
   const productsByCategory = useMemo(() => {
     const grouped: Record<ProductCategory, Product[]> = {
       手串: [],
+      配飾: [],
       擺件: [],
       礦石: [],
     }

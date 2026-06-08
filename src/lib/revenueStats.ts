@@ -5,6 +5,7 @@ import type { Order, ProductCategory } from './types'
 
 export const REVENUE_CATEGORY_COLORS: Record<ProductCategory, string> = {
   手串: '#e8c872',
+  配飾: '#f9a8d4',
   擺件: '#5eead4',
   礦石: '#c4b5fd',
 }
@@ -39,7 +40,12 @@ export interface RevenueStats {
 
 function resolveOrderCategory(order: Order): ProductCategory | null {
   const category = order.products?.category
-  if (category === '手串' || category === '擺件' || category === '礦石') {
+  if (
+    category === '手串' ||
+    category === '配飾' ||
+    category === '擺件' ||
+    category === '礦石'
+  ) {
     return category
   }
   return null

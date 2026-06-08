@@ -9,6 +9,7 @@ import { TAG_FILTERS } from '../constants/tags'
 
 import { PRODUCT_CATEGORIES } from '../constants/categories'
 import {
+  ACCESSORY_SUBCATEGORIES,
   MINERAL_SUBCATEGORIES,
   ORNAMENT_SUBCATEGORIES,
   type ProductSubcategory,
@@ -102,6 +103,11 @@ export function ProductsPage() {
   const [activeBraceletStyle, setActiveBraceletStyle] =
 
     useState<BraceletStyle | null>(initialSession?.activeBraceletStyle ?? null)
+
+  const [activeAccessorySubcategory, setActiveAccessorySubcategory] =
+    useState<ProductSubcategory | null>(
+      initialSession?.activeAccessorySubcategory ?? null
+    )
 
   const [activeOrnamentSubcategory, setActiveOrnamentSubcategory] =
     useState<ProductSubcategory | null>(
@@ -283,6 +289,12 @@ export function ProductsPage() {
 
       }
 
+      if (product.category === '配飾' && activeAccessorySubcategory) {
+
+        if (product.subcategory !== activeAccessorySubcategory) continue
+
+      }
+
       if (product.category === '擺件' && activeOrnamentSubcategory) {
 
         if (product.subcategory !== activeOrnamentSubcategory) continue
@@ -306,6 +318,7 @@ export function ProductsPage() {
   }, [
     filteredProducts,
     activeBraceletStyle,
+    activeAccessorySubcategory,
     activeOrnamentSubcategory,
     activeMineralSubcategory,
   ])
@@ -351,6 +364,7 @@ export function ProductsPage() {
   useProductsListHomeReset({
     setActiveCategory,
     setActiveBraceletStyle,
+    setActiveAccessorySubcategory,
     setActiveOrnamentSubcategory,
     setActiveMineralSubcategory,
     setActiveFilterId,
@@ -364,6 +378,7 @@ export function ProductsPage() {
       scrollY: window.scrollY,
       activeCategory,
       activeBraceletStyle,
+      activeAccessorySubcategory,
       activeOrnamentSubcategory,
       activeMineralSubcategory,
       activeFilterId,
@@ -375,6 +390,7 @@ export function ProductsPage() {
     [
       activeCategory,
       activeBraceletStyle,
+      activeAccessorySubcategory,
       activeOrnamentSubcategory,
       activeMineralSubcategory,
       activeFilterId,
@@ -493,6 +509,32 @@ export function ProductsPage() {
               activeStyle={activeBraceletStyle}
 
               onSelect={setActiveBraceletStyle}
+
+            />
+
+          </div>
+
+        </div>
+
+
+
+        <div className="flex min-h-11 items-center gap-2 border-t border-white/5 py-1.5">
+
+          <span className="w-9 shrink-0 text-sm font-medium tracking-wide text-white/55">
+
+            配飾
+
+          </span>
+
+          <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+
+            <ProductSubcategoryFilter
+
+              options={ACCESSORY_SUBCATEGORIES}
+
+              activeSubcategory={activeAccessorySubcategory}
+
+              onSelect={setActiveAccessorySubcategory}
 
             />
 
@@ -710,6 +752,10 @@ export function ProductsPage() {
             activeBraceletStyle={activeBraceletStyle}
 
             onBraceletStyleSelect={setActiveBraceletStyle}
+
+            activeAccessorySubcategory={activeAccessorySubcategory}
+
+            onAccessorySubcategorySelect={setActiveAccessorySubcategory}
 
             activeOrnamentSubcategory={activeOrnamentSubcategory}
 

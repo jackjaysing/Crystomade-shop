@@ -5,7 +5,7 @@ import { sanitizeFiveElements } from './fiveElements'
 import { parseDiscountZhe } from './productPricing'
 import { sanitizeProductTags } from './productTags'
 
-const VALID_CATEGORIES: ProductCategory[] = ['手串', '擺件', '礦石']
+const VALID_CATEGORIES: ProductCategory[] = ['手串', '配飾', '擺件', '礦石']
 
 function parseCategory(value: unknown): ProductCategory {
   const s = String(value ?? '')

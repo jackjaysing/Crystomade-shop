@@ -11,6 +11,7 @@ export interface ProductsListSessionState {
   carouselScrollLeft: CarouselScrollLeft
   activeCategory: ProductCategory | null
   activeBraceletStyle: BraceletStyle | null
+  activeAccessorySubcategory: ProductSubcategory | null
   activeOrnamentSubcategory: ProductSubcategory | null
   activeMineralSubcategory: ProductSubcategory | null
   activeFilterId: string | null
@@ -56,6 +57,7 @@ export function loadProductsListSession(): ProductsListSessionState | null {
       carouselScrollLeft: normalizeCarouselScrollLeft(parsed.carouselScrollLeft),
       activeCategory: parsed.activeCategory ?? null,
       activeBraceletStyle: parsed.activeBraceletStyle ?? null,
+      activeAccessorySubcategory: parsed.activeAccessorySubcategory ?? null,
       activeOrnamentSubcategory: parsed.activeOrnamentSubcategory ?? null,
       activeMineralSubcategory: parsed.activeMineralSubcategory ?? null,
       activeFilterId: parsed.activeFilterId ?? null,
@@ -75,7 +77,7 @@ function normalizeCarouselScrollLeft(
 ): CarouselScrollLeft {
   if (!value || typeof value !== 'object') return {}
 
-  const categories: ProductCategory[] = ['手串', '擺件', '礦石']
+  const categories: ProductCategory[] = ['手串', '配飾', '擺件', '礦石']
   const result: CarouselScrollLeft = {}
 
   for (const category of categories) {

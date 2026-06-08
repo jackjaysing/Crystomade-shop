@@ -1,7 +1,9 @@
 import type { Order, OrderFormData, ProductCategory } from './types'
 
 function parseProductCategory(value: unknown): ProductCategory | undefined {
-  if (value === '手串' || value === '擺件' || value === '礦石') return value
+  if (value === '手串' || value === '配飾' || value === '擺件' || value === '礦石') {
+    return value
+  }
   return undefined
 }
 

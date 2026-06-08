@@ -15,7 +15,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-  CREATE TYPE product_category AS ENUM ('手串', '擺件', '礦石');
+  CREATE TYPE product_category AS ENUM ('手串', '配飾', '擺件', '礦石');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 COMMENT ON TABLE products IS '水晶商品：一物一圖';
-COMMENT ON COLUMN products.category IS '品類：手串、擺件、礦石';
+COMMENT ON COLUMN products.category IS '品類：手串、配飾、擺件、礦石';
 COMMENT ON COLUMN products.gallery_urls IS '詳情頁額外圖片（不含封面 image_url）';
 COMMENT ON COLUMN products.tags IS '功效標籤，如 招財、人緣';
 COMMENT ON COLUMN products.status IS 'available=上架中, sold=已售出';

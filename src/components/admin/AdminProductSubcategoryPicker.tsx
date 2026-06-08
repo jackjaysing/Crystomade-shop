@@ -10,7 +10,7 @@ interface AdminProductSubcategoryPickerProps {
   onChange: (subcategory: ProductSubcategory) => void
 }
 
-/** 後台：擺件／礦石細項單選 */
+/** 後台：配飾／擺件／礦石細項單選 */
 export function AdminProductSubcategoryPicker({
   category,
   value,

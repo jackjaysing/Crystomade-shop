@@ -82,7 +82,7 @@ export function RevenueCategoryPieChart({ slices }: RevenueCategoryPieChartProps
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           className="h-48 w-48 shrink-0"
           role="img"
-          aria-label="手串、擺件、礦石收入比例圓餅圖"
+          aria-label="手串、配飾、擺件、礦石收入比例圓餅圖"
         >
           {segments.map(({ slice, start, end }) => (
             <path

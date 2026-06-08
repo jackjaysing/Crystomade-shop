@@ -190,7 +190,7 @@ export function RevenueStatsPanel({
       <GlassPanel className="mt-4 p-5 sm:p-6">
         <p className="text-sm font-medium text-white/70">品類收入比例</p>
         <p className="mt-1 text-xs text-white/40">
-          累計已結帳收入 · 手串 / 擺件 / 礦石（依商品品類統計）
+          累計已結帳收入 · 手串 / 配飾 / 擺件 / 礦石（依商品品類統計）
         </p>
         <div className="mt-6">
           {loading && orders.length === 0 ? (
