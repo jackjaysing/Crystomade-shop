@@ -5,6 +5,7 @@ import { AdminAccessSection } from '../components/account/AdminAccessSection'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import { MemberCouponsPanel } from '../components/member/MemberCouponsPanel'
 import { MemberGiftCouponsPanel } from '../components/member/MemberGiftCouponsPanel'
+import { MemberChangePasswordPanel } from '../components/member/MemberChangePasswordPanel'
 import { MemberClaimReferralPanel } from '../components/member/MemberClaimReferralPanel'
 import { MemberReferralPanel } from '../components/member/MemberReferralPanel'
 import { MetalDivider } from '../components/ui/MetalDivider'
@@ -132,6 +133,8 @@ export function AccountPage() {
             </Link>
           </div>
         </GlassPanel>
+
+        <MemberChangePasswordPanel />
 
         <MemberClaimReferralPanel
           userId={user.id}

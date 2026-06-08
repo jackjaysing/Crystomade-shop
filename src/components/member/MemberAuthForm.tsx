@@ -14,6 +14,7 @@ import {
   sanitizeReferralInput,
 } from '../../lib/referral'
 import { GlassPanel } from '../ui/GlassPanel'
+import { PasswordInput } from '../ui/PasswordInput'
 import { PhoneNumberInput } from '../ui/PhoneNumberInput'
 
 type AuthMode = 'login' | 'register'
@@ -289,9 +290,8 @@ export function MemberAuthForm({
             />
             {showPasswordFields && (
               <>
-                <input
+                <PasswordInput
                   required
-                  type="password"
                   placeholder="自設密碼 *（至少 6 碼）"
                   value={registerForm.password}
                   onChange={(e) =>
@@ -300,12 +300,10 @@ export function MemberAuthForm({
                       password: e.target.value,
                     })
                   }
-                  className="input-field"
                   autoComplete="new-password"
                 />
-                <input
+                <PasswordInput
                   required
-                  type="password"
                   placeholder="確認密碼 *"
                   value={registerForm.confirmPassword}
                   onChange={(e) =>
@@ -314,7 +312,6 @@ export function MemberAuthForm({
                       confirmPassword: e.target.value,
                     })
                   }
-                  className="input-field"
                   autoComplete="new-password"
                 />
               </>
@@ -336,16 +333,14 @@ export function MemberAuthForm({
               className="input-field"
             />
             {showPasswordFields && (
-              <input
+              <PasswordInput
                 ref={loginPasswordRef}
                 required
-                type="password"
                 placeholder="密碼 *"
                 value={loginForm.password}
                 onChange={(e) =>
                   setLoginForm({ ...loginForm, password: e.target.value })
                 }
-                className="input-field"
                 autoComplete="current-password"
               />
             )}

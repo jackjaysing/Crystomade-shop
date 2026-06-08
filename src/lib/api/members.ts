@@ -11,7 +11,9 @@ import type { MemberProfile, Order, PointsHistoryEntry } from '../types'
 import {
   memberRegisterMetadata,
   validateMemberLogin,
+  validateMemberPasswordChange,
   validateMemberRegister,
+  type MemberChangePasswordInput,
   type MemberLoginInput,
   type MemberRegisterInput,
 } from '../validateMember'
@@ -126,6 +128,38 @@ export async function signInMember(input: MemberLoginInput): Promise<Session> {
 
 export async function signOutMember(): Promise<void> {
   const { error } = await supabase.auth.signOut()
+  if (error) throw new Error(formatErrorMessage(error))
+}
+
+/** 會員中心：驗證目前密碼後重設新密碼 */
+export async function changeMemberPassword(
+  input: MemberChangePasswordInput
+): Promise<void> {
+  const validationError = validateMemberPasswordChange(input)
+  if (validationError) throw new Error(validationError)
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError) throw new Error(formatErrorMessage(userError))
+  if (!user?.email) throw new Error('請重新登入後再試')
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: input.currentPassword,
+  })
+  if (verifyError) {
+    const msg = formatErrorMessage(verifyError)
+    if (msg.includes('Invalid login') || msg.includes('credentials')) {
+      throw new Error('目前密碼不正確')
+    }
+    throw new Error(msg)
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: input.newPassword,
+  })
   if (error) throw new Error(formatErrorMessage(error))
 }
 

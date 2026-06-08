@@ -15,6 +15,12 @@ export interface MemberLoginInput {
   password: string
 }
 
+export interface MemberChangePasswordInput {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
 export function validateMemberRegister(
   input: MemberRegisterInput
 ): string | null {
@@ -49,6 +55,22 @@ export function validateMemberLogin(input: MemberLoginInput): string | null {
     return '請填寫有效的手機號碼'
   }
   if (!input.password) return '請輸入密碼'
+  return null
+}
+
+export function validateMemberPasswordChange(
+  input: MemberChangePasswordInput
+): string | null {
+  if (!input.currentPassword) return '請輸入目前密碼'
+  if (!input.newPassword || input.newPassword.length < 6) {
+    return '新密碼至少 6 個字元'
+  }
+  if (input.newPassword === input.currentPassword) {
+    return '新密碼不可與目前密碼相同'
+  }
+  if (input.newPassword !== input.confirmPassword) {
+    return '兩次新密碼不一致'
+  }
   return null
 }
 

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { loginAdmin } from '../../lib/adminAuth'
 import { GlassPanel } from '../ui/GlassPanel'
+import { PasswordInput } from '../ui/PasswordInput'
 
 interface AdminLoginProps {
   onSuccess: () => void
@@ -26,12 +27,10 @@ export function AdminLogin({ onSuccess, variant = 'page' }: AdminLoginProps) {
 
   const form = (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <input
-        type="password"
+      <PasswordInput
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="管理員密碼"
-        className="input-field"
         autoComplete="current-password"
       />
       {error && <p className="text-sm text-red-400">{error}</p>}
