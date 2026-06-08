@@ -361,36 +361,44 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
             {raffles.map((r) => (
               <li key={r.id}>
                 <GlassPanel className="p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-1 gap-4">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 gap-3 sm:flex-1 sm:gap-4">
                       <RafflePrizeImage raffle={r} imageSize="sm" />
-                      <div className="min-w-0">
-                      <RaffleListedCode code={r.listed_code} />
-                      <p className="mt-1 font-medium text-white">{prizeName(r)}</p>
-                      {r.description && (
-                        <p className="mt-1 text-sm text-white/50">{r.description}</p>
-                      )}
-                      <p className="mt-2 text-xs text-white/40">
-                        截止：{formatDeadline(r.registration_deadline)} ·{' '}
-                        {RAFFLE_STATUS_LABELS[r.status]} · 報名 {r.entry_count} 人
-                      </p>
-                      {r.status === 'drawn' && (
-                        <p className="mt-1 text-xs text-emerald-300/80">
-                          得主：
-                          {r.winner_name
-                            ? r.winner_name
-                            : r.entry_count === 0
-                              ? '無人報名'
-                              : '—'}
+                      <div className="min-w-0 flex-1">
+                        <RaffleListedCode code={r.listed_code} />
+                        <p className="mt-1 break-words font-medium leading-snug text-white">
+                          {prizeName(r)}
                         </p>
-                      )}
+                        {r.description && (
+                          <p className="mt-1 break-words text-sm leading-relaxed text-white/50">
+                            {r.description}
+                          </p>
+                        )}
+                        <ul className="mt-2 space-y-1 text-xs leading-relaxed text-white/40">
+                          <li className="break-words">
+                            截止：{formatDeadline(r.registration_deadline)}
+                          </li>
+                          <li>
+                            {RAFFLE_STATUS_LABELS[r.status]} · 報名 {r.entry_count} 人
+                          </li>
+                          {r.status === 'drawn' && (
+                            <li className="text-emerald-300/80">
+                              得主：
+                              {r.winner_name
+                                ? r.winner_name
+                                : r.entry_count === 0
+                                  ? '無人報名'
+                                  : '—'}
+                            </li>
+                          )}
+                        </ul>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex w-full flex-wrap gap-2 border-t border-white/10 pt-3 sm:w-auto sm:shrink-0 sm:justify-end sm:border-0 sm:pt-0">
                       <button
                         type="button"
                         onClick={() => void openEntries(r.id)}
-                        className="rounded border border-white/20 px-3 py-1 text-xs text-white/70 hover:text-white"
+                        className="rounded border border-white/20 px-3 py-1.5 text-xs text-white/70 hover:text-white"
                       >
                         報名名單
                       </button>
@@ -400,7 +408,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                           <button
                             type="button"
                             onClick={() => void handleDraw(r)}
-                            className="rounded border border-amber-glow/40 px-3 py-1 text-xs text-amber-glow hover:bg-amber-glow/10"
+                            className="rounded border border-amber-glow/40 px-3 py-1.5 text-xs text-amber-glow hover:bg-amber-glow/10"
                           >
                             立即抽獎
                           </button>
@@ -409,7 +417,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                         <button
                           type="button"
                           onClick={() => loadEdit(r)}
-                          className="rounded border border-white/20 px-3 py-1 text-xs text-white/70 hover:text-white"
+                          className="rounded border border-white/20 px-3 py-1.5 text-xs text-white/70 hover:text-white"
                         >
                           編輯
                         </button>
@@ -417,7 +425,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                       <button
                         type="button"
                         onClick={() => void handleDelete(r)}
-                        className="rounded border border-red-400/30 px-3 py-1 text-xs text-red-300/80 hover:bg-red-400/10"
+                        className="rounded border border-red-400/30 px-3 py-1.5 text-xs text-red-300/80 hover:bg-red-400/10"
                       >
                         刪除
                       </button>
