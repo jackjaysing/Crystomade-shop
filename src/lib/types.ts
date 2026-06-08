@@ -391,6 +391,12 @@ export interface FortuneConsultationRequest {
   member_phone?: string | null
   /** 後台列表：會員姓名 */
   member_real_name?: string | null
+  /** 後台填寫：預估諮詢費用（NT$） */
+  estimated_fee: number | null
+  /** 後台標記：已聯繫時間 */
+  contacted_at: string | null
+  /** 後台標記：已付款時間 */
+  paid_at: string | null
 }
 
 /** 後台編輯商品表單 */

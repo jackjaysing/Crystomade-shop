@@ -30,6 +30,20 @@ function normalizeRow(row: Record<string, unknown>): FortuneConsultationRequest 
       row.member_real_name != null && String(row.member_real_name).trim() !== ''
         ? String(row.member_real_name)
         : null,
+    estimated_fee:
+      row.estimated_fee == null
+        ? null
+        : typeof row.estimated_fee === 'number'
+          ? row.estimated_fee
+          : Number(row.estimated_fee) || null,
+    contacted_at:
+      row.contacted_at != null && String(row.contacted_at).trim() !== ''
+        ? String(row.contacted_at)
+        : null,
+    paid_at:
+      row.paid_at != null && String(row.paid_at).trim() !== ''
+        ? String(row.paid_at)
+        : null,
   }
 }
 
@@ -111,6 +125,83 @@ export async function fetchAllFortuneConsultationsAdmin(): Promise<
 
 const FORTUNE_DELETE_RPC_MISSING =
   '命理諮詢刪除權限未設定完成，請在 Supabase SQL Editor 執行 supabase/migration-fix-fortune-consultation-delete.sql'
+
+const FORTUNE_UPDATE_RPC_MISSING =
+  '命理諮詢更新權限未設定完成，請在 Supabase SQL Editor 執行 supabase/migration-add-fortune-consultation-admin-fields.sql'
+
+export interface UpdateFortuneConsultationAdminInput {
+  estimatedFee?: number | null
+  contacted?: boolean
+  paid?: boolean
+}
+
+function formatFortuneFeeSummary(fee: number | null | undefined): string {
+  if (fee == null) return '（未填寫）'
+  return `NT$ ${fee.toLocaleString()}`
+}
+
+/** 後台：更新命理諮詢（預估費用、已聯繫、已付款） */
+export async function updateFortuneConsultationAdmin(
+  id: string,
+  patch: UpdateFortuneConsultationAdminInput
+): Promise<FortuneConsultationRequest> {
+  if (!isSupabaseConfigured) {
+    throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
+  }
+
+  const updateEstimatedFee = patch.estimatedFee !== undefined
+  const estimatedFee =
+    patch.estimatedFee == null
+      ? null
+      : Math.max(0, Math.floor(patch.estimatedFee))
+
+  const { data: updated, error: rpcError } = await supabase.rpc(
+    'update_fortune_consultation_admin',
+    {
+      p_id: id,
+      p_estimated_fee: estimatedFee,
+      p_update_estimated_fee: updateEstimatedFee,
+      p_contacted: patch.contacted ?? null,
+      p_paid: patch.paid ?? null,
+    }
+  )
+
+  if (rpcError) {
+    const msg = formatErrorMessage(rpcError)
+    if (/update_fortune_consultation_admin|42883|42P01|42703/i.test(msg)) {
+      throw new Error(FORTUNE_UPDATE_RPC_MISSING)
+    }
+    throw new Error(msg)
+  }
+
+  if (!updated) throw new Error('更新失敗，找不到該則諮詢')
+
+  const rows = await fetchAllFortuneConsultationsAdmin()
+  const row = rows.find((item) => item.id === id)
+  if (!row) throw new Error('更新後無法讀取諮詢資料')
+
+  const summaries: string[] = []
+  if (updateEstimatedFee) {
+    summaries.push(`預估費用 ${formatFortuneFeeSummary(estimatedFee)}`)
+  }
+  if (patch.contacted === true) summaries.push('標記已聯繫')
+  if (patch.contacted === false) summaries.push('取消已聯繫')
+  if (patch.paid === true) summaries.push('標記已付款')
+  if (patch.paid === false) summaries.push('取消已付款')
+
+  if (summaries.length > 0) {
+    const contact = row.member_real_name || row.display_name || '會員'
+    await recordAdminActivity({
+      action: 'update',
+      entityType: 'fortune_consultation',
+      entityId: id,
+      entityLabel: contact,
+      summary: `更新命理諮詢「${contact}」：${summaries.join('；')}`,
+    })
+  }
+
+  return row
+}
 
 /** 後台：刪除命理諮詢 */
 export async function deleteFortuneConsultation(id: string): Promise<void> {
