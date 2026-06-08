@@ -184,12 +184,16 @@ export function AdminPage() {
       clearFortuneBadge()
       setFortuneReloadSignal((n) => n + 1)
     }
+    if (activeTab === 'logs') {
+      void reloadActivityLogs()
+    }
   }, [
     activeTab,
     clearOrderBadge,
     clearMemberBadge,
     clearWishBadge,
     clearFortuneBadge,
+    reloadActivityLogs,
   ])
 
   if (!authed) {

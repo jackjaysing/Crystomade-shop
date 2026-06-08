@@ -291,12 +291,12 @@ export async function updateProduct(
 
   if (error) throw new Error(formatErrorMessage(error))
   const product = normalizeProduct(data as Record<string, unknown>)
-  void recordAdminActivity({
+  await recordAdminActivity({
     action: 'update',
     entityType: 'product',
     entityId: product.id,
     entityLabel: product.name,
-    summary: buildProductUpdateSummary(beforeProduct, form),
+    summary: buildProductUpdateSummary(beforeProduct, product),
   })
   return product
 }
@@ -305,7 +305,7 @@ export async function updateProduct(
 export async function markProductSold(productId: string): Promise<void> {
   const { data: row } = await supabase
     .from('products')
-    .select('name')
+    .select('name, stock')
     .eq('id', productId)
     .single()
 
@@ -317,12 +317,14 @@ export async function markProductSold(productId: string): Promise<void> {
   if (error) throw error
 
   const name = row?.name ? String(row.name) : productId
-  void recordAdminActivity({
+  const stock =
+    typeof row?.stock === 'number' ? row.stock : Number(row?.stock) || 0
+  await recordAdminActivity({
     action: 'status',
     entityType: 'product',
     entityId: productId,
     entityLabel: name,
-    summary: `將商品「${name}」標記為已售出`,
+    summary: `將商品「${name}」標記為已售出：庫存 ${stock} 件 → 0 件`,
   })
 }
 

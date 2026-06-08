@@ -1,7 +1,4 @@
 import { COUPON_TYPE_LABELS } from '../constants/coupons'
-import { sanitizeFiveElements } from './fiveElements'
-import { sanitizeSubcategoryForSave } from './productSubcategory'
-import { sanitizeProductTags } from './productTags'
 import {
   calcSalePrice,
   formatDiscountZheLabel,
@@ -14,8 +11,6 @@ import type {
   GiftCouponFormData,
   PointProduct,
   Product,
-  ProductEditData,
-  ProductGalleryEditItem,
   Raffle,
   RaffleFormData,
 } from './types'
@@ -107,50 +102,34 @@ export function parseAdminLogSummary(summary: string): {
   return { headline, changes: [body] }
 }
 
-export function isProductGalleryChanged(
-  beforeUrls: string[],
-  items: ProductGalleryEditItem[]
-): boolean {
-  if (beforeUrls.length !== items.length) return true
-  return items.some((item, index) => {
-    if (item.kind === 'new') return true
-    return item.url !== beforeUrls[index]
-  })
-}
-
-export function buildProductUpdateSummary(
-  before: Product,
-  form: ProductEditData
-): string {
+/** 依資料庫更新前後快照產生商品變更摘要 */
+export function buildProductUpdateSummary(before: Product, after: Product): string {
   const changes: string[] = []
-  const afterName = form.name.trim()
-  const name = afterName || before.name
-  const nextStock = Math.max(0, Math.floor(form.stock))
-  const afterCategory = form.category
-  const afterTags = sanitizeProductTags(form.tags)
-  const afterFive = sanitizeFiveElements(form.five_elements)
-  const afterSubcategory =
-    sanitizeSubcategoryForSave(afterCategory, form.subcategory) ?? '—'
-  const beforeSubcategory = before.subcategory ?? '—'
+  const name = after.name || before.name
   const beforeDiscountZhe = parseDiscountZhe(before.discount_zhe)
-  const afterDiscountZhe = parseDiscountZhe(form.discount_zhe)
+  const afterDiscountZhe = parseDiscountZhe(after.discount_zhe)
 
-  pushTextChange(changes, '名稱', before.name, afterName)
-  pushTextChange(changes, '品類', before.category, afterCategory)
+  pushTextChange(changes, '名稱', before.name, after.name)
+  pushTextChange(changes, '品類', before.category, after.category)
 
   const beforeBracelet =
     before.category === '手串' ? before.bracelet_style ?? '通用' : '—'
   const afterBracelet =
-    afterCategory === '手串' ? form.bracelet_style ?? '通用' : '—'
+    after.category === '手串' ? after.bracelet_style ?? '通用' : '—'
   pushTextChange(changes, '手串款式', beforeBracelet, afterBracelet)
 
-  pushTextChange(changes, '細項分類', beforeSubcategory, afterSubcategory)
+  pushTextChange(
+    changes,
+    '細項分類',
+    before.subcategory ?? '—',
+    after.subcategory ?? '—'
+  )
 
   pushNumberChange(
     changes,
     '原價',
     Math.round(before.price),
-    Math.round(form.price),
+    Math.round(after.price),
     formatAdminMoney
   )
 
@@ -161,84 +140,89 @@ export function buildProductUpdateSummary(
     formatAdminDiscount(afterDiscountZhe)
   )
 
-  const beforeSale = calcSalePrice(before.price, beforeDiscountZhe)
-  const afterSale = calcSalePrice(form.price, afterDiscountZhe)
-  pushNumberChange(changes, '特價', beforeSale, afterSale, formatAdminMoney)
+  pushNumberChange(
+    changes,
+    '特價',
+    calcSalePrice(before.price, beforeDiscountZhe),
+    calcSalePrice(after.price, afterDiscountZhe),
+    formatAdminMoney
+  )
 
-  pushNumberChange(changes, '庫存', before.stock, nextStock, (value) => `${value} 件`)
+  pushNumberChange(changes, '庫存', before.stock, after.stock, (value) => `${value} 件`)
 
-  if (before.description.trim() !== form.description.trim()) {
+  pushTextChange(
+    changes,
+    '狀態',
+    before.status === 'sold' ? '已售出' : '上架中',
+    after.status === 'sold' ? '已售出' : '上架中'
+  )
+
+  if (before.description.trim() !== after.description.trim()) {
     changes.push('商品介紹已更新')
   }
 
-  pushArrayChange(changes, '標籤', before.tags, afterTags)
-  pushArrayChange(changes, '五行', before.five_elements, afterFive)
+  pushArrayChange(changes, '標籤', before.tags, after.tags)
+  pushArrayChange(changes, '五行', before.five_elements, after.five_elements)
 
-  if (before.is_hot !== form.is_hot) {
-    pushTextChange(
-      changes,
-      '熱門商品',
-      formatAdminBool(before.is_hot),
-      formatAdminBool(form.is_hot)
-    )
-  }
+  pushTextChange(
+    changes,
+    '熱門商品',
+    formatAdminBool(before.is_hot),
+    formatAdminBool(after.is_hot)
+  )
 
-  if (before.is_quick_add !== form.is_quick_add) {
-    pushTextChange(
-      changes,
-      '快捷加購',
-      formatAdminBool(before.is_quick_add),
-      formatAdminBool(form.is_quick_add)
-    )
-  }
+  pushTextChange(
+    changes,
+    '快捷加購',
+    formatAdminBool(before.is_quick_add),
+    formatAdminBool(after.is_quick_add)
+  )
 
-  if (form.coverFile) changes.push('更換封面圖')
-  if (isProductGalleryChanged(before.gallery_urls, form.galleryItems)) {
+  if (before.image_url !== after.image_url) changes.push('更換封面圖')
+  if (JSON.stringify(before.gallery_urls) !== JSON.stringify(after.gallery_urls)) {
     changes.push('調整相簿圖片')
   }
 
   return joinAdminChangeSummary(changes, `商品「${name}」`)
 }
 
+/** 依資料庫更新前後快照產生點數商品變更摘要 */
 export function buildPointProductUpdateSummary(
   before: PointProduct,
-  patch: Partial<{
-    name: string
-    required_points: number
-    stock: number
-    is_active: boolean
-    imageFile: File | null
-  }>
+  after: PointProduct
 ): string {
-  const name = patch.name?.trim() || before.name
+  const name = after.name || before.name
 
-  if (patch.is_active != null && patch.is_active !== before.is_active) {
-    return `${patch.is_active ? '上架' : '下架'}點數商品「${name}」`
+  if (before.is_active !== after.is_active && before.name === after.name) {
+    const onlyStatusChange =
+      before.required_points === after.required_points &&
+      before.stock === after.stock &&
+      before.image_url === after.image_url
+    if (onlyStatusChange) {
+      return `${after.is_active ? '上架' : '下架'}點數商品「${name}」`
+    }
   }
-
-  if (patch.imageFile) return `更換點數商品「${name}」的圖片`
 
   const changes: string[] = []
-  if (patch.name != null) {
-    pushTextChange(changes, '名稱', before.name, patch.name.trim())
-  }
-  if (patch.required_points != null) {
-    pushNumberChange(
-      changes,
-      '所需點數',
-      before.required_points,
-      Math.max(1, Math.floor(patch.required_points)),
-      (value) => `${value} 點`
-    )
-  }
-  if (patch.stock != null) {
-    pushNumberChange(
-      changes,
-      '庫存',
-      before.stock,
-      Math.max(0, Math.floor(patch.stock)),
-      (value) => `${value} 件`
-    )
+
+  pushTextChange(changes, '名稱', before.name, after.name)
+  pushNumberChange(
+    changes,
+    '所需點數',
+    before.required_points,
+    after.required_points,
+    (value) => `${value} 點`
+  )
+  pushNumberChange(changes, '庫存', before.stock, after.stock, (value) => `${value} 件`)
+  pushTextChange(
+    changes,
+    '狀態',
+    formatAdminBool(before.is_active, '上架', '下架'),
+    formatAdminBool(after.is_active, '上架', '下架')
+  )
+
+  if (before.image_url !== after.image_url) {
+    changes.push('更換商品圖片')
   }
 
   return joinAdminChangeSummary(changes, `點數商品「${name}」`)

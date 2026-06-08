@@ -181,7 +181,13 @@ export async function updatePointProduct(
   const beforeProduct = await fetchPointProductById(id)
   if (!beforeProduct) throw new Error('找不到點數商品')
 
-  const { error } = await supabase.from('point_products').update(payload).eq('id', id)
+  const { data: afterRow, error } = await supabase
+    .from('point_products')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+
   if (error) {
     const msg = formatErrorMessage(error)
     if (/row-level security|RLS/i.test(msg)) {
@@ -192,14 +198,13 @@ export async function updatePointProduct(
     throw new Error(msg)
   }
 
-  const updatedName =
-    patch.name != null && patch.name.trim() ? patch.name.trim() : beforeProduct.name
-  void recordAdminActivity({
+  const afterProduct = normalizePointProduct(afterRow as Record<string, unknown>)
+  await recordAdminActivity({
     action: 'update',
     entityType: 'point_product',
     entityId: id,
-    entityLabel: updatedName,
-    summary: buildPointProductUpdateSummary(beforeProduct, patch),
+    entityLabel: afterProduct.name,
+    summary: buildPointProductUpdateSummary(beforeProduct, afterProduct),
   })
 }
 
