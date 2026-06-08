@@ -16,6 +16,11 @@ const NOTIFIED_ORDERS_KEY = 'crystomade-admin-alerts-orders'
 const NOTIFIED_MEMBERS_KEY = 'crystomade-admin-alerts-members'
 const NOTIFIED_WISHES_KEY = 'crystomade-admin-alerts-wishes'
 const NOTIFIED_FORTUNES_KEY = 'crystomade-admin-alerts-fortunes'
+const BADGE_ORDER_KEY = 'crystomade-admin-badge-order'
+const BADGE_MEMBER_KEY = 'crystomade-admin-badge-member'
+const BADGE_WISH_KEY = 'crystomade-admin-badge-wish'
+const BADGE_FORTUNE_KEY = 'crystomade-admin-badge-fortune'
+const ALERTS_KEY = 'crystomade-admin-alerts-list'
 const POLL_MS = 30_000
 
 export type AdminAlertItem =
@@ -48,6 +53,45 @@ function saveNotifiedSet(key: string, set: Set<string>) {
 
 function saveWatermark(value: string) {
   sessionStorage.setItem(WATERMARK_KEY, value)
+}
+
+function loadStoredBadge(key: string): number {
+  try {
+    const raw = sessionStorage.getItem(key)
+    if (raw == null) return 0
+    const value = Number.parseInt(raw, 10)
+    return Number.isFinite(value) && value > 0 ? value : 0
+  } catch {
+    return 0
+  }
+}
+
+function storeBadge(key: string, value: number): void {
+  const safe = Math.max(0, Math.min(999, Math.floor(value)))
+  if (safe <= 0) {
+    sessionStorage.removeItem(key)
+    return
+  }
+  sessionStorage.setItem(key, String(safe))
+}
+
+function loadStoredAlerts(): AdminAlertItem[] {
+  try {
+    const raw = sessionStorage.getItem(ALERTS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as AdminAlertItem[]
+    return Array.isArray(parsed) ? parsed.slice(0, 12) : []
+  } catch {
+    return []
+  }
+}
+
+function storeAlerts(items: AdminAlertItem[]): void {
+  if (items.length === 0) {
+    sessionStorage.removeItem(ALERTS_KEY)
+    return
+  }
+  sessionStorage.setItem(ALERTS_KEY, JSON.stringify(items.slice(0, 12)))
 }
 
 function formatOrderAlert(order: AdminAlertOrder): AdminAlertItem {
@@ -127,11 +171,13 @@ export function useAdminAlerts({
   onNewWishes,
   onNewFortunes,
 }: UseAdminAlertsOptions) {
-  const [alerts, setAlerts] = useState<AdminAlertItem[]>([])
-  const [orderBadge, setOrderBadge] = useState(0)
-  const [memberBadge, setMemberBadge] = useState(0)
-  const [wishBadge, setWishBadge] = useState(0)
-  const [fortuneBadge, setFortuneBadge] = useState(0)
+  const [alerts, setAlerts] = useState<AdminAlertItem[]>(loadStoredAlerts)
+  const [orderBadge, setOrderBadge] = useState(() => loadStoredBadge(BADGE_ORDER_KEY))
+  const [memberBadge, setMemberBadge] = useState(() => loadStoredBadge(BADGE_MEMBER_KEY))
+  const [wishBadge, setWishBadge] = useState(() => loadStoredBadge(BADGE_WISH_KEY))
+  const [fortuneBadge, setFortuneBadge] = useState(() =>
+    loadStoredBadge(BADGE_FORTUNE_KEY)
+  )
   const [toast, setToast] = useState<string | null>(null)
   const [listening, setListening] = useState(false)
   const [desktopPermission, setDesktopPermission] = useState<NotificationPermission | 'unsupported'>(() =>
@@ -147,7 +193,11 @@ export function useAdminAlerts({
 
   const appendAlerts = useCallback((items: AdminAlertItem[]) => {
     if (items.length === 0) return
-    setAlerts((prev) => [...items, ...prev].slice(0, 12))
+    setAlerts((prev) => {
+      const next = [...items, ...prev].slice(0, 12)
+      storeAlerts(next)
+      return next
+    })
     setToast(items[0].title + '：' + items[0].detail)
     playAdminNotificationSound()
     for (const item of items) {
@@ -231,19 +281,35 @@ export function useAdminAlerts({
       if (combined.length > 0) {
         appendAlerts(combined)
         if (newOrderCount > 0) {
-          setOrderBadge((n) => n + newOrderCount)
+          setOrderBadge((n) => {
+            const next = n + newOrderCount
+            storeBadge(BADGE_ORDER_KEY, next)
+            return next
+          })
           onNewOrders?.()
         }
         if (newMemberCount > 0) {
-          setMemberBadge((n) => n + newMemberCount)
+          setMemberBadge((n) => {
+            const next = n + newMemberCount
+            storeBadge(BADGE_MEMBER_KEY, next)
+            return next
+          })
           onNewMembers?.()
         }
         if (newWishCount > 0) {
-          setWishBadge((n) => n + newWishCount)
+          setWishBadge((n) => {
+            const next = n + newWishCount
+            storeBadge(BADGE_WISH_KEY, next)
+            return next
+          })
           onNewWishes?.()
         }
         if (newFortuneCount > 0) {
-          setFortuneBadge((n) => n + newFortuneCount)
+          setFortuneBadge((n) => {
+            const next = n + newFortuneCount
+            storeBadge(BADGE_FORTUNE_KEY, next)
+            return next
+          })
           onNewFortunes?.()
         }
       }
@@ -279,12 +345,27 @@ export function useAdminAlerts({
     setDesktopPermission(result)
   }, [])
 
-  const clearOrderBadge = useCallback(() => setOrderBadge(0), [])
-  const clearMemberBadge = useCallback(() => setMemberBadge(0), [])
-  const clearWishBadge = useCallback(() => setWishBadge(0), [])
-  const clearFortuneBadge = useCallback(() => setFortuneBadge(0), [])
+  const clearOrderBadge = useCallback(() => {
+    storeBadge(BADGE_ORDER_KEY, 0)
+    setOrderBadge(0)
+  }, [])
+  const clearMemberBadge = useCallback(() => {
+    storeBadge(BADGE_MEMBER_KEY, 0)
+    setMemberBadge(0)
+  }, [])
+  const clearWishBadge = useCallback(() => {
+    storeBadge(BADGE_WISH_KEY, 0)
+    setWishBadge(0)
+  }, [])
+  const clearFortuneBadge = useCallback(() => {
+    storeBadge(BADGE_FORTUNE_KEY, 0)
+    setFortuneBadge(0)
+  }, [])
   const dismissToast = useCallback(() => setToast(null), [])
-  const clearAlerts = useCallback(() => setAlerts([]), [])
+  const clearAlerts = useCallback(() => {
+    storeAlerts([])
+    setAlerts([])
+  }, [])
 
   return {
     alerts,
