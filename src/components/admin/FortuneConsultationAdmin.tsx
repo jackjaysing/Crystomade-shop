@@ -26,10 +26,14 @@ function contactLabel(row: FortuneConsultationRequest): string {
 
 interface FortuneConsultationAdminProps {
   enabled: boolean
+  reloadSignal?: number
 }
 
 /** 後台：命理諮詢列表 */
-export function FortuneConsultationAdmin({ enabled }: FortuneConsultationAdminProps) {
+export function FortuneConsultationAdmin({
+  enabled,
+  reloadSignal = 0,
+}: FortuneConsultationAdminProps) {
   const { isSuperAdmin } = useAdminSession()
   const [rows, setRows] = useState<FortuneConsultationRequest[]>([])
   const [loading, setLoading] = useState(false)
@@ -52,7 +56,7 @@ export function FortuneConsultationAdmin({ enabled }: FortuneConsultationAdminPr
 
   useEffect(() => {
     void reload()
-  }, [reload])
+  }, [reload, reloadSignal])
 
   const handleDelete = async (row: FortuneConsultationRequest) => {
     if (!confirm(`確定刪除此諮詢？\n「${row.question.slice(0, 40)}…」`)) return

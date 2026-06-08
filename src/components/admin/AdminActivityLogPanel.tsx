@@ -33,6 +33,7 @@ const ACTION_LABEL: Record<string, string> = {
 
 const ENTITY_LABEL: Record<string, string> = {
   product: '商品',
+  point_product: '點數商品',
   order: '訂單',
   banner: '公告橫幅',
   member: '會員',

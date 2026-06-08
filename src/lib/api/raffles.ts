@@ -3,6 +3,7 @@ import {
   RAFFLE_GIFT_DESCRIPTION,
   RAFFLE_GIFT_VALID_DAYS,
 } from '../../constants/raffles'
+import { buildRaffleUpdateSummary } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { buildRaffleListedCodes, raffleDayKey } from '../raffleListedCode'
@@ -352,6 +353,18 @@ export async function updateRaffle(
   data: RaffleFormData,
   existingCouponId?: string | null
 ): Promise<Raffle> {
+  const { data: beforeRow, error: beforeError } = await supabase
+    .from('raffles')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (beforeError || !beforeRow) {
+    throw new Error(beforeError ? formatErrorMessage(beforeError) : '找不到抽獎活動')
+  }
+
+  const beforeRaffle = normalizeRaffle(beforeRow as Record<string, unknown>)
+
   const couponId = await syncRafflePrizeCoupon(
     id,
     data,
@@ -380,7 +393,7 @@ export async function updateRaffle(
     entityType: 'raffle',
     entityId: updated.id,
     entityLabel: prizeName,
-    summary: `更新抽獎「${prizeName}」`,
+    summary: buildRaffleUpdateSummary(beforeRaffle, data),
   })
   return updated
 }

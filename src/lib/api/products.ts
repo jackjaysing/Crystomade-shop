@@ -1,3 +1,4 @@
+import { buildProductUpdateSummary } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { applyCrystomadeWatermark } from '../watermarkProductImage'
@@ -240,6 +241,18 @@ export async function updateProduct(
   form: ProductEditData,
   currentImageUrl: string
 ): Promise<Product> {
+  const { data: beforeRow, error: beforeError } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', productId)
+    .single()
+
+  if (beforeError || !beforeRow) {
+    throw new Error(beforeError ? formatErrorMessage(beforeError) : '找不到商品')
+  }
+
+  const beforeProduct = normalizeProduct(beforeRow as Record<string, unknown>)
+
   const image_url = form.coverFile
     ? await uploadProductImage(form.coverFile)
     : currentImageUrl
@@ -280,7 +293,7 @@ export async function updateProduct(
     entityType: 'product',
     entityId: product.id,
     entityLabel: product.name,
-    summary: `修改商品「${product.name}」`,
+    summary: buildProductUpdateSummary(beforeProduct, form),
   })
   return product
 }

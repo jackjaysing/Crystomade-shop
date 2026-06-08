@@ -80,20 +80,28 @@ export function AdminPage() {
     alerts,
     orderBadge,
     memberBadge,
+    wishBadge,
+    fortuneBadge,
     toast: alertToast,
     listening,
     desktopPermission,
     requestDesktopNotifications,
     clearOrderBadge,
     clearMemberBadge,
+    clearWishBadge,
+    clearFortuneBadge,
     dismissToast,
     clearAlerts,
   } = useAdminAlerts({
     enabled: authed,
     onNewOrders: () => void reloadOrders({ silent: true }),
     onNewMembers: () => setCustomerReloadSignal((n) => n + 1),
+    onNewWishes: () => setWishReloadSignal((n) => n + 1),
+    onNewFortunes: () => setFortuneReloadSignal((n) => n + 1),
   })
   const [customerReloadSignal, setCustomerReloadSignal] = useState(0)
+  const [wishReloadSignal, setWishReloadSignal] = useState(0)
+  const [fortuneReloadSignal, setFortuneReloadSignal] = useState(0)
   const {
     stats: pageViewStats,
     loading: pageViewLoading,
@@ -168,7 +176,21 @@ export function AdminPage() {
       clearMemberBadge()
       setCustomerReloadSignal((n) => n + 1)
     }
-  }, [activeTab, clearOrderBadge, clearMemberBadge])
+    if (activeTab === 'wish_board') {
+      clearWishBadge()
+      setWishReloadSignal((n) => n + 1)
+    }
+    if (activeTab === 'fortune_consultation') {
+      clearFortuneBadge()
+      setFortuneReloadSignal((n) => n + 1)
+    }
+  }, [
+    activeTab,
+    clearOrderBadge,
+    clearMemberBadge,
+    clearWishBadge,
+    clearFortuneBadge,
+  ])
 
   if (!authed) {
     return <AdminLogin onSuccess={refresh} />
@@ -207,6 +229,8 @@ export function AdminPage() {
         onClearAlerts={clearAlerts}
         onGoOrders={() => setActiveTab('orders')}
         onGoCustomers={() => setActiveTab('customers')}
+        onGoWishBoard={() => setActiveTab('wish_board')}
+        onGoFortuneConsultation={() => setActiveTab('fortune_consultation')}
       />
 
       <nav
@@ -216,7 +240,15 @@ export function AdminPage() {
         {adminTabs.map((tab) => {
           const isActive = activeTab === tab.id
           const badge =
-            tab.id === 'orders' ? orderBadge : tab.id === 'customers' ? memberBadge : 0
+            tab.id === 'orders'
+              ? orderBadge
+              : tab.id === 'customers'
+                ? memberBadge
+                : tab.id === 'wish_board'
+                  ? wishBadge
+                  : tab.id === 'fortune_consultation'
+                    ? fortuneBadge
+                    : 0
           return (
             <button
               key={tab.id}
@@ -224,7 +256,7 @@ export function AdminPage() {
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveTab(tab.id)}
-              className={`rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+              className={`relative rounded-full border px-4 py-2 text-sm tracking-wide transition ${
                 isActive
                   ? 'border-amber-glow/60 bg-amber-glow/15 text-amber-glow'
                   : 'border-white/15 text-white/55 hover:border-amber-glow/40 hover:text-amber-glow'
@@ -392,7 +424,7 @@ export function AdminPage() {
             <p className="mb-4 text-sm text-white/45">
               會員在前台提交的許願留言，僅供後台查看與參考。
             </p>
-            <WishBoardAdmin enabled={authed} />
+            <WishBoardAdmin enabled={authed} reloadSignal={wishReloadSignal} />
           </section>
         )}
 
@@ -402,7 +434,10 @@ export function AdminPage() {
             <p className="mb-4 text-sm text-white/45">
               客戶填寫的諮詢問題與 Line ID，供命理老師聯絡使用。
             </p>
-            <FortuneConsultationAdmin enabled={authed} />
+            <FortuneConsultationAdmin
+              enabled={authed}
+              reloadSignal={fortuneReloadSignal}
+            />
           </section>
         )}
 

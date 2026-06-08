@@ -1,3 +1,4 @@
+import { buildBannerUpdateSummary } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
@@ -149,6 +150,18 @@ export async function updateBanner(
     payload.image_url = await uploadBannerImage(patch.imageFile)
   }
 
+  const { data: beforeRow, error: beforeError } = await supabase
+    .from('announcement_banners')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (beforeError || !beforeRow) {
+    throw new Error(beforeError ? formatErrorMessage(beforeError) : '找不到橫幅')
+  }
+
+  const beforeBanner = normalizeBanner(beforeRow as Record<string, unknown>)
+
   const { data, error } = await supabase
     .from('announcement_banners')
     .update(payload)
@@ -163,7 +176,7 @@ export async function updateBanner(
     entityType: 'banner',
     entityId: banner.id,
     entityLabel: banner.name,
-    summary: `修改公告橫幅「${banner.name}」`,
+    summary: buildBannerUpdateSummary(beforeBanner, patch),
   })
   return banner
 }

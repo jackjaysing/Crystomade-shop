@@ -15,6 +15,7 @@ export type AdminActivityAction =
 
 export type AdminActivityEntityType =
   | 'product'
+  | 'point_product'
   | 'order'
   | 'banner'
   | 'member'

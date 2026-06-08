@@ -9,6 +9,8 @@ interface AdminAlertsBarProps {
   onClearAlerts: () => void
   onGoOrders: () => void
   onGoCustomers: () => void
+  onGoWishBoard: () => void
+  onGoFortuneConsultation: () => void
 }
 
 /** 後台新消息通知列 */
@@ -20,6 +22,8 @@ export function AdminAlertsBar({
   onClearAlerts,
   onGoOrders,
   onGoCustomers,
+  onGoWishBoard,
+  onGoFortuneConsultation,
 }: AdminAlertsBarProps) {
   const showDesktopCta =
     desktopPermission !== 'unsupported' && desktopPermission !== 'granted'
@@ -34,7 +38,9 @@ export function AdminAlertsBar({
             <Bell className="h-4 w-4 text-white/40" strokeWidth={1.5} />
           )}
           <span>
-            {listening ? '正在監聽新訂單與新註冊（約每 30 秒）' : '啟動通知監聽中…'}
+            {listening
+              ? '正在監聽新訂單、新註冊、許願留言與命理諮詢（約每 30 秒）'
+              : '啟動通知監聽中…'}
           </span>
         </div>
         {showDesktopCta && (
@@ -68,7 +74,12 @@ export function AdminAlertsBar({
               <li key={`${alert.type}-${alert.id}`}>
                 <button
                   type="button"
-                  onClick={alert.type === 'order' ? onGoOrders : onGoCustomers}
+                  onClick={() => {
+                    if (alert.type === 'order') onGoOrders()
+                    else if (alert.type === 'member') onGoCustomers()
+                    else if (alert.type === 'wish') onGoWishBoard()
+                    else onGoFortuneConsultation()
+                  }}
                   className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:bg-amber-glow/10"
                 >
                   <div>
@@ -76,7 +87,13 @@ export function AdminAlertsBar({
                     <p className="mt-0.5 text-xs text-white/50">{alert.detail}</p>
                   </div>
                   <span className="shrink-0 text-[10px] uppercase tracking-wide text-amber-glow/70">
-                    {alert.type === 'order' ? '訂單' : '註冊'}
+                    {alert.type === 'order'
+                      ? '訂單'
+                      : alert.type === 'member'
+                        ? '註冊'
+                        : alert.type === 'wish'
+                          ? '許願'
+                          : '諮詢'}
                   </span>
                 </button>
               </li>
@@ -95,7 +112,7 @@ interface TabBadgeProps {
 export function AdminTabBadge({ count }: TabBadgeProps) {
   if (count <= 0) return null
   return (
-    <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-amber-glow px-1.5 py-0.5 text-[10px] font-medium leading-none text-void">
+    <span className="absolute -right-1 -top-1 inline-flex min-w-[1.15rem] items-center justify-center rounded-full bg-amber-glow px-1 py-0.5 text-[10px] font-semibold leading-none text-void shadow-[0_0_0_2px_rgba(10,10,12,0.95)]">
       {count > 99 ? '99+' : count}
     </span>
   )

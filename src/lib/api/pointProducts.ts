@@ -1,3 +1,4 @@
+import { buildPointProductUpdateSummary } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
@@ -31,6 +32,17 @@ async function uploadPointProductImage(file: File): Promise<string> {
   if (error) throw error
   const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path)
   return data.publicUrl
+}
+
+async function fetchPointProductById(id: string): Promise<PointProduct | null> {
+  const { data, error } = await supabase
+    .from('point_products')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error || !data) return null
+  return normalizePointProduct(data as Record<string, unknown>)
 }
 
 async function nextSortOrder(): Promise<number> {
@@ -138,9 +150,10 @@ export async function createPointProduct(
   const product = normalizePointProduct(data as Record<string, unknown>)
   void recordAdminActivity({
     action: 'create',
-    entityType: 'product',
+    entityType: 'point_product',
     entityId: product.id,
-    summary: `新增點數商品：${product.name}`,
+    entityLabel: product.name,
+    summary: `新增點數商品「${product.name}」`,
   })
   return product
 }
@@ -165,6 +178,9 @@ export async function updatePointProduct(
   if (patch.is_active != null) payload.is_active = patch.is_active
   if (patch.imageFile) payload.image_url = await uploadPointProductImage(patch.imageFile)
 
+  const beforeProduct = await fetchPointProductById(id)
+  if (!beforeProduct) throw new Error('找不到點數商品')
+
   const { error } = await supabase.from('point_products').update(payload).eq('id', id)
   if (error) {
     const msg = formatErrorMessage(error)
@@ -176,15 +192,21 @@ export async function updatePointProduct(
     throw new Error(msg)
   }
 
+  const updatedName =
+    patch.name != null && patch.name.trim() ? patch.name.trim() : beforeProduct.name
   void recordAdminActivity({
     action: 'update',
-    entityType: 'product',
+    entityType: 'point_product',
     entityId: id,
-    summary: `更新點數商品：${patch.name ?? id}`,
+    entityLabel: updatedName,
+    summary: buildPointProductUpdateSummary(beforeProduct, patch),
   })
 }
 
 export async function deletePointProduct(id: string): Promise<void> {
+  const beforeProduct = await fetchPointProductById(id)
+  const productName = beforeProduct?.name ?? id
+
   const { error } = await supabase.from('point_products').delete().eq('id', id)
   if (error) {
     const msg = formatErrorMessage(error)
@@ -198,8 +220,9 @@ export async function deletePointProduct(id: string): Promise<void> {
 
   void recordAdminActivity({
     action: 'delete',
-    entityType: 'product',
+    entityType: 'point_product',
     entityId: id,
-    summary: '刪除點數商品',
+    entityLabel: productName,
+    summary: `刪除點數商品「${productName}」`,
   })
 }

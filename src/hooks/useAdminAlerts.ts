@@ -1,20 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  fetchNewFortuneConsultationsSince,
   fetchNewMembersSince,
   fetchNewOrdersSince,
+  fetchNewWishMessagesSince,
+  type AdminAlertFortune,
   type AdminAlertMember,
   type AdminAlertOrder,
+  type AdminAlertWish,
 } from '../lib/api/adminAlerts'
 import { playAdminNotificationSound } from '../lib/adminNotificationSound'
 
 const WATERMARK_KEY = 'crystomade-admin-alerts-watermark'
 const NOTIFIED_ORDERS_KEY = 'crystomade-admin-alerts-orders'
 const NOTIFIED_MEMBERS_KEY = 'crystomade-admin-alerts-members'
+const NOTIFIED_WISHES_KEY = 'crystomade-admin-alerts-wishes'
+const NOTIFIED_FORTUNES_KEY = 'crystomade-admin-alerts-fortunes'
 const POLL_MS = 30_000
 
 export type AdminAlertItem =
   | { type: 'order'; id: string; at: string; title: string; detail: string }
   | { type: 'member'; id: string; at: string; title: string; detail: string }
+  | { type: 'wish'; id: string; at: string; title: string; detail: string }
+  | { type: 'fortune'; id: string; at: string; title: string; detail: string }
 
 function loadWatermark(): string {
   const stored = sessionStorage.getItem(WATERMARK_KEY)
@@ -63,6 +71,32 @@ function formatMemberAlert(member: AdminAlertMember): AdminAlertItem {
   }
 }
 
+function formatWishAlert(wish: AdminAlertWish): AdminAlertItem {
+  const preview =
+    wish.content.length > 40 ? `${wish.content.slice(0, 40)}…` : wish.content
+  return {
+    type: 'wish',
+    id: wish.id,
+    at: wish.created_at,
+    title: '新許願留言',
+    detail: `${wish.display_name} · ${preview}`,
+  }
+}
+
+function formatFortuneAlert(fortune: AdminAlertFortune): AdminAlertItem {
+  const preview =
+    fortune.question.length > 40
+      ? `${fortune.question.slice(0, 40)}…`
+      : fortune.question
+  return {
+    type: 'fortune',
+    id: fortune.id,
+    at: fortune.created_at,
+    title: '新命理諮詢',
+    detail: `${fortune.contact_name} · ${preview}`,
+  }
+}
+
 function pushDesktopNotification(item: AdminAlertItem) {
   if (typeof Notification === 'undefined') return
   if (Notification.permission !== 'granted') return
@@ -81,13 +115,23 @@ interface UseAdminAlertsOptions {
   enabled: boolean
   onNewOrders?: () => void
   onNewMembers?: () => void
+  onNewWishes?: () => void
+  onNewFortunes?: () => void
 }
 
 /** 後台新訂單／新註冊輪詢通知 */
-export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminAlertsOptions) {
+export function useAdminAlerts({
+  enabled,
+  onNewOrders,
+  onNewMembers,
+  onNewWishes,
+  onNewFortunes,
+}: UseAdminAlertsOptions) {
   const [alerts, setAlerts] = useState<AdminAlertItem[]>([])
   const [orderBadge, setOrderBadge] = useState(0)
   const [memberBadge, setMemberBadge] = useState(0)
+  const [wishBadge, setWishBadge] = useState(0)
+  const [fortuneBadge, setFortuneBadge] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
   const [listening, setListening] = useState(false)
   const [desktopPermission, setDesktopPermission] = useState<NotificationPermission | 'unsupported'>(() =>
@@ -97,6 +141,8 @@ export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminA
   const watermarkRef = useRef(loadWatermark())
   const notifiedOrdersRef = useRef(loadNotifiedSet(NOTIFIED_ORDERS_KEY))
   const notifiedMembersRef = useRef(loadNotifiedSet(NOTIFIED_MEMBERS_KEY))
+  const notifiedWishesRef = useRef(loadNotifiedSet(NOTIFIED_WISHES_KEY))
+  const notifiedFortunesRef = useRef(loadNotifiedSet(NOTIFIED_FORTUNES_KEY))
   const pollingRef = useRef(false)
 
   const appendAlerts = useCallback((items: AdminAlertItem[]) => {
@@ -115,9 +161,11 @@ export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminA
     pollingRef.current = true
     try {
       const since = watermarkRef.current
-      const [orders, members] = await Promise.all([
+      const [orders, members, wishes, fortunes] = await Promise.all([
         fetchNewOrdersSince(since),
         fetchNewMembersSince(since),
+        fetchNewWishMessagesSince(since),
+        fetchNewFortuneConsultationsSince(since),
       ])
 
       const newOrderAlerts: AdminAlertItem[] = []
@@ -143,16 +191,43 @@ export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminA
         if (member.created_at > maxAt) maxAt = member.created_at
       }
 
+      const newWishAlerts: AdminAlertItem[] = []
+      let newWishCount = 0
+
+      for (const wish of wishes) {
+        if (notifiedWishesRef.current.has(wish.id)) continue
+        notifiedWishesRef.current.add(wish.id)
+        newWishAlerts.push(formatWishAlert(wish))
+        newWishCount += 1
+        if (wish.created_at > maxAt) maxAt = wish.created_at
+      }
+
+      const newFortuneAlerts: AdminAlertItem[] = []
+      let newFortuneCount = 0
+
+      for (const fortune of fortunes) {
+        if (notifiedFortunesRef.current.has(fortune.id)) continue
+        notifiedFortunesRef.current.add(fortune.id)
+        newFortuneAlerts.push(formatFortuneAlert(fortune))
+        newFortuneCount += 1
+        if (fortune.created_at > maxAt) maxAt = fortune.created_at
+      }
+
       if (maxAt !== since) {
         watermarkRef.current = maxAt
         saveWatermark(maxAt)
       }
       saveNotifiedSet(NOTIFIED_ORDERS_KEY, notifiedOrdersRef.current)
       saveNotifiedSet(NOTIFIED_MEMBERS_KEY, notifiedMembersRef.current)
+      saveNotifiedSet(NOTIFIED_WISHES_KEY, notifiedWishesRef.current)
+      saveNotifiedSet(NOTIFIED_FORTUNES_KEY, notifiedFortunesRef.current)
 
-      const combined = [...newOrderAlerts, ...newMemberAlerts].sort((a, b) =>
-        b.at.localeCompare(a.at)
-      )
+      const combined = [
+        ...newOrderAlerts,
+        ...newMemberAlerts,
+        ...newWishAlerts,
+        ...newFortuneAlerts,
+      ].sort((a, b) => b.at.localeCompare(a.at))
       if (combined.length > 0) {
         appendAlerts(combined)
         if (newOrderCount > 0) {
@@ -163,6 +238,14 @@ export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminA
           setMemberBadge((n) => n + newMemberCount)
           onNewMembers?.()
         }
+        if (newWishCount > 0) {
+          setWishBadge((n) => n + newWishCount)
+          onNewWishes?.()
+        }
+        if (newFortuneCount > 0) {
+          setFortuneBadge((n) => n + newFortuneCount)
+          onNewFortunes?.()
+        }
       }
     } catch {
       // 靜默略過單次輪詢失敗
@@ -170,7 +253,7 @@ export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminA
       pollingRef.current = false
       setListening(true)
     }
-  }, [appendAlerts, enabled, onNewMembers, onNewOrders])
+  }, [appendAlerts, enabled, onNewFortunes, onNewMembers, onNewOrders, onNewWishes])
 
   useEffect(() => {
     if (!enabled) return
@@ -198,6 +281,8 @@ export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminA
 
   const clearOrderBadge = useCallback(() => setOrderBadge(0), [])
   const clearMemberBadge = useCallback(() => setMemberBadge(0), [])
+  const clearWishBadge = useCallback(() => setWishBadge(0), [])
+  const clearFortuneBadge = useCallback(() => setFortuneBadge(0), [])
   const dismissToast = useCallback(() => setToast(null), [])
   const clearAlerts = useCallback(() => setAlerts([]), [])
 
@@ -205,12 +290,16 @@ export function useAdminAlerts({ enabled, onNewOrders, onNewMembers }: UseAdminA
     alerts,
     orderBadge,
     memberBadge,
+    wishBadge,
+    fortuneBadge,
     toast,
     listening,
     desktopPermission,
     requestDesktopNotifications,
     clearOrderBadge,
     clearMemberBadge,
+    clearWishBadge,
+    clearFortuneBadge,
     dismissToast,
     clearAlerts,
     refreshNow: poll,

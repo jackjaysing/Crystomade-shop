@@ -1,4 +1,8 @@
 import { isCartRaffleGiftCoupon } from '../../constants/coupons'
+import {
+  buildCouponUpdateSummary,
+  buildGiftCouponUpdateSummary,
+} from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { assertBrowserDisplayableImageFile } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
@@ -158,6 +162,19 @@ export async function updateGiftCoupon(
   id: string,
   data: GiftCouponFormData
 ): Promise<Coupon> {
+  const { data: beforeRow, error: beforeError } = await supabase
+    .from('coupons')
+    .select('*')
+    .eq('id', id)
+    .is('source_raffle_id', null)
+    .single()
+
+  if (beforeError || !beforeRow) {
+    throw new Error(beforeError ? formatErrorMessage(beforeError) : '找不到禮物券')
+  }
+
+  const beforeCoupon = normalizeCoupon(beforeRow as Record<string, unknown>)
+
   const { data: row, error } = await supabase
     .from('coupons')
     .update(giftCouponInsertPayload(data))
@@ -173,7 +190,7 @@ export async function updateGiftCoupon(
     entityType: 'coupon',
     entityId: coupon.id,
     entityLabel: coupon.title,
-    summary: `更新禮物券「${coupon.title}」`,
+    summary: buildGiftCouponUpdateSummary(beforeCoupon, data),
   })
   return coupon
 }
@@ -201,6 +218,18 @@ export async function updateCoupon(
   id: string,
   data: CouponFormData
 ): Promise<Coupon> {
+  const { data: beforeRow, error: beforeError } = await supabase
+    .from('coupons')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (beforeError || !beforeRow) {
+    throw new Error(beforeError ? formatErrorMessage(beforeError) : '找不到優惠券')
+  }
+
+  const beforeCoupon = normalizeCoupon(beforeRow as Record<string, unknown>)
+
   const { data: row, error } = await supabase
     .from('coupons')
     .update(couponInsertPayload(data))
@@ -215,7 +244,7 @@ export async function updateCoupon(
     entityType: 'coupon',
     entityId: coupon.id,
     entityLabel: coupon.title,
-    summary: `更新優惠券「${coupon.title}」`,
+    summary: buildCouponUpdateSummary(beforeCoupon, data),
   })
   return coupon
 }

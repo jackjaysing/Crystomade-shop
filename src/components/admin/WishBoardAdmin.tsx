@@ -20,10 +20,14 @@ function formatDateTime(iso: string): string {
 
 interface WishBoardAdminProps {
   enabled: boolean
+  reloadSignal?: number
 }
 
 /** 後台：許願留言列表 */
-export function WishBoardAdmin({ enabled }: WishBoardAdminProps) {
+export function WishBoardAdmin({
+  enabled,
+  reloadSignal = 0,
+}: WishBoardAdminProps) {
   const { isSuperAdmin } = useAdminSession()
   const [wishes, setWishes] = useState<WishMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,7 +50,7 @@ export function WishBoardAdmin({ enabled }: WishBoardAdminProps) {
 
   useEffect(() => {
     void reload()
-  }, [reload])
+  }, [reload, reloadSignal])
 
   const handleDelete = async (wish: WishMessage) => {
     if (!confirm(`確定刪除此許願？\n「${wish.content.slice(0, 40)}…」`)) return
