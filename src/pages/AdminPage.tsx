@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AdminActivityLogPanel } from '../components/admin/AdminActivityLogPanel'
 import { AdminLogin } from '../components/admin/AdminLogin'
+import { AcademyArticleAdmin } from '../components/admin/AcademyArticleAdmin'
 import { BannerAdmin } from '../components/admin/BannerAdmin'
 import { DeletedProductsModal } from '../components/admin/DeletedProductsModal'
 import { PageViewStats } from '../components/admin/PageViewStats'
@@ -41,6 +42,7 @@ type AdminTab =
   | 'orders'
   | 'revenue'
   | 'banners'
+  | 'academy'
   | 'wish_board'
   | 'fortune_consultation'
   | 'analytics'
@@ -53,6 +55,7 @@ const ALL_ADMIN_TABS: { id: AdminTab; label: string; superOnly?: boolean }[] = [
   { id: 'customers', label: '客戶資料' },
   { id: 'orders', label: '訂單管理' },
   { id: 'banners', label: '公告橫幅' },
+  { id: 'academy', label: '晶研所' },
   { id: 'wish_board', label: '許願留言' },
   { id: 'fortune_consultation', label: '命理諮詢' },
   { id: 'analytics', label: '瀏覽統計' },
@@ -419,6 +422,14 @@ export function AdminPage() {
               </p>
             )}
             <BannerAdmin banners={banners} onUpdated={reloadBanners} />
+          </section>
+        )}
+
+        {activeTab === 'academy' && (
+          <section>
+            <h2 className="mb-1 text-lg tracking-wide text-white/80">晶研所</h2>
+            <p className="mb-4 text-sm text-white/45">可插圖的富文本</p>
+            <AcademyArticleAdmin enabled={authed} />
           </section>
         )}
 

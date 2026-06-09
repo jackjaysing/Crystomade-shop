@@ -12,6 +12,8 @@ import { CheckoutPage } from './pages/CheckoutPage'
 import { PointShopPage } from './pages/PointShopPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
 import { ProductsPage } from './pages/ProductsPage'
+import { AcademyArticlePage } from './pages/AcademyArticlePage'
+import { AcademyPage } from './pages/AcademyPage'
 import { WishBoardPage } from './pages/WishBoardPage'
 import { RaffleFloatingWidget } from './components/raffle/RaffleFloatingWidget'
 import { SiteMetaSync } from './components/seo/SiteMetaSync'
@@ -45,6 +47,8 @@ export default function App() {
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/products/:slug" element={<ProductDetailPage />} />
               <Route path="/point-shop" element={<PointShopPage />} />
+              <Route path="/academy" element={<AcademyPage />} />
+              <Route path="/academy/:slug" element={<AcademyArticlePage />} />
               <Route path="/wish-board" element={<WishBoardPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/register" element={<RegisterRedirect />} />

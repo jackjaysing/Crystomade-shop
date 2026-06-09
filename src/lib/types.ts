@@ -379,6 +379,29 @@ export interface WishMessage {
   member_phone?: string | null
 }
 
+/** 晶刻學研所文章 */
+export interface AcademyArticle {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  cover_image_url: string | null
+  body_html: string
+  is_published: boolean
+  sort_order: number
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AcademyArticleFormData {
+  title: string
+  excerpt: string
+  cover_image_url: string | null
+  body_html: string
+  is_published: boolean
+}
+
 /** 命理諮詢留言 */
 export interface FortuneConsultationRequest {
   id: string

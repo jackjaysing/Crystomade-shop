@@ -89,6 +89,72 @@
     background-color: #14141a;
     color: #f5f5f5;
   }
+
+  .academy-rich-editor:empty::before {
+    content: attr(data-placeholder);
+    color: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+  }
+
+  .academy-rich-editor h2 {
+    @apply mt-6 font-display text-2xl text-white;
+  }
+
+  .academy-rich-editor h3 {
+    @apply mt-4 text-lg font-medium text-white/90;
+  }
+
+  .academy-rich-editor p {
+    @apply mt-3;
+  }
+
+  .academy-rich-editor ul {
+    @apply mt-3 list-disc space-y-1 pl-5;
+  }
+
+  .academy-rich-editor ol {
+    @apply mt-3 list-decimal space-y-1 pl-5;
+  }
+
+  .academy-rich-editor img {
+    @apply mt-4 max-w-full rounded-lg border border-white/10;
+  }
+
+  .academy-article-body {
+    @apply text-sm leading-relaxed text-white/75 sm:text-base;
+  }
+
+  .academy-article-body h2 {
+    @apply mt-8 font-display text-2xl text-white;
+  }
+
+  .academy-article-body h3 {
+    @apply mt-6 text-lg font-medium text-white/90;
+  }
+
+  .academy-article-body p {
+    @apply mt-4;
+  }
+
+  .academy-article-body ul {
+    @apply mt-4 list-disc space-y-2 pl-5;
+  }
+
+  .academy-article-body ol {
+    @apply mt-4 list-decimal space-y-2 pl-5;
+  }
+
+  .academy-article-body a {
+    @apply text-amber-glow/90 underline decoration-amber-glow/40 underline-offset-2;
+  }
+
+  .academy-article-body img {
+    @apply my-6 w-full rounded-xl border border-white/10;
+  }
+
+  .academy-article-body blockquote {
+    @apply my-6 border-l-2 border-amber-glow/40 pl-4 text-white/60;
+  }
 }
 
 /* Masonry 瀑布流間距 */

@@ -18,6 +18,12 @@ export const PAGE_META: Record<string, PageMeta> = {
     description: SITE_DESCRIPTION,
     keywords: SITE_KEYWORDS,
   },
+  '/academy': {
+    title: `晶研所｜${SITE_NAME}`,
+    description:
+      '晶研所分享水晶保養、五行選石、手串配戴與能量水晶知識，協助您更了解天然晶石與客製化水晶手鍊。',
+    keywords: `${SITE_KEYWORDS},水晶知識,水晶保養,五行水晶,能量水晶`,
+  },
   '/point-shop': {
     title: `點數商城｜${SITE_NAME}`,
     description:

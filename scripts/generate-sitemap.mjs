@@ -44,6 +44,10 @@ function productDetailPath(product) {
   return `/products/${encodeURIComponent(productSlug(product))}`
 }
 
+function academyArticlePath(slug) {
+  return `/academy/${encodeURIComponent(String(slug || ''))}`
+}
+
 function escapeXml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -104,12 +108,14 @@ function failSitemapBuild(message) {
 const staticPages = [
   // 首頁 / 以 301 導向 /products，勿列入 sitemap 避免與典藏頁重複
   { path: '/products', changefreq: 'daily', priority: '1.0' },
+  { path: '/academy', changefreq: 'weekly', priority: '0.8' },
   { path: '/register', changefreq: 'monthly', priority: '0.6' },
   { path: '/point-shop', changefreq: 'weekly', priority: '0.7' },
   { path: '/wish-board', changefreq: 'weekly', priority: '0.6' },
 ]
 
 let productPages = []
+let academyPages = []
 
 async function fetchProductRows(supabase) {
   const primary = await supabase
@@ -146,6 +152,22 @@ if (supabaseUrl && supabaseKey) {
   } else if (error) {
     failSitemapBuild(`無法讀取商品，僅輸出靜態頁面：${error.message}`)
   }
+
+  const academyResult = await supabase
+    .from('academy_articles')
+    .select('slug,updated_at,published_at')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false })
+
+  if (!academyResult.error && Array.isArray(academyResult.data)) {
+    academyPages = academyResult.data.map((row) => ({
+      path: academyArticlePath(row.slug),
+      changefreq: 'monthly',
+      priority: '0.7',
+      lastmod: (row.updated_at || row.published_at || lastmod).slice(0, 10),
+    }))
+    console.log(`[sitemap] 已納入 ${academyPages.length} 篇學研文章`)
+  }
 } else {
   failSitemapBuild(
     '未設定 Supabase（VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY），僅輸出靜態頁面'
@@ -155,6 +177,7 @@ if (supabaseUrl && supabaseKey) {
 const body = [
   ...staticPages.map((page) => urlEntry(siteUrl, page.path, { ...page, lastmod })),
   ...productPages.map((page) => urlEntry(siteUrl, page.path, page)),
+  ...academyPages.map((page) => urlEntry(siteUrl, page.path, page)),
 ].join('\n')
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -165,9 +188,9 @@ ${body}
 
 const outPath = resolve(root, 'public', 'sitemap.xml')
 writeFileSync(outPath, xml, 'utf8')
-const totalUrls = staticPages.length + productPages.length
+const totalUrls = staticPages.length + productPages.length + academyPages.length
 console.log(
-  `[sitemap] 已寫入 ${outPath}（${totalUrls} 個網址：${staticPages.length} 靜態 + ${productPages.length} 商品）`
+  `[sitemap] 已寫入 ${outPath}（${totalUrls} 個網址：${staticPages.length} 靜態 + ${productPages.length} 商品 + ${academyPages.length} 學研）`
 )
 if (!process.env.VITE_SITE_URL && !fileEnv.VITE_SITE_URL) {
   console.warn(

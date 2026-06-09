@@ -30,15 +30,19 @@ export function ProductsPageSeoSection() {
           <li>會員點數回饋，可至點數商城兌換或折抵消費</li>
         </ul>
         <p className="mt-6">
-          新朋友歡迎
+          想更了解水晶？歡迎到
+          <Link to="/academy" className="mx-1 text-amber-glow/90 hover:underline">
+            晶研所
+          </Link>
+          閱讀保養與選石知識。新朋友也可
           <Link to="/register" className="mx-1 text-amber-glow/90 hover:underline">
             註冊會員
           </Link>
-          領取點數；若有許願商品想法，也可至
+          領取點數；若有許願商品想法，請至
           <Link to="/wish-board" className="mx-1 text-amber-glow/90 hover:underline">
             許願留言板
           </Link>
-          告訴我們，我們會依會員心願規劃上架。
+          告訴我們。
         </p>
       </div>
     </section>

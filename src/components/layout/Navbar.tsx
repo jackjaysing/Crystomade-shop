@@ -26,6 +26,7 @@ function navIconClass(active: boolean): string {
 export function Navbar() {
   const { pathname } = useLocation()
   const isProducts = pathname.startsWith('/products')
+  const isAcademy = pathname.startsWith('/academy')
   const isPointShop = pathname.startsWith('/point-shop')
   const isAccount = pathname.startsWith('/account')
   const isAdmin = pathname.startsWith('/admin')
@@ -89,6 +90,14 @@ export function Navbar() {
                   典藏
                 </Link>
                 <Link
+                  to="/academy"
+                  className={`tracking-wide transition ${
+                    isAcademy ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  晶研所
+                </Link>
+                <Link
                   to="/point-shop"
                   className={`flex items-center gap-1 tracking-wide transition ${
                     isPointShop ? 'text-amber-glow' : 'text-white/60 hover:text-white'
@@ -131,6 +140,14 @@ export function Navbar() {
                   }`}
                 >
                   典藏
+                </Link>
+                <Link
+                  to="/academy"
+                  className={`shrink-0 tracking-wide transition ${
+                    isAcademy ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  晶研
                 </Link>
                 <Link
                   to="/point-shop"
