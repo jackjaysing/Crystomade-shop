@@ -140,25 +140,28 @@ export function Navbar() {
               </div>
 
               <div className="flex min-w-0 items-center gap-2 md:hidden">
-                <Link
-                  to="/products"
-                  state={productsLinkState}
-                  onClick={handleProductsNavClick}
-                  className={`shrink-0 text-sm tracking-wide transition ${
-                    isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-                  }`}
-                >
-                  典藏
-                </Link>
-                <Link
-                  to="/academy"
-                  className={`flex shrink-0 items-center gap-1 text-sm tracking-wide transition ${
-                    isAcademy ? 'text-amber-glow' : 'text-white/60 hover:text-white'
-                  }`}
-                >
-                  <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                  晶研
-                </Link>
+                <div className="flex shrink-0 items-center gap-3">
+                  <Link
+                    to="/products"
+                    state={productsLinkState}
+                    onClick={handleProductsNavClick}
+                    className={`flex shrink-0 items-center gap-1 text-sm tracking-wide transition ${
+                      isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <Gem className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    典藏
+                  </Link>
+                  <Link
+                    to="/academy"
+                    className={`flex shrink-0 items-center gap-1 text-sm tracking-wide transition ${
+                      isAcademy ? 'text-amber-glow' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    晶研
+                  </Link>
+                </div>
                 <Link
                   to="/point-shop"
                   className={navIconClass(isPointShop)}
