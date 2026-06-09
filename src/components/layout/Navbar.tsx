@@ -56,7 +56,7 @@ export function Navbar() {
             to="/products"
             state={productsLinkState}
             onClick={handleProductsNavClick}
-            className="group flex min-w-0 shrink items-center gap-1 transition hover:opacity-90 sm:gap-1.5"
+            className="group flex shrink-0 items-center gap-1 transition hover:opacity-90 sm:gap-1.5"
             aria-label="晶刻 Crystomade"
           >
             <img
@@ -70,12 +70,12 @@ export function Navbar() {
               src="/logoword.png"
               alt=""
               aria-hidden="true"
-              className="hidden h-[2.125rem] w-auto max-w-[6.75rem] shrink-0 object-contain object-left min-[400px]:block sm:h-9 sm:max-w-none md:h-10"
+              className="hidden h-9 w-auto shrink-0 object-contain object-left sm:block md:h-10"
             />
           </Link>
 
           <nav
-            className={`ml-auto flex shrink-0 items-center ${NAV_ICON_GAP} text-sm md:gap-6`}
+            className={`ml-auto flex min-w-0 flex-1 items-center justify-end ${NAV_ICON_GAP} text-sm md:gap-6`}
           >
             <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:gap-6`}>
               <div className="hidden items-center gap-6 md:flex">
@@ -130,12 +130,14 @@ export function Navbar() {
                 )}
               </div>
 
-              <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:hidden`}>
+              <div
+                className={`flex min-w-0 items-center ${NAV_ICON_GAP} md:hidden`}
+              >
                 <Link
                   to="/products"
                   state={productsLinkState}
                   onClick={handleProductsNavClick}
-                  className={`shrink-0 tracking-wide transition ${
+                  className={`shrink-0 text-xs tracking-wide transition sm:text-sm ${
                     isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
                 >
@@ -143,7 +145,7 @@ export function Navbar() {
                 </Link>
                 <Link
                   to="/academy"
-                  className={`shrink-0 tracking-wide transition ${
+                  className={`shrink-0 text-xs tracking-wide transition sm:text-sm ${
                     isAcademy ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
                 >
@@ -151,15 +153,7 @@ export function Navbar() {
                 </Link>
                 <Link
                   to="/point-shop"
-                  className={
-                    profile
-                      ? `flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-2.5 transition ${
-                          isPointShop
-                            ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
-                            : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
-                        }`
-                      : navIconClass(isPointShop)
-                  }
+                  className={navIconClass(isPointShop)}
                   aria-label={
                     profile
                       ? `點數商城，可用 ${availablePoints} 點`
@@ -168,30 +162,17 @@ export function Navbar() {
                 >
                   <Store className="h-5 w-5 shrink-0" strokeWidth={1.5} />
                   {profile && (
-                    <span className="whitespace-nowrap text-xs font-medium tabular-nums">
-                      {availablePoints > 999 ? '999+' : availablePoints} 點
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-[10px] font-medium tabular-nums text-void">
+                      {availablePoints > 999 ? '999+' : availablePoints}
                     </span>
                   )}
                 </Link>
                 <Link
                   to="/account"
-                  className={
-                    profile
-                      ? navIconClass(isAccount)
-                      : `flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-2.5 transition ${
-                          isAccount
-                            ? 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
-                            : 'border-white/10 text-white/70 hover:border-amber-glow/40 hover:text-amber-glow'
-                        }`
-                  }
+                  className={navIconClass(isAccount)}
                   aria-label={profile ? '會員中心' : '會員登入'}
                 >
                   <User className="h-5 w-5 shrink-0" strokeWidth={1.5} />
-                  {!profile && (
-                    <span className="whitespace-nowrap text-xs font-medium tracking-wide">
-                      登入
-                    </span>
-                  )}
                 </Link>
               </div>
             </div>
@@ -199,7 +180,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={openCart}
-              className={`${navIconClass(false)} max-md:shadow-[4px_0_12px_rgba(0,0,0,0.45)]`}
+              className={`${navIconClass(false)} shrink-0 max-md:shadow-[4px_0_12px_rgba(0,0,0,0.45)]`}
               aria-label={`購物車，${checkoutItemCount} 件可結帳商品`}
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />
