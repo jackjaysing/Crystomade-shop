@@ -102,8 +102,8 @@ function failSitemapBuild(message) {
 }
 
 const staticPages = [
-  { path: '/', changefreq: 'weekly', priority: '1.0' },
-  { path: '/products', changefreq: 'daily', priority: '0.9' },
+  // 首頁 / 以 301 導向 /products，勿列入 sitemap 避免與典藏頁重複
+  { path: '/products', changefreq: 'daily', priority: '1.0' },
   { path: '/register', changefreq: 'monthly', priority: '0.6' },
   { path: '/point-shop', changefreq: 'weekly', priority: '0.7' },
   { path: '/wish-board', changefreq: 'weekly', priority: '0.6' },
