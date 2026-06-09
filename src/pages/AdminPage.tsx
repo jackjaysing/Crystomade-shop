@@ -241,7 +241,7 @@ export function AdminPage() {
       />
 
       <nav
-        className="mb-8 flex flex-wrap gap-2 border-b border-white/10 pb-4"
+        className="mb-8 grid grid-cols-3 gap-2 border-b border-white/10 pb-4 md:flex md:flex-wrap"
         aria-label="後台功能分頁"
       >
         {adminTabs.map((tab) => {
@@ -263,7 +263,7 @@ export function AdminPage() {
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative rounded-full border px-4 py-2 text-sm tracking-wide transition ${
+              className={`relative w-full min-w-0 rounded-full border px-2 py-2 text-center text-xs tracking-wide transition sm:px-3 sm:text-sm md:w-auto md:px-4 ${
                 isActive
                   ? 'border-amber-glow/60 bg-amber-glow/15 text-amber-glow'
                   : 'border-white/15 text-white/55 hover:border-amber-glow/40 hover:text-amber-glow'
