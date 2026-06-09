@@ -70,7 +70,7 @@ export function Navbar() {
               src="/logoword.png"
               alt=""
               aria-hidden="true"
-              className="hidden h-9 w-auto shrink-0 object-contain object-left sm:block md:h-10"
+              className="block h-7 w-auto max-w-[5.5rem] shrink-0 object-contain object-left sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
 
