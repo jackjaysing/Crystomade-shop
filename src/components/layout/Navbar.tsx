@@ -77,7 +77,7 @@ export function Navbar() {
               src="/logoword.png"
               alt=""
               aria-hidden="true"
-              className="block h-7 w-auto max-w-[5.5rem] shrink-0 object-contain object-left sm:h-9 sm:max-w-none md:h-10"
+              className="block h-8 w-auto max-w-[6rem] shrink-0 object-contain object-left sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
 
@@ -145,11 +145,10 @@ export function Navbar() {
                     to="/products"
                     state={productsLinkState}
                     onClick={handleProductsNavClick}
-                    className={`flex shrink-0 items-center gap-1 text-sm tracking-wide transition ${
+                    className={`shrink-0 text-sm tracking-wide transition ${
                       isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                     }`}
                   >
-                    <Gem className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                     典藏
                   </Link>
                   <Link
