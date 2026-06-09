@@ -1,4 +1,11 @@
-import { LayoutDashboard, ShoppingCart, Store, User } from 'lucide-react'
+import {
+  BookOpen,
+  Gem,
+  LayoutDashboard,
+  ShoppingCart,
+  Store,
+  User,
+} from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   PRODUCTS_LIST_RESET_STATE,
@@ -75,7 +82,7 @@ export function Navbar() {
           </Link>
 
           <nav
-            className={`ml-auto flex min-w-0 flex-1 items-center justify-end ${NAV_ICON_GAP} text-sm md:gap-6`}
+            className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 text-sm md:gap-6"
           >
             <div className={`flex shrink-0 items-center ${NAV_ICON_GAP} md:gap-6`}>
               <div className="hidden items-center gap-6 md:flex">
@@ -83,18 +90,20 @@ export function Navbar() {
                   to="/products"
                   state={productsLinkState}
                   onClick={handleProductsNavClick}
-                  className={`tracking-wide transition ${
+                  className={`flex items-center gap-1 tracking-wide transition ${
                     isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
                 >
+                  <Gem className="h-4 w-4" strokeWidth={1.5} />
                   典藏
                 </Link>
                 <Link
                   to="/academy"
-                  className={`tracking-wide transition ${
+                  className={`flex items-center gap-1 tracking-wide transition ${
                     isAcademy ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
                 >
+                  <BookOpen className="h-4 w-4" strokeWidth={1.5} />
                   晶研所
                 </Link>
                 <Link
@@ -130,14 +139,12 @@ export function Navbar() {
                 )}
               </div>
 
-              <div
-                className={`flex min-w-0 items-center ${NAV_ICON_GAP} md:hidden`}
-              >
+              <div className="flex min-w-0 items-center gap-2 md:hidden">
                 <Link
                   to="/products"
                   state={productsLinkState}
                   onClick={handleProductsNavClick}
-                  className={`shrink-0 text-xs tracking-wide transition sm:text-sm ${
+                  className={`shrink-0 text-sm tracking-wide transition ${
                     isProducts ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
                 >
@@ -145,10 +152,11 @@ export function Navbar() {
                 </Link>
                 <Link
                   to="/academy"
-                  className={`shrink-0 text-xs tracking-wide transition sm:text-sm ${
+                  className={`flex shrink-0 items-center gap-1 text-sm tracking-wide transition ${
                     isAcademy ? 'text-amber-glow' : 'text-white/60 hover:text-white'
                   }`}
                 >
+                  <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                   晶研
                 </Link>
                 <Link
