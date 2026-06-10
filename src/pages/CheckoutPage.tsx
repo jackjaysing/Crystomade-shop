@@ -417,6 +417,7 @@ export function CheckoutPage() {
                 spendNtd={payableTotal}
                 firstPurchase={!hasCompletedPurchase}
                 loading={firstPurchaseLoading}
+                pointsDiscountNtd={pointsDiscountNtd}
               />
             </div>
           )}

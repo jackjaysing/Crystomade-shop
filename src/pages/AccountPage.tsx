@@ -15,6 +15,10 @@ import {
   POINTS_PER_NTD_DISCOUNT,
   POINTS_PER_NTD_EARN,
 } from '../constants/points'
+import {
+  calcDiscountNtdFromPoints,
+  calcMinSubtotalToUseAllPointsDiscount,
+} from '../lib/pointsCalculation'
 import { useAuth } from '../contexts/AuthContext'
 import {
   fetchMemberOrders,
@@ -80,6 +84,9 @@ export function AccountPage() {
   }
 
   const orderGroups = groupOrders(orders)
+  const pointsDiscountNtd = calcDiscountNtdFromPoints(profile.points)
+  const minSubtotalForPointsDiscount =
+    calcMinSubtotalToUseAllPointsDiscount(profile.points)
 
   const refreshAccountData = async () => {
     if (!user?.id) return
@@ -133,6 +140,12 @@ export function AccountPage() {
               {Math.round(MAX_ORDER_DISCOUNT_RATE * 100)}%）· 首購{' '}
               {FIRST_PURCHASE_POINTS_MULTIPLIER} 倍累點 · 已付款或已出貨後入帳
             </p>
+            {pointsDiscountNtd > 0 && (
+              <p className="mt-2 text-sm text-amber-glow/85">
+                再消費 NT${minSubtotalForPointsDiscount.toLocaleString()} 可折抵
+                NT${pointsDiscountNtd.toLocaleString()}
+              </p>
+            )}
             <Link
               to="/point-shop"
               className="mt-5 inline-block rounded-lg border border-amber-glow/40 bg-amber-glow/10 px-5 py-2.5 text-sm tracking-wide text-amber-glow transition hover:bg-amber-glow/20"

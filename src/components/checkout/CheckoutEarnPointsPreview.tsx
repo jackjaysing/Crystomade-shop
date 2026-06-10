@@ -8,6 +8,8 @@ interface CheckoutEarnPointsPreviewProps {
   spendNtd: number
   firstPurchase: boolean
   loading?: boolean
+  /** 本單已套用的點數折抵金額（NT$） */
+  pointsDiscountNtd?: number
 }
 
 /** 結帳：預計消費回饋點數 */
@@ -15,6 +17,7 @@ export function CheckoutEarnPointsPreview({
   spendNtd,
   firstPurchase,
   loading = false,
+  pointsDiscountNtd = 0,
 }: CheckoutEarnPointsPreviewProps) {
   if (loading || spendNtd <= 0) return null
 
@@ -41,6 +44,12 @@ export function CheckoutEarnPointsPreview({
           </p>
           {firstPurchase && (
             <p className="mt-1 text-xs text-amber-glow/80">首購雙倍累點適用中</p>
+          )}
+          {pointsDiscountNtd > 0 && (
+            <p className="mt-1 text-xs text-white/55">
+              使用點數折抵後，本單仍可累積{' '}
+              <span className="text-amber-glow/90">{earnedPoints}</span> 點
+            </p>
           )}
           <p className="mt-1 text-[11px] text-white/35">
             會員回饋 2% · 每 10 點可折 NT$1

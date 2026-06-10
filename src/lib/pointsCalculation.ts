@@ -54,6 +54,13 @@ export function calcMaxDiscountNtd(
   return Math.min(productSubtotal, capByRate, capByPoints)
 }
 
+/** 欲用盡目前點數折抵，下一筆訂單商品小計至少需達此金額（受 15% 上限） */
+export function calcMinSubtotalToUseAllPointsDiscount(memberPoints: number): number {
+  const discountNtd = calcDiscountNtdFromPoints(memberPoints)
+  if (discountNtd <= 0) return 0
+  return Math.ceil(discountNtd / MAX_ORDER_DISCOUNT_RATE)
+}
+
 /** 將使用者選擇的折抵點數限制在合法範圍（需扣除兌換品已預留點數） */
 export function clampPointsForDiscount(
   requestedPoints: number,
