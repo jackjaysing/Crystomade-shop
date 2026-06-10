@@ -1,13 +1,34 @@
 import {
+  FIRST_PURCHASE_POINTS_MULTIPLIER,
   MAX_ORDER_DISCOUNT_RATE,
   POINTS_PER_NTD_DISCOUNT,
   POINTS_PER_NTD_EARN,
 } from '../constants/points'
 
-/** 消費金額可獲得的點數（滿 10 元 1 點，不滿不計） */
+/** 消費金額可獲得的點數（滿 NT$5 累 1 點，不滿不計） */
 export function calcEarnedPointsFromSpent(ntd: number): number {
   if (ntd <= 0) return 0
   return Math.floor(ntd / POINTS_PER_NTD_EARN)
+}
+
+/** 消費贈點（含首購加倍） */
+export function calcEarnedPointsFromSpentWithBonus(
+  ntd: number,
+  firstPurchase: boolean
+): number {
+  const base = calcEarnedPointsFromSpent(ntd)
+  if (base <= 0) return 0
+  return firstPurchase ? base * FIRST_PURCHASE_POINTS_MULTIPLIER : base
+}
+
+/** 消費贈點折抵價值（NT$） */
+export function calcEarnedRewardNtdFromSpent(
+  ntd: number,
+  firstPurchase = false
+): number {
+  return calcDiscountNtdFromPoints(
+    calcEarnedPointsFromSpentWithBonus(ntd, firstPurchase)
+  )
 }
 
 /** 點數可折抵的現金（NT$） */
@@ -22,7 +43,7 @@ export function calcPointsForDiscountNtd(ntd: number): number {
   return ntd * POINTS_PER_NTD_DISCOUNT
 }
 
-/** 本筆訂單商品小計可折抵上限（NT$）：10% 上限、不得超過小計、不得超過持有點數 */
+/** 本筆訂單商品小計可折抵上限（NT$）：15% 上限、不得超過小計、不得超過持有點數 */
 export function calcMaxDiscountNtd(
   productSubtotal: number,
   memberPoints: number

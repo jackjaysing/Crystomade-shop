@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
+  FIRST_PURCHASE_POINTS_MULTIPLIER,
   POINTS_PER_NTD_EARN,
   REFERRAL_WELCOME_BONUS_POINTS,
   WELCOME_BONUS_POINTS,
@@ -187,7 +188,8 @@ export function MemberAuthForm({
             )}
           </p>
           <p className="text-xs leading-relaxed text-white/35">
-            消費滿 NT${POINTS_PER_NTD_EARN} 累積 1 點，已付款或已出貨後入帳。
+            會員消費回饋 2%（每 NT${POINTS_PER_NTD_EARN} 累 1 點），首購{' '}
+            {FIRST_PURCHASE_POINTS_MULTIPLIER} 倍累點，已付款或已出貨後入帳。
           </p>
         </div>
       )}

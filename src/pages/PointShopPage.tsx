@@ -5,6 +5,8 @@ import { PointProductCard } from '../components/point-shop/PointProductCard'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import { MetalDivider } from '../components/ui/MetalDivider'
 import {
+  FIRST_PURCHASE_POINTS_MULTIPLIER,
+  MAX_ORDER_DISCOUNT_RATE,
   POINTS_PER_NTD_DISCOUNT,
   POINTS_PER_NTD_EARN,
   WELCOME_BONUS_POINTS,
@@ -81,10 +83,12 @@ export function PointShopPage() {
                 <span className="text-amber-glow">{WELCOME_BONUS_POINTS}</span> 點。
               </p>
               <ul className="mt-4 space-y-2 text-xs text-white/40">
-                <li>· 消費每 NT${POINTS_PER_NTD_EARN} 累積 1 點</li>
+                <li>· 會員消費回饋 2%（每 NT${POINTS_PER_NTD_EARN} 累 1 點）</li>
                 <li>
-                  · 每 {POINTS_PER_NTD_DISCOUNT} 點可折 NT$1（結帳時使用，上限 10%）
+                  · 每 {POINTS_PER_NTD_DISCOUNT} 點可折 NT$1（結帳時使用，上限{' '}
+                  {Math.round(MAX_ORDER_DISCOUNT_RATE * 100)}%）
                 </li>
+                <li>· 首購 {FIRST_PURCHASE_POINTS_MULTIPLIER} 倍累點</li>
               </ul>
             </GlassPanel>
             <MemberAuthForm variant="page" />

@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
-import { POINTS_PER_NTD_EARN } from '../../constants/points'
+import {
+  FIRST_PURCHASE_POINTS_MULTIPLIER,
+  POINTS_PER_NTD_EARN,
+} from '../../constants/points'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatPhoneDisplay } from '../../lib/phoneAuth'
 import { MemberAuthForm } from './MemberAuthForm'
@@ -49,8 +52,9 @@ export function CheckoutMemberSection() {
           </div>
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-white/35">
-          本筆訂單將綁定會員帳號；管理員標記已付款或已出貨後，依消費金額每 NT$
-          {POINTS_PER_NTD_EARN} 贈 1 點。
+          本筆訂單將綁定會員帳號；管理員標記已付款或已出貨後，依消費金額回饋 2%（每
+          NT${POINTS_PER_NTD_EARN} 累 1 點），首購 {FIRST_PURCHASE_POINTS_MULTIPLIER}{' '}
+          倍累點。
         </p>
       </div>
     )

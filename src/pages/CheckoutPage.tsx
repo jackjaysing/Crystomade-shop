@@ -4,6 +4,7 @@ import { CartItemSizeEditor } from '../components/cart/CartItemSizeEditor'
 import { OrderSuccessModal } from '../components/cart/OrderSuccessModal'
 import { CheckoutCouponSelect } from '../components/checkout/CheckoutCouponSelect'
 import { CheckoutLoginGate } from '../components/checkout/CheckoutLoginGate'
+import { CheckoutEarnPointsPreview } from '../components/checkout/CheckoutEarnPointsPreview'
 import { CheckoutPointsDiscount } from '../components/checkout/CheckoutPointsDiscount'
 import { calcCouponDiscount } from '../lib/couponCalculation'
 import { fetchMemberAvailableCoupons, redeemMemberCouponAtCheckout } from '../lib/api/coupons'
@@ -19,7 +20,11 @@ import { FREE_SHIPPING_THRESHOLD } from '../constants/shipping'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
 import { useCartAvailability } from '../hooks/useCartAvailability'
-import { profileToOrderPrefill, syncMemberProfileFromCheckout } from '../lib/api/members'
+import {
+  memberHasCompletedPurchase,
+  profileToOrderPrefill,
+  syncMemberProfileFromCheckout,
+} from '../lib/api/members'
 import { createOrdersFromCart } from '../lib/api/orders'
 import { validateOrderForm } from '../lib/normalizeOrder'
 import type { OrderFormData } from '../lib/types'
@@ -62,14 +67,36 @@ export function CheckoutPage() {
   const [memberCoupons, setMemberCoupons] = useState<
     Awaited<ReturnType<typeof fetchMemberAvailableCoupons>>
   >([])
+  const [hasCompletedPurchase, setHasCompletedPurchase] = useState(false)
+  const [firstPurchaseLoading, setFirstPurchaseLoading] = useState(false)
 
   useEffect(() => {
     if (!user?.id) {
       setMemberCoupons([])
       setSelectedCouponId(null)
+      setHasCompletedPurchase(false)
       return
     }
     void fetchMemberAvailableCoupons(user.id).then(setMemberCoupons)
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    setFirstPurchaseLoading(true)
+    void memberHasCompletedPurchase(user.id)
+      .then((completed) => {
+        if (!cancelled) setHasCompletedPurchase(completed)
+      })
+      .catch(() => {
+        if (!cancelled) setHasCompletedPurchase(false)
+      })
+      .finally(() => {
+        if (!cancelled) setFirstPurchaseLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [user?.id])
 
   useEffect(() => {
@@ -380,6 +407,16 @@ export function CheckoutPage() {
                 productSubtotal={subtotal}
                 selectedId={selectedCouponId}
                 onSelect={setSelectedCouponId}
+              />
+            </div>
+          )}
+
+          {profile && payableTotal > 0 && (
+            <div className="mt-4">
+              <CheckoutEarnPointsPreview
+                spendNtd={payableTotal}
+                firstPurchase={!hasCompletedPurchase}
+                loading={firstPurchaseLoading}
               />
             </div>
           )}

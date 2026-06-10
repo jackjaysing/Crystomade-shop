@@ -1,4 +1,7 @@
-import { POINTS_PER_NTD_DISCOUNT } from '../../constants/points'
+import {
+  MAX_ORDER_DISCOUNT_RATE,
+  POINTS_PER_NTD_DISCOUNT,
+} from '../../constants/points'
 import {
   calcDiscountNtdFromPoints,
   calcMaxDiscountNtd,
@@ -13,7 +16,7 @@ interface CheckoutPointsDiscountProps {
   onPointsChange: (points: number) => void
 }
 
-/** 結帳：點數折抵（不含運費、上限 10%） */
+/** 結帳：點數折抵（不含運費、上限 15%） */
 export function CheckoutPointsDiscount({
   memberPoints,
   productSubtotal,
@@ -51,7 +54,8 @@ export function CheckoutPointsDiscount({
         </p>
       </div>
       <p className="mt-1 text-[11px] text-white/35">
-        每 {POINTS_PER_NTD_DISCOUNT} 點折 NT$1
+        每 {POINTS_PER_NTD_DISCOUNT} 點折 NT$1 · 本單上限{' '}
+        {Math.round(MAX_ORDER_DISCOUNT_RATE * 100)}%
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -283,6 +283,20 @@ const MEMBER_ORDER_SELECT = `
   products ( name, image_url, category )
 `
 
+/** 會員是否已有完成付款或出貨的付費訂單（用於首購雙倍預覽） */
+export async function memberHasCompletedPurchase(userId: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .neq('status', 'cancelled')
+    .eq('is_point_redemption', false)
+    .or('is_paid.eq.true,status.eq.shipped')
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return (count ?? 0) > 0
+}
+
 export async function fetchMemberOrders(userId: string): Promise<Order[]> {
   const { data, error } = await supabase
     .from('orders')

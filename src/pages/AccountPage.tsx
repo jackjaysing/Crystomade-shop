@@ -9,7 +9,12 @@ import { MemberChangePasswordPanel } from '../components/member/MemberChangePass
 import { MemberClaimReferralPanel } from '../components/member/MemberClaimReferralPanel'
 import { MemberReferralPanel } from '../components/member/MemberReferralPanel'
 import { MetalDivider } from '../components/ui/MetalDivider'
-import { POINTS_PER_NTD_DISCOUNT, POINTS_PER_NTD_EARN } from '../constants/points'
+import {
+  FIRST_PURCHASE_POINTS_MULTIPLIER,
+  MAX_ORDER_DISCOUNT_RATE,
+  POINTS_PER_NTD_DISCOUNT,
+  POINTS_PER_NTD_EARN,
+} from '../constants/points'
 import { useAuth } from '../contexts/AuthContext'
 import {
   fetchMemberOrders,
@@ -123,7 +128,10 @@ export function AccountPage() {
               {profile.points}
             </p>
             <p className="mt-3 text-xs text-white/40">
-              每消費 NT${POINTS_PER_NTD_EARN} 累積 1 點 · 每 {POINTS_PER_NTD_DISCOUNT} 點折 NT$1（訂單上限 10%）· 已付款或已出貨後入帳
+              會員回饋 2%（每 NT${POINTS_PER_NTD_EARN} 累 1 點）· 每{' '}
+              {POINTS_PER_NTD_DISCOUNT} 點折 NT$1（訂單上限{' '}
+              {Math.round(MAX_ORDER_DISCOUNT_RATE * 100)}%）· 首購{' '}
+              {FIRST_PURCHASE_POINTS_MULTIPLIER} 倍累點 · 已付款或已出貨後入帳
             </p>
             <Link
               to="/point-shop"
