@@ -7,3 +7,6 @@ dist
 # 含 Supabase 金鑰與後台密碼，勿上傳
 EDIT-ME-SUPABASE-KEYS.txt
 ENV設定.txt
+
+# 壓縮腳本備份的原圖（勿上傳）
+public/_originals/

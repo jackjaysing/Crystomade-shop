@@ -13,7 +13,7 @@ export function useProducts() {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchProducts()
+      const data = await fetchProducts({ bypassCache: true })
       setProducts(data)
     } catch (e) {
       setError(formatErrorMessage(e))

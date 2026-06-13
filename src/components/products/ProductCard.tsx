@@ -5,6 +5,7 @@ import { isProductSoldOut } from '../../lib/productStock'
 import { productPhotoAlt } from '../../lib/imageAlt'
 import { productDetailPath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
+import { OptimizedImage } from '../ui/OptimizedImage'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageBadges } from './ProductImageBadges'
 import { ProductPriceDisplay } from './ProductPriceDisplay'
@@ -32,11 +33,10 @@ export function ProductCard({ product }: ProductCardProps) {
       }`}
     >
       <div className="relative aspect-[3/4] overflow-hidden">
-        <img
+        <OptimizedImage
           src={product.image_url}
           alt={productPhotoAlt(product.name)}
           className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-          loading="lazy"
         />
         {/* 金屬邊框光暈 */}
         <div className="pointer-events-none absolute inset-0 bg-metal-gradient opacity-0 transition group-hover:opacity-100" />

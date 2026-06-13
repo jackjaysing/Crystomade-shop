@@ -268,9 +268,12 @@ async function fetchListedCodeMap(): Promise<Map<string, string>> {
 
 /** 前台：進行中與近期抽獎（截止後自動開獎） */
 export async function fetchPublicRaffles(
-  userId?: string | null
+  userId?: string | null,
+  options?: { skipFinalize?: boolean }
 ): Promise<RaffleWithMeta[]> {
-  await finalizeOverdueRaffles()
+  if (!options?.skipFinalize) {
+    await finalizeOverdueRaffles()
+  }
 
   const { data, error } = await supabase
     .from('raffles')

@@ -115,62 +115,100 @@ export async function fetchNewMembersSince(since: string): Promise<AdminAlertMem
   }))
 }
 
+function mapWishAlertRow(row: Record<string, unknown>): AdminAlertWish {
+  return {
+    id: String(row.id),
+    display_name: String(row.display_name ?? ''),
+    content: String(row.content ?? ''),
+    created_at: String(row.created_at ?? ''),
+  }
+}
+
 /** 取得指定時間之後的新許願留言 */
 export async function fetchNewWishMessagesSince(
   since: string
 ): Promise<AdminAlertWish[]> {
-  const { data, error } = await supabase.rpc('fetch_all_wish_messages_admin')
+  const incremental = await supabase.rpc('fetch_new_wish_messages_admin', {
+    since,
+  })
 
+  if (!incremental.error) {
+    return (incremental.data ?? []).map((row: Record<string, unknown>) =>
+      mapWishAlertRow(row)
+    )
+  }
+
+  const msg = formatErrorMessage(incremental.error)
+  if (!/fetch_new_wish_messages_admin|42883/i.test(msg)) {
+    if (/wish_messages|42P01/i.test(msg)) return []
+    throw new Error(msg)
+  }
+
+  const { data, error } = await supabase.rpc('fetch_all_wish_messages_admin')
   if (error) {
-    const msg = formatErrorMessage(error)
-    if (/wish_messages|fetch_all_wish_messages_admin|42P01|42883/i.test(msg)) {
+    const fallbackMsg = formatErrorMessage(error)
+    if (/wish_messages|fetch_all_wish_messages_admin|42P01|42883/i.test(fallbackMsg)) {
       return []
     }
-    throw new Error(msg)
+    throw new Error(fallbackMsg)
   }
 
   return (data ?? [])
     .filter((row: Record<string, unknown>) => String(row.created_at) > since)
-    .map((row: Record<string, unknown>) => ({
-      id: String(row.id),
-      display_name: String(row.display_name ?? ''),
-      content: String(row.content ?? ''),
-      created_at: String(row.created_at ?? ''),
-    }))
+    .map((row: Record<string, unknown>) => mapWishAlertRow(row))
     .sort((a: AdminAlertWish, b: AdminAlertWish) =>
       b.created_at.localeCompare(a.created_at)
     )
+}
+
+function mapFortuneAlertRow(row: Record<string, unknown>): AdminAlertFortune {
+  return {
+    id: String(row.id),
+    contact_name:
+      String(row.member_real_name ?? '').trim() ||
+      String(row.display_name ?? '').trim() ||
+      '訪客',
+    question: String(row.question ?? ''),
+    created_at: String(row.created_at ?? ''),
+  }
 }
 
 /** 取得指定時間之後的新命理諮詢 */
 export async function fetchNewFortuneConsultationsSince(
   since: string
 ): Promise<AdminAlertFortune[]> {
-  const { data, error } = await supabase.rpc('fetch_all_fortune_consultations_admin')
+  const incremental = await supabase.rpc('fetch_new_fortune_consultations_admin', {
+    since,
+  })
 
+  if (!incremental.error) {
+    return (incremental.data ?? []).map((row: Record<string, unknown>) =>
+      mapFortuneAlertRow(row)
+    )
+  }
+
+  const msg = formatErrorMessage(incremental.error)
+  if (!/fetch_new_fortune_consultations_admin|42883/i.test(msg)) {
+    if (/fortune_consultation|42P01/i.test(msg)) return []
+    throw new Error(msg)
+  }
+
+  const { data, error } = await supabase.rpc('fetch_all_fortune_consultations_admin')
   if (error) {
-    const msg = formatErrorMessage(error)
+    const fallbackMsg = formatErrorMessage(error)
     if (
       /fortune_consultation|fetch_all_fortune_consultations_admin|42P01|42883/i.test(
-        msg
+        fallbackMsg
       )
     ) {
       return []
     }
-    throw new Error(msg)
+    throw new Error(fallbackMsg)
   }
 
   return (data ?? [])
     .filter((row: Record<string, unknown>) => String(row.created_at) > since)
-    .map((row: Record<string, unknown>) => ({
-      id: String(row.id),
-      contact_name:
-        String(row.member_real_name ?? '').trim() ||
-        String(row.display_name ?? '').trim() ||
-        '訪客',
-      question: String(row.question ?? ''),
-      created_at: String(row.created_at ?? ''),
-    }))
+    .map((row: Record<string, unknown>) => mapFortuneAlertRow(row))
     .sort((a: AdminAlertFortune, b: AdminAlertFortune) =>
       b.created_at.localeCompare(a.created_at)
     )

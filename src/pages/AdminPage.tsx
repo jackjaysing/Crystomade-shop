@@ -105,31 +105,33 @@ export function AdminPage() {
   const [customerReloadSignal, setCustomerReloadSignal] = useState(0)
   const [wishReloadSignal, setWishReloadSignal] = useState(0)
   const [fortuneReloadSignal, setFortuneReloadSignal] = useState(0)
+  const needsProductAnalytics = authed && activeTab === 'products'
+  const needsPageAnalytics = authed && activeTab === 'analytics'
   const {
     stats: pageViewStats,
     loading: pageViewLoading,
     error: pageViewError,
     reload: reloadPageViewStats,
-  } = usePageViewStats(authed)
+  } = usePageViewStats(needsPageAnalytics)
   const {
     stats: productViewStats,
     statsByProductId,
     loading: productViewLoading,
     error: productViewError,
     reload: reloadProductViewStats,
-  } = useProductViewStats(authed)
+  } = useProductViewStats(needsProductAnalytics)
   const {
     statsByProductId: shareStatsByProductId,
     loading: productShareLoading,
     error: productShareError,
     reload: reloadProductShareStats,
-  } = useProductShareStats(authed)
+  } = useProductShareStats(needsProductAnalytics)
   const {
     slots: pageViewTimeSlots,
     loading: timeSlotLoading,
     error: timeSlotError,
     reload: reloadTimeSlotStats,
-  } = usePageViewTimeSlotStats(authed)
+  } = usePageViewTimeSlotStats(needsPageAnalytics)
   const {
     banners,
     error: bannerError,

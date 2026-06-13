@@ -41,6 +41,8 @@ const safeBottom = {
   bottom: 'max(5.5rem, calc(1.5rem + env(safe-area-inset-bottom, 0px)))',
 }
 
+const RAFFLE_POLL_MS = 300_000
+
 /** 左側懸浮輪盤；可向左收合，展開時圖示較大 */
 export function RaffleFloatingWidget() {
   const { user } = useAuth()
@@ -48,14 +50,19 @@ export function RaffleFloatingWidget() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [winPulse, setWinPulse] = useState(false)
 
-  const reloadRaffles = useCallback(async () => {
-    try {
-      const rows = await fetchPublicRaffles(user?.id ?? null)
-      setWinPulse(hasUnseenWin(rows, user?.id))
-    } catch {
-      setWinPulse(false)
-    }
-  }, [user?.id])
+  const reloadRaffles = useCallback(
+    async (options?: { skipFinalize?: boolean }) => {
+      try {
+        const rows = await fetchPublicRaffles(user?.id ?? null, {
+          skipFinalize: options?.skipFinalize,
+        })
+        setWinPulse(hasUnseenWin(rows, user?.id))
+      } catch {
+        setWinPulse(false)
+      }
+    },
+    [user?.id]
+  )
 
   useEffect(() => {
     try {
@@ -66,10 +73,15 @@ export function RaffleFloatingWidget() {
   }, [mode])
 
   useEffect(() => {
-    void reloadRaffles()
-    const id = window.setInterval(() => void reloadRaffles(), 60_000)
+    if (!user?.id) return
+
+    void reloadRaffles({ skipFinalize: true })
+    const id = window.setInterval(
+      () => void reloadRaffles({ skipFinalize: true }),
+      RAFFLE_POLL_MS
+    )
     return () => window.clearInterval(id)
-  }, [reloadRaffles])
+  }, [reloadRaffles, user?.id])
 
   const isCollapsed = mode === 'collapsed'
 

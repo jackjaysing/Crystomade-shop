@@ -17,7 +17,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
 import { usePointRedeemState } from '../../hooks/usePointRedeemState'
 import { useAdminSession } from '../../hooks/useAdminSession'
-import { useCartAvailability } from '../../hooks/useCartAvailability'
+import { OptimizedImage } from '../ui/OptimizedImage'
 
 const NAV_ICON_GAP = 'gap-1.5'
 
@@ -40,8 +40,8 @@ export function Navbar() {
   const { profile } = useAuth()
   const { authed: adminAuthed } = useAdminSession()
   const { availablePoints } = usePointRedeemState()
-  const { openCart } = useCart()
-  const { checkoutItemCount } = useCartAvailability()
+  const { openCart, items } = useCart()
+  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   const productsLinkState = { [PRODUCTS_LIST_RESET_STATE]: true }
 
@@ -66,17 +66,19 @@ export function Navbar() {
             className="group flex shrink-0 items-center gap-1 transition hover:opacity-90 sm:gap-1.5"
             aria-label="晶刻 Crystomade"
           >
-            <img
+            <OptimizedImage
               src="/logomark.png"
               alt="晶刻 Crystomade 品牌標誌"
               width={40}
               height={40}
+              priority
               className="block h-9 w-9 shrink-0 object-contain sm:h-11 sm:w-11"
             />
-            <img
+            <OptimizedImage
               src="/logoword.png"
               alt=""
               aria-hidden="true"
+              priority
               className="block h-8 w-auto max-w-[6rem] shrink-0 object-contain object-left sm:h-9 sm:max-w-none md:h-10"
             />
           </Link>
@@ -191,12 +193,12 @@ export function Navbar() {
               type="button"
               onClick={openCart}
               className={`${navIconClass(false)} shrink-0 max-md:shadow-[4px_0_12px_rgba(0,0,0,0.45)]`}
-              aria-label={`購物車，${checkoutItemCount} 件可結帳商品`}
+              aria-label={`購物車，${cartItemCount} 件商品`}
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />
-              {checkoutItemCount > 0 && (
+              {cartItemCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-[10px] font-medium text-void">
-                  {checkoutItemCount > 99 ? '99+' : checkoutItemCount}
+                  {cartItemCount > 99 ? '99+' : cartItemCount}
                 </span>
               )}
             </button>

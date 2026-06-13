@@ -6,9 +6,7 @@ export function formatErrorMessage(err: unknown): string {
     const msg = err.message
 
     if (/fetch failed|Failed to fetch|NetworkError/i.test(msg)) {
-      return (
-        '無法連線 Supabase（常見：專案暫停 503、防毒攔截 HTTPS、URL 與 Dashboard 不一致）。請點下方「連線檢測」查看原因'
-      )
+      return '無法連線資料服務，請稍後再試或聯繫官方 LINE'
     }
 
     if (/Legacy API keys|legacy api/i.test(msg)) {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { OptimizedImage } from '../ui/OptimizedImage'
 import type { AnnouncementBanner } from '../../lib/types'
 
 interface BannerCarouselProps {
@@ -125,16 +126,16 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
         className="flex transition-transform duration-500 ease-out will-change-transform"
         style={{ transform: `translate3d(-${activeIndex * 100}%, 0, 0)` }}
       >
-        {banners.map((banner) => {
+        {banners.map((banner, index) => {
           const altText = banner.name.trim()
             ? `晶刻 Crystomade 公告：${banner.name.trim()}`
             : '晶刻 Crystomade 活動公告橫幅'
           const image = (
-            <img
+            <OptimizedImage
               src={banner.image_url}
               alt={altText}
               className="aspect-[3/1] w-full max-h-[216px] object-cover sm:max-h-[240px] md:max-h-[264px]"
-              loading="lazy"
+              priority={index === 0}
               draggable={false}
             />
           )

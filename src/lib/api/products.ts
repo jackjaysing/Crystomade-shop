@@ -25,6 +25,13 @@ function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
   )
 }
 
+const PRODUCTS_CACHE_MS = 60_000
+let storefrontProductsCache: { data: Product[]; at: number } | null = null
+
+export function invalidateStorefrontProductsCache(): void {
+  storefrontProductsCache = null
+}
+
 /** 新商品排在同區塊最前（sort_order 小於現有最小值） */
 async function getSortOrderForNewProduct(isHot: boolean): Promise<number> {
   const { data, error } = await supabase
@@ -56,9 +63,20 @@ async function getSortOrderForNewProduct(isHot: boolean): Promise<number> {
 }
 
 /** 取得上架中商品（排除已軟刪除；排序由 sortProducts 處理） */
-export async function fetchProducts(): Promise<Product[]> {
+export async function fetchProducts(options?: {
+  bypassCache?: boolean
+}): Promise<Product[]> {
   if (!isSupabaseConfigured) {
     throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
+  }
+
+  const now = Date.now()
+  if (
+    !options?.bypassCache &&
+    storefrontProductsCache &&
+    now - storefrontProductsCache.at < PRODUCTS_CACHE_MS
+  ) {
+    return storefrontProductsCache.data
   }
 
   const { data, error } = await supabase
@@ -78,12 +96,16 @@ export async function fetchProducts(): Promise<Product[]> {
     .order('created_at', { ascending: false })
 
       if (fallbackError) throw new Error(formatErrorMessage(fallbackError))
-      return mapActiveProducts((fallback ?? []) as Record<string, unknown>[])
+      const result = mapActiveProducts((fallback ?? []) as Record<string, unknown>[])
+      storefrontProductsCache = { data: result, at: Date.now() }
+      return result
     }
     throw new Error(msg)
   }
 
-  return mapActiveProducts((data ?? []) as Record<string, unknown>[])
+  const result = mapActiveProducts((data ?? []) as Record<string, unknown>[])
+  storefrontProductsCache = { data: result, at: Date.now() }
+  return result
 }
 
 /** 依 ID 取得單一上架商品（詳情頁用） */
@@ -235,6 +257,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
     entityLabel: product.name,
     summary: `新增商品「${product.name}」：原價 ${formatAdminMoney(product.price)}；庫存 ${product.stock} 件`,
   })
+  invalidateStorefrontProductsCache()
   return product
 }
 
@@ -298,6 +321,7 @@ export async function updateProduct(
     entityLabel: product.name,
     summary: buildProductUpdateSummary(beforeProduct, product),
   })
+  invalidateStorefrontProductsCache()
   return product
 }
 
@@ -326,6 +350,7 @@ export async function markProductSold(productId: string): Promise<void> {
     entityLabel: name,
     summary: `將商品「${name}」標記為已售出：庫存 ${stock} 件 → 0 件`,
   })
+  invalidateStorefrontProductsCache()
 }
 
 /** 後台：切換熱門商品標示 */
@@ -349,6 +374,7 @@ export async function setProductHot(
     entityLabel: product.name,
     summary: `${isHot ? '設為' : '取消'}熱門商品「${product.name}」`,
   })
+  invalidateStorefrontProductsCache()
   return product
 }
 
@@ -447,6 +473,7 @@ export async function deleteProduct(productId: string): Promise<void> {
     entityLabel: name,
     summary: `刪除商品「${name}」`,
   })
+  invalidateStorefrontProductsCache()
 }
 
 /** 後台：重新上架已刪除商品 */
@@ -468,5 +495,6 @@ export async function restoreProduct(productId: string): Promise<Product> {
     entityLabel: product.name,
     summary: `重新上架商品「${product.name}」`,
   })
+  invalidateStorefrontProductsCache()
   return product
 }

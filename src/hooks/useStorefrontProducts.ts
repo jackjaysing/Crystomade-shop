@@ -11,7 +11,7 @@ interface UseStorefrontProductsOptions {
 
 /** 前台典藏商品 hook（排除已刪除物品） */
 export function useStorefrontProducts(options: UseStorefrontProductsOptions = {}) {
-  const { refetchOnFocus = true } = options
+  const { refetchOnFocus = false } = options
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

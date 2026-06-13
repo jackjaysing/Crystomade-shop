@@ -21,7 +21,8 @@ const BADGE_MEMBER_KEY = 'crystomade-admin-badge-member'
 const BADGE_WISH_KEY = 'crystomade-admin-badge-wish'
 const BADGE_FORTUNE_KEY = 'crystomade-admin-badge-fortune'
 const ALERTS_KEY = 'crystomade-admin-alerts-list'
-const POLL_MS = 30_000
+const POLL_MS = 60_000
+const FOCUS_POLL_COOLDOWN_MS = 20_000
 
 export type AdminAlertItem =
   | { type: 'order'; id: string; at: string; title: string; detail: string }
@@ -190,6 +191,16 @@ export function useAdminAlerts({
   const notifiedWishesRef = useRef(loadNotifiedSet(NOTIFIED_WISHES_KEY))
   const notifiedFortunesRef = useRef(loadNotifiedSet(NOTIFIED_FORTUNES_KEY))
   const pollingRef = useRef(false)
+  const lastPollAtRef = useRef(0)
+  const onNewOrdersRef = useRef(onNewOrders)
+  const onNewMembersRef = useRef(onNewMembers)
+  const onNewWishesRef = useRef(onNewWishes)
+  const onNewFortunesRef = useRef(onNewFortunes)
+
+  onNewOrdersRef.current = onNewOrders
+  onNewMembersRef.current = onNewMembers
+  onNewWishesRef.current = onNewWishes
+  onNewFortunesRef.current = onNewFortunes
 
   const appendAlerts = useCallback((items: AdminAlertItem[]) => {
     if (items.length === 0) return
@@ -205,10 +216,16 @@ export function useAdminAlerts({
     }
   }, [])
 
-  const poll = useCallback(async () => {
+  const poll = useCallback(async (options?: { force?: boolean }) => {
     if (!enabled || pollingRef.current) return
 
+    const now = Date.now()
+    if (!options?.force && now - lastPollAtRef.current < FOCUS_POLL_COOLDOWN_MS) {
+      return
+    }
+
     pollingRef.current = true
+    lastPollAtRef.current = now
     try {
       const since = watermarkRef.current
       const [orders, members, wishes, fortunes] = await Promise.all([
@@ -286,7 +303,7 @@ export function useAdminAlerts({
             storeBadge(BADGE_ORDER_KEY, next)
             return next
           })
-          onNewOrders?.()
+          onNewOrdersRef.current?.()
         }
         if (newMemberCount > 0) {
           setMemberBadge((n) => {
@@ -294,7 +311,7 @@ export function useAdminAlerts({
             storeBadge(BADGE_MEMBER_KEY, next)
             return next
           })
-          onNewMembers?.()
+          onNewMembersRef.current?.()
         }
         if (newWishCount > 0) {
           setWishBadge((n) => {
@@ -302,7 +319,7 @@ export function useAdminAlerts({
             storeBadge(BADGE_WISH_KEY, next)
             return next
           })
-          onNewWishes?.()
+          onNewWishesRef.current?.()
         }
         if (newFortuneCount > 0) {
           setFortuneBadge((n) => {
@@ -310,7 +327,7 @@ export function useAdminAlerts({
             storeBadge(BADGE_FORTUNE_KEY, next)
             return next
           })
-          onNewFortunes?.()
+          onNewFortunesRef.current?.()
         }
       }
     } catch {
@@ -319,12 +336,12 @@ export function useAdminAlerts({
       pollingRef.current = false
       setListening(true)
     }
-  }, [appendAlerts, enabled, onNewFortunes, onNewMembers, onNewOrders, onNewWishes])
+  }, [appendAlerts, enabled])
 
   useEffect(() => {
     if (!enabled) return
-    void poll()
-    const timer = window.setInterval(() => void poll(), POLL_MS)
+    void poll({ force: true })
+    const timer = window.setInterval(() => void poll({ force: true }), POLL_MS)
 
     const onVisible = () => {
       if (document.visibilityState === 'visible') void poll()

@@ -12,7 +12,7 @@ interface UseBannersOptions {
 
 /** 公告橫幅列表 hook */
 export function useBanners(options: UseBannersOptions = {}) {
-  const { admin = false, enabled = true, refetchOnFocus = !admin } = options
+  const { admin = false, enabled = true, refetchOnFocus = false } = options
   const [banners, setBanners] = useState<AnnouncementBanner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
