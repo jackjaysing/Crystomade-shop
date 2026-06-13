@@ -129,11 +129,17 @@ function formatKb(bytes) {
 const { dryRun, limit } = parseArgs(process.argv.slice(2))
 const env = await loadEnv()
 const url = env.VITE_SUPABASE_URL
-const key = env.VITE_SUPABASE_ANON_KEY
+const key = env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_ANON_KEY
 
 if (!url || !key) {
   console.error('請在 .env 設定 VITE_SUPABASE_URL 與 VITE_SUPABASE_ANON_KEY')
   process.exit(1)
+}
+
+if (!env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.log(
+    '提示：若上傳出現 row-level security policy，請在 .env 加入 SUPABASE_SERVICE_ROLE_KEY（僅本機使用，勿 commit），或執行 supabase/migration-add-storage-update-policy.sql\n'
+  )
 }
 
 const supabase = createClient(url, key)
@@ -145,7 +151,14 @@ let files
 try {
   files = await listAllFiles(supabase)
 } catch (e) {
-  console.error('無法列出 Storage（可能 API 受限或網路問題）：', e.message ?? e)
+  const msg = e.message ?? String(e)
+  console.error('無法列出 Storage：', msg)
+  if (/UNABLE_TO_VERIFY_LEAF_SIGNATURE|fetch failed/i.test(msg)) {
+    console.error(
+      '\n本機 SSL 憑證問題（常見：防毒 HTTPS 掃描）。PowerShell 可暫時執行：\n' +
+        "  $env:NODE_TLS_REJECT_UNAUTHORIZED='0'; npm run compress:storage\n"
+    )
+  }
   process.exit(1)
 }
 
@@ -206,6 +219,11 @@ for (const file of images) {
     })
     if (upErr) {
       console.log(`  ↳ 上傳失敗：${upErr.message}`)
+      if (/row-level security/i.test(upErr.message)) {
+        console.log(
+          '  ↳ 請在 Supabase SQL Editor 執行 migration-add-storage-update-policy.sql'
+        )
+      }
       failed += 1
       continue
     }

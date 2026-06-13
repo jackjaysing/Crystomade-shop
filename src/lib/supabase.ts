@@ -33,3 +33,6 @@ export const ADMIN_PASSWORD = readEnv('VITE_ADMIN_PASSWORD')
 
 /** Storage 桶名稱 */
 export const PRODUCT_IMAGE_BUCKET = 'product-images'
+
+/** Storage 圖片 CDN 快取（1 年，降低重複下載 egress） */
+export const STORAGE_IMAGE_CACHE_CONTROL = '31536000'

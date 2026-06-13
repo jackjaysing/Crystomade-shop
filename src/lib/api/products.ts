@@ -12,7 +12,7 @@ import { sanitizeSubcategoryForSave } from '../productSubcategory'
 import { sanitizeProductTags } from '../productTags'
 import { isProductActive } from '../productStock'
 import { sortProducts } from '../sortProducts'
-import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
+import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../supabase'
 import type {
   Product,
   ProductEditData,
@@ -180,7 +180,7 @@ async function uploadProductImage(file: File): Promise<string> {
 
   const { error: uploadError } = await supabase.storage
     .from(PRODUCT_IMAGE_BUCKET)
-    .upload(path, watermarked, { cacheControl: '3600', upsert: false })
+    .upload(path, watermarked, { cacheControl: STORAGE_IMAGE_CACHE_CONTROL, upsert: false })
 
   if (uploadError) throw uploadError
 

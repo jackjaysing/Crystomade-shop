@@ -9,6 +9,7 @@
     "sitemap": "node scripts/generate-sitemap.mjs",
     "compress:public": "node scripts/compress-public-images.mjs",
     "compress:storage": "node scripts/compress-storage-images.mjs",
+    "diagnose:supabase": "node scripts/diagnose-supabase.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

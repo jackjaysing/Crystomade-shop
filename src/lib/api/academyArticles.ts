@@ -2,7 +2,7 @@ import { buildArticleSlug } from '../articleSlug'
 import { compressImageForUpload } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
 import { sanitizeArticleHtml } from '../sanitizeArticleHtml'
-import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
+import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../supabase'
 import type { AcademyArticle, AcademyArticleFormData } from '../types'
 
 function normalizeArticle(row: Record<string, unknown>): AcademyArticle {
@@ -52,7 +52,7 @@ export async function uploadAcademyImage(file: File): Promise<string> {
 
   const { error: uploadError } = await supabase.storage
     .from(PRODUCT_IMAGE_BUCKET)
-    .upload(path, compressed, { cacheControl: '3600', upsert: false })
+    .upload(path, compressed, { cacheControl: STORAGE_IMAGE_CACHE_CONTROL, upsert: false })
 
   if (uploadError) throw uploadError
 

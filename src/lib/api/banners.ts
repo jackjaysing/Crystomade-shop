@@ -2,7 +2,7 @@ import { buildBannerUpdateSummary } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { compressImageForUpload } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
-import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
+import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../supabase'
 import type { AnnouncementBanner } from '../types'
 
 function normalizeBanner(row: Record<string, unknown>): AnnouncementBanner {
@@ -24,7 +24,7 @@ async function uploadBannerImage(file: File): Promise<string> {
 
   const { error: uploadError } = await supabase.storage
     .from(PRODUCT_IMAGE_BUCKET)
-    .upload(path, compressed, { cacheControl: '3600', upsert: false })
+    .upload(path, compressed, { cacheControl: STORAGE_IMAGE_CACHE_CONTROL, upsert: false })
 
   if (uploadError) throw uploadError
 

@@ -6,7 +6,7 @@ import {
 import { recordAdminActivity } from './adminActivityLog'
 import { assertBrowserDisplayableImageFile, compressImageForUpload } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
-import { supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
+import { supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../supabase'
 import type {
   Coupon,
   CouponFormData,
@@ -133,7 +133,7 @@ export async function uploadGiftCouponImage(file: File): Promise<string> {
 
   const { error } = await supabase.storage
     .from(PRODUCT_IMAGE_BUCKET)
-    .upload(path, compressed, { cacheControl: '3600', upsert: false })
+    .upload(path, compressed, { cacheControl: STORAGE_IMAGE_CACHE_CONTROL, upsert: false })
 
   if (error) throw new Error(formatErrorMessage(error))
   const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path)
