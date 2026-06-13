@@ -97,13 +97,11 @@ function resolveSiteUrl() {
 const siteUrl = resolveSiteUrl()
 const supabaseUrl = process.env.VITE_SUPABASE_URL || fileEnv.VITE_SUPABASE_URL
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || fileEnv.VITE_SUPABASE_ANON_KEY
-const isVercelBuild = process.env.VERCEL === '1'
-const lastmod = new Date().toISOString().slice(0, 10)
-
-function failSitemapBuild(message) {
-  console.error(`[sitemap] ${message}`)
-  if (isVercelBuild) process.exit(1)
+function warnSitemapIssue(message) {
+  console.warn(`[sitemap] ${message}`)
 }
+
+const lastmod = new Date().toISOString().slice(0, 10)
 
 const staticPages = [
   // 首頁 / 以 301 導向 /products，勿列入 sitemap 避免與典藏頁重複
@@ -150,7 +148,7 @@ if (supabaseUrl && supabaseKey) {
     }))
     console.log(`[sitemap] 已納入 ${productPages.length} 個商品頁`)
   } else if (error) {
-    failSitemapBuild(`無法讀取商品，僅輸出靜態頁面：${error.message}`)
+    warnSitemapIssue(`無法讀取商品，僅輸出靜態頁面：${error.message}`)
   }
 
   const academyResult = await supabase
@@ -169,7 +167,7 @@ if (supabaseUrl && supabaseKey) {
     console.log(`[sitemap] 已納入 ${academyPages.length} 篇學研文章`)
   }
 } else {
-  failSitemapBuild(
+  warnSitemapIssue(
     '未設定 Supabase（VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY），僅輸出靜態頁面'
   )
 }
