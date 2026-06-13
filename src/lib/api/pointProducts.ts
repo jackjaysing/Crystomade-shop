@@ -1,5 +1,6 @@
 import { buildPointProductUpdateSummary } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
+import { compressImageForUpload } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
 import type { PointProduct, PointProductFormData } from '../types'
@@ -22,12 +23,13 @@ function normalizePointProduct(row: Record<string, unknown>): PointProduct {
 }
 
 async function uploadPointProductImage(file: File): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'jpg'
+  const compressed = await compressImageForUpload(file, 'card')
+  const ext = compressed.name.split('.').pop() ?? 'jpg'
   const path = `point-shop/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   const { error } = await supabase.storage
     .from(PRODUCT_IMAGE_BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false })
+    .upload(path, compressed, { cacheControl: '3600', upsert: false })
 
   if (error) throw error
   const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path)

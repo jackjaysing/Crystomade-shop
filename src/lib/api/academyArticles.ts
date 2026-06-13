@@ -1,4 +1,5 @@
 import { buildArticleSlug } from '../articleSlug'
+import { compressImageForUpload } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
 import { sanitizeArticleHtml } from '../sanitizeArticleHtml'
 import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET } from '../supabase'
@@ -45,12 +46,13 @@ function prepareFormPayload(form: AcademyArticleFormData) {
 }
 
 export async function uploadAcademyImage(file: File): Promise<string> {
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+  const compressed = await compressImageForUpload(file, 'banner')
+  const ext = compressed.name.split('.').pop()?.toLowerCase() ?? 'jpg'
   const path = `academy/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   const { error: uploadError } = await supabase.storage
     .from(PRODUCT_IMAGE_BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false })
+    .upload(path, compressed, { cacheControl: '3600', upsert: false })
 
   if (uploadError) throw uploadError
 

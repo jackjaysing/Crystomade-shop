@@ -4,6 +4,7 @@ import {
 } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
+import { compressImageForUpload } from '../browserImage'
 import { applyCrystomadeWatermark } from '../watermarkProductImage'
 import { normalizeProduct } from '../normalizeProduct'
 import { sanitizeFiveElements } from '../fiveElements'
@@ -172,7 +173,8 @@ export async function fetchQuickAddProducts(): Promise<Product[]> {
 
 /** 上傳單張圖片至 Storage，回傳公開 URL */
 async function uploadProductImage(file: File): Promise<string> {
-  const watermarked = await applyCrystomadeWatermark(file)
+  const compressed = await compressImageForUpload(file, 'product')
+  const watermarked = await applyCrystomadeWatermark(compressed)
   const ext = watermarked.name.split('.').pop() ?? 'jpg'
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
