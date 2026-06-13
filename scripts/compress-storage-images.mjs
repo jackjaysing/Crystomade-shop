@@ -17,6 +17,16 @@ const PNG_QUALITY = 80
 const MIN_BYTES_TO_TOUCH = 120 * 1024
 
 function parseArgs(argv) {
+  const dryRun = argv.includes('--dry-run')
+  const limitIdx = argv.indexOf('--limit')
+  const limit =
+    limitIdx >= 0 && argv[limitIdx + 1]
+      ? Number.parseInt(argv[limitIdx + 1], 10)
+      : Infinity
+  return { dryRun, limit: Number.isFinite(limit) ? limit : Infinity }
+}
+
+async function loadEnv() {
   let text = ''
   try {
     text = await fs.readFile(path.resolve('.env'), 'utf8')
@@ -32,16 +42,6 @@ function parseArgs(argv) {
     env[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim()
   }
   return env
-}
-
-function parseArgs(argv) {
-  const dryRun = argv.includes('--dry-run')
-  const limitIdx = argv.indexOf('--limit')
-  const limit =
-    limitIdx >= 0 && argv[limitIdx + 1]
-      ? Number.parseInt(argv[limitIdx + 1], 10)
-      : Infinity
-  return { dryRun, limit: Number.isFinite(limit) ? limit : Infinity }
 }
 
 async function listAllFiles(supabase, prefix = '') {
