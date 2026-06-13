@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArticleBody } from '../components/academy/ArticleBody'
+import { SiteMaintenancePanel } from '../components/ui/SiteMaintenancePanel'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import { fetchPublishedAcademyArticleBySlug } from '../lib/api/academyArticles'
 import { applyPageMeta } from '../lib/siteMeta'
@@ -11,6 +12,7 @@ export function AcademyArticlePage() {
   const { slug } = useParams<{ slug: string }>()
   const [article, setArticle] = useState<AcademyArticle | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
@@ -22,6 +24,8 @@ export function AcademyArticlePage() {
 
     let cancelled = false
     setLoading(true)
+    setError(false)
+    setNotFound(false)
     void fetchPublishedAcademyArticleBySlug(decodeURIComponent(slug))
       .then((row) => {
         if (cancelled) return
@@ -31,9 +35,14 @@ export function AcademyArticlePage() {
           return
         }
         setArticle(row)
-        setNotFound(false)
         applyPageMeta('/academy')
         document.title = `${row.title}｜晶研所`
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(true)
+          setArticle(null)
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -48,6 +57,22 @@ export function AcademyArticlePage() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center pt-28 text-white/40">
         載入中…
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-24 pb-16">
+        <div className="mx-auto max-w-lg px-6">
+          <SiteMaintenancePanel />
+          <Link
+            to="/academy"
+            className="mt-6 block text-center text-sm text-amber-glow hover:underline"
+          >
+            返回晶研所
+          </Link>
+        </div>
       </div>
     )
   }

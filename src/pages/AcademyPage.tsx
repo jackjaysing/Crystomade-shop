@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchPublishedAcademyArticles } from '../lib/api/academyArticles'
 import type { AcademyArticle } from '../lib/types'
 import { ArticleCard } from '../components/academy/ArticleCard'
+import { SiteMaintenancePanel } from '../components/ui/SiteMaintenancePanel'
 import { GlassPanel } from '../components/ui/GlassPanel'
 
 /** 晶刻學研所：水晶知識文章列表 */
@@ -51,15 +52,7 @@ export function AcademyPage() {
         <div className="mt-10">
           {loading && <p className="text-sm text-white/40">載入文章中…</p>}
 
-          {error && (
-            <GlassPanel className="p-6 text-sm text-red-300/90">
-              {error}
-              <p className="mt-2 text-xs text-white/45">
-                若為新功能，請在 Supabase SQL Editor 執行
-                supabase/migration-add-academy-articles.sql
-              </p>
-            </GlassPanel>
-          )}
+          {error && <SiteMaintenancePanel />}
 
           {!loading && !error && articles.length === 0 && (
             <GlassPanel className="p-8 text-center text-sm text-white/45">
