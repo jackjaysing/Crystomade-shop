@@ -49,7 +49,7 @@ import { ProductSortFilter } from '../components/products/ProductSortFilter'
 
 import { TagFilter } from '../components/products/TagFilter'
 
-import { ConnectionDiagnostics } from '../components/ui/ConnectionDiagnostics'
+import { SiteMaintenancePanel } from '../components/ui/SiteMaintenancePanel'
 
 import { ScrollToTopFab } from '../components/ui/ScrollToTopFab'
 
@@ -679,47 +679,7 @@ export function ProductsPage() {
 
         )}
 
-        {error && (
-
-          <div className="mx-auto max-w-lg rounded-xl border border-red-400/30 bg-red-950/30 p-6 text-center">
-
-            <p className="text-red-300">{error}</p>
-
-            <ul className="mt-4 space-y-2 text-left text-xs text-white/50">
-
-              <li>
-
-                1. 打開<strong className="text-white/70"> Healthy 的那個專案</strong>（不是舊專案）
-
-              </li>
-
-              <li>
-
-                2. <strong className="text-white/70">Settings → API</strong>：複製{' '}
-
-                <strong className="text-white/70">Project URL</strong> 與{' '}
-
-                <strong className="text-white/70">Publishable key</strong>
-
-              </li>
-
-              <li>
-
-                3. 貼到 <strong className="text-white/70">EDIT-ME-SUPABASE-KEYS.txt</strong> → 存檔 → 雙擊{' '}
-
-                <strong className="text-white/70">SYNC-ENV.bat</strong>
-
-              </li>
-
-              <li>4. 終端 Ctrl+C → <strong className="text-white/70">npm.cmd run dev</strong> → 瀏覽器 F5</li>
-
-            </ul>
-
-            <ConnectionDiagnostics />
-
-          </div>
-
-        )}
+        {error && <SiteMaintenancePanel />}
 
         {!loading && !error && !hasAnyProducts && (
 

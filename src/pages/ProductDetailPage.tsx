@@ -9,6 +9,7 @@ import { ProductDetailView } from '../components/products/ProductDetailView'
 import { BreadcrumbStructuredData } from '../components/seo/BreadcrumbStructuredData'
 import { ProductStructuredData } from '../components/seo/ProductStructuredData'
 import { GlassPanel } from '../components/ui/GlassPanel'
+import { SiteMaintenancePanel } from '../components/ui/SiteMaintenancePanel'
 
 /** 單一商品詳情頁（可被 Google 收錄的獨立 URL） */
 export function ProductDetailPage() {
@@ -99,12 +100,28 @@ export function ProductDetailPage() {
     )
   }
 
-  if (error || !product) {
+  if (error) {
+    return (
+      <div className="min-h-screen pt-24 pb-16">
+        <div className="mx-auto max-w-lg px-6">
+          <SiteMaintenancePanel />
+          <Link
+            to="/products"
+            className="mt-6 block text-center text-sm text-amber-glow hover:underline"
+          >
+            返回典藏選購
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (!product) {
     return (
       <div className="min-h-screen pt-24 pb-16">
         <div className="mx-auto max-w-lg px-6">
           <GlassPanel className="p-8 text-center">
-            <p className="text-sm text-red-300/90">{error ?? '載入失敗'}</p>
+            <p className="text-sm text-white/50">載入失敗，請稍後再試</p>
             <Link
               to="/products"
               className="mt-6 inline-block text-sm text-amber-glow hover:underline"
