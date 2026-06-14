@@ -107,7 +107,7 @@ const staticPages = [
   // 首頁 / 以 301 導向 /products，勿列入 sitemap 避免與典藏頁重複
   { path: '/products', changefreq: 'daily', priority: '1.0' },
   { path: '/academy', changefreq: 'weekly', priority: '0.8' },
-  { path: '/register', changefreq: 'monthly', priority: '0.6' },
+  // /register 會導向 /account（robots 已 disallow），勿列入避免重複收錄
   { path: '/point-shop', changefreq: 'weekly', priority: '0.7' },
   { path: '/wish-board', changefreq: 'weekly', priority: '0.6' },
 ]

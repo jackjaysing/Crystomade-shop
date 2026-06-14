@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { fetchProductById } from '../lib/api/products'
 import { formatErrorMessage } from '../lib/formatError'
-import { parseProductIdFromSlug, productDetailPath } from '../lib/productSlug'
+import {
+  parseProductIdFromSlug,
+  productDetailPath,
+  productSlug,
+} from '../lib/productSlug'
 import { applyProductSiteMeta } from '../lib/siteMeta'
 import type { Product } from '../lib/types'
 import { ProductDetailView } from '../components/products/ProductDetailView'
@@ -14,6 +18,7 @@ import { SiteMaintenancePanel } from '../components/ui/SiteMaintenancePanel'
 /** 單一商品詳情頁（可被 Google 收錄的獨立 URL） */
 export function ProductDetailPage() {
   const { slug = '' } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,7 +66,7 @@ export function ProductDetailPage() {
   }, [slug])
 
   useEffect(() => {
-    if (!product) return
+    if (!product || !slug) return
 
     applyProductSiteMeta({
       name: product.name,
@@ -69,7 +74,13 @@ export function ProductDetailPage() {
       imageUrl: product.image_url,
       pathname: productDetailPath(product),
     })
-  }, [product])
+
+    const canonicalSlug = productSlug(product)
+    const currentSlug = decodeURIComponent(slug)
+    if (currentSlug !== canonicalSlug) {
+      navigate(productDetailPath(product), { replace: true })
+    }
+  }, [product, slug, navigate])
 
   if (loading) {
     return (
