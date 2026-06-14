@@ -24,6 +24,7 @@ import {
   fetchMemberOrders,
   fetchPointsHistory,
 } from '../lib/api/members'
+import { formatOrderLineDisplayAmount } from '../lib/formatOrderPricing'
 import {
   formatOrderGroupStatus,
   formatOrderPaymentStatus,
@@ -255,7 +256,7 @@ export function AccountPage() {
                           {line.quantity > 1 ? ` ×${line.quantity}` : ''}
                         </span>
                         <span className="shrink-0 text-white/45">
-                          NT$ {line.lineTotal.toLocaleString()}
+                          NT$ {formatOrderLineDisplayAmount(line)}
                         </span>
                       </li>
                     ))}

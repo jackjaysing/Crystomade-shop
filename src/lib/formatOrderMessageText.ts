@@ -1,5 +1,9 @@
 import { formatOrderLineItemDetail } from '../constants/braceletSizes'
-import type { OrderLineItem } from './groupOrders'
+import {
+  formatOrderLineDisplayAmount,
+  formatOrderPricingAdjustments,
+} from './formatOrderPricing'
+import type { OrderGroup, OrderLineItem } from './groupOrders'
 
 /** 編號欄位（無 emoji，LINE 複製後較整齊） */
 export function formatNumberedField(
@@ -14,7 +18,8 @@ export function formatNumberedField(
 export function formatNumberedItemSection(
   index: number,
   sectionLabel: string,
-  lineItems: OrderLineItem[]
+  lineItems: OrderLineItem[],
+  group?: Pick<OrderGroup, 'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd'>
 ): string[] {
   const header = `${index}. ${sectionLabel}`
   const detailLines = lineItems.map((item, i) => {
@@ -23,7 +28,15 @@ export function formatNumberedItemSection(
       quantity: item.quantity,
       selectedSize: item.selectedSize,
     })
-    return `   ${i + 1}) ${line}`
+    const amount = formatOrderLineDisplayAmount(item)
+    return `   ${i + 1}) ${line} NT$ ${amount}`
   })
-  return detailLines.length > 0 ? [header, ...detailLines] : [`${header}：（無）`]
+
+  const adjustmentLines = group
+    ? formatOrderPricingAdjustments(group).map((line) => `      ${line}`)
+    : []
+
+  const lines =
+    detailLines.length > 0 ? [header, ...detailLines, ...adjustmentLines] : [`${header}：（無）`]
+  return lines
 }

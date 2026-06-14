@@ -8,6 +8,7 @@ import {
   type OrderGroupStatus,
   type OrderLineItem,
 } from './groupOrders'
+import { formatOrderLineDisplayAmount } from './formatOrderPricing'
 import type { OrderPaymentStatus } from './types'
 
 const HEADER_FILL = 'FF2A2418'
@@ -24,7 +25,7 @@ function formatExcelLineItem(item: OrderLineItem): string {
       sizeSuffix = ` (${withUnit})`
     }
   }
-  return `${item.productName}${sizeSuffix} x ${item.quantity}`
+  return `${item.productName}${sizeSuffix} x ${item.quantity} NT$ ${formatOrderLineDisplayAmount(item)}`
 }
 
 /** 合併儲存格欄位（同一訂單多行商品時） */

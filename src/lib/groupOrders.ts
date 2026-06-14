@@ -1,3 +1,9 @@
+import {
+  isPaidProductOrder,
+  lineItemKeyFromOrder,
+  reconstructLineSubtotals,
+  resolveOrderGroupPricing,
+} from './orderGroupPricing'
 import type { CvsBrand, Order, OrderPaymentStatus, OrderStatus } from './types'
 
 export type OrderGroupStatus = OrderStatus | 'partial'
@@ -12,7 +18,10 @@ export interface OrderLineItem {
   /** 手串手圍等規格 */
   selectedSize?: string | null
   quantity: number
+  /** 實際入帳金額（含點數折抵分攤） */
   lineTotal: number
+  /** 折抵前商品小計（整數，供後台／LINE 顯示） */
+  lineSubtotal?: number
 }
 
 /** 後台合併顯示的訂單群組（同一結帳） */
@@ -39,6 +48,12 @@ export interface OrderGroup {
   isOverdueUnpaid: boolean
   /** 物流寄件單號（同一結帳批次） */
   trackingNumber: string | null
+  /** 點數折抵（整單） */
+  pointsDiscountNtd: number
+  /** 優惠券折抵（整單） */
+  couponDiscountNtd: number
+  /** 運費（併入第一筆付費商品列） */
+  shippingFeeNtd: number
 }
 
 const LEGACY_GROUP_WINDOW_MS = 2 * 60 * 1000
@@ -53,12 +68,28 @@ function matchesIdentity(a: Order, b: Order): boolean {
   )
 }
 
-function buildLineItems(orders: Order[]): OrderLineItem[] {
+function buildLineItems(
+  orders: Order[],
+  pricing: Pick<OrderGroup, 'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd'>
+): OrderLineItem[] {
   const map = new Map<string, OrderLineItem>()
+  const paidOrders = orders
+    .filter(isPaidProductOrder)
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+  const firstPaidLineKey = paidOrders[0]
+    ? lineItemKeyFromOrder(paidOrders[0])
+    : null
+  const pricingEntries: Array<{
+    key: string
+    lineTotalAfterDiscount: number
+    isFirstPaidLine: boolean
+  }> = []
 
   for (const order of orders) {
-    const sizeKey = order.selected_size?.trim() ?? ''
-    const key = `${order.product_id || order.product_name || order.id}::${sizeKey}`
+    const key = lineItemKeyFromOrder(order)
     const productName =
       order.products?.name ?? order.product_name ?? '（商品已刪除）'
     const imageUrl = order.products?.image_url ?? order.product_image_url ?? undefined
@@ -67,6 +98,10 @@ function buildLineItems(orders: Order[]): OrderLineItem[] {
     if (existing) {
       existing.quantity += 1
       existing.lineTotal += order.total_amount
+      const pricingEntry = pricingEntries.find((entry) => entry.key === key)
+      if (pricingEntry) {
+        pricingEntry.lineTotalAfterDiscount += order.total_amount
+      }
       continue
     }
 
@@ -78,6 +113,27 @@ function buildLineItems(orders: Order[]): OrderLineItem[] {
       quantity: 1,
       lineTotal: order.total_amount,
     })
+
+    if (isPaidProductOrder(order)) {
+      pricingEntries.push({
+        key,
+        lineTotalAfterDiscount: order.total_amount,
+        isFirstPaidLine: key === firstPaidLineKey,
+      })
+    }
+  }
+
+  const lineSubtotals = reconstructLineSubtotals(
+    pricingEntries,
+    pricing.pointsDiscountNtd,
+    pricing.couponDiscountNtd
+  )
+
+  for (const [key, item] of map) {
+    const lineSubtotal = lineSubtotals.get(key)
+    if (lineSubtotal != null && lineSubtotal > 0) {
+      item.lineSubtotal = lineSubtotal
+    }
   }
 
   return Array.from(map.values())
@@ -125,7 +181,8 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
   const sorted = [...orders].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
-  const lineItems = buildLineItems(sorted)
+  const pricing = resolveOrderGroupPricing(sorted)
+  const lineItems = buildLineItems(sorted, pricing)
   const paymentStatus = resolvePaymentStatus(sorted)
   const status = resolveGroupStatus(sorted)
   const unpaidDays =
@@ -160,6 +217,9 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
       paymentStatus !== 'paid' &&
       unpaidDays > OVERDUE_UNPAID_DAYS,
     trackingNumber: resolveTrackingNumber(sorted),
+    pointsDiscountNtd: pricing.pointsDiscountNtd,
+    couponDiscountNtd: pricing.couponDiscountNtd,
+    shippingFeeNtd: pricing.shippingFeeNtd,
   }
 }
 

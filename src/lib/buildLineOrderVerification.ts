@@ -40,7 +40,7 @@ export function buildLineOrderVerificationMessage(
     formatNumberedField(2, '收件姓名', group.buyer_name),
     formatNumberedField(3, '聯絡電話', group.phone),
     formatNumberedField(4, '收件門市', formatCvsPickupLine(group)),
-    ...formatNumberedItemSection(5, '預訂明細', group.lineItems),
+    ...formatNumberedItemSection(5, '預訂明細', group.lineItems, group),
     formatNumberedField(6, '應付總額', `NT$ ${grandTotal}`),
     '',
     '【後續付款與出貨流程說明】',

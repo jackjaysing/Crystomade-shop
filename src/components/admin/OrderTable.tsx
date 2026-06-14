@@ -15,6 +15,10 @@ import {
   softDeleteOrderGroup,
   unshipOrderGroup,
 } from '../../lib/api/orders'
+import {
+  formatOrderLineDisplayAmount,
+  formatOrderPricingAdjustments,
+} from '../../lib/formatOrderPricing'
 import { adminProductThumbAlt } from '../../lib/imageAlt'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
@@ -671,11 +675,27 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                         <p className="mt-0.5 text-xs text-white/40">數量 {item.quantity}</p>
                       </div>
                       <p className="shrink-0 text-sm text-amber-glow">
-                        NT$ {Number(item.lineTotal).toLocaleString()}
+                        NT$ {formatOrderLineDisplayAmount(item)}
                       </p>
                     </li>
                   ))}
                 </ul>
+
+                {formatOrderPricingAdjustments(group).length > 0 && (
+                  <ul className="mt-3 space-y-1.5 border-t border-white/5 pt-3">
+                    {formatOrderPricingAdjustments(group).map((line) => (
+                      <li
+                        key={line}
+                        className="flex justify-end text-sm text-white/60"
+                      >
+                        {line}
+                      </li>
+                    ))}
+                    <li className="flex justify-end text-sm font-medium text-amber-glow">
+                      合計 NT$ {Number(group.totalAmount).toLocaleString('zh-TW')}
+                    </li>
+                  </ul>
+                )}
 
                 <div className="mt-4">{renderActionButtons(group)}</div>
               </div>
