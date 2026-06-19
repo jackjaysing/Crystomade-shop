@@ -1,9 +1,13 @@
 import { applyCrystomadeWatermark } from './watermarkProductImage'
 
+function isMobileDevice(): boolean {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
 async function fileFromImageSource(source: File | string): Promise<File> {
   if (source instanceof File) return source
 
-  const response = await fetch(source)
+  const response = await fetch(source, { cache: 'no-store' })
   if (!response.ok) throw new Error('無法載入圖片，請稍後再試')
 
   const blob = await response.blob()
@@ -31,10 +35,28 @@ function triggerFileDownload(file: File): void {
   anchor.href = url
   anchor.download = file.name
   anchor.rel = 'noopener'
+  anchor.style.display = 'none'
   document.body.appendChild(anchor)
-  anchor.click()
-  anchor.remove()
-  URL.revokeObjectURL(url)
+
+  // iOS 連續下載時若過早 revoke blob，第二次常會完全沒反應
+  const revokeDelayMs = isMobileDevice() ? 60_000 : 2_000
+  const cleanup = () => {
+    window.setTimeout(() => {
+      anchor.remove()
+      URL.revokeObjectURL(url)
+    }, revokeDelayMs)
+  }
+
+  requestAnimationFrame(() => {
+    anchor.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      })
+    )
+    cleanup()
+  })
 }
 
 /** 下載已壓 Crystomade 浮水印的圖片（與上架後前台顯示一致） */
@@ -48,7 +70,7 @@ export async function downloadWatermarkedImage(
     filenameBase.replace(/[^\w\u4e00-\u9fff-]+/g, '_').replace(/^_|_$/g, '') ||
     'crystomade'
   const ext = watermarked.name.split('.').pop() ?? 'jpg'
-  const finalName = `${safeBase}-watermark.${ext}`
+  const finalName = `${safeBase}-watermark-${Date.now()}.${ext}`
   triggerFileDownload(
     new File([watermarked], finalName, {
       type: watermarked.type,

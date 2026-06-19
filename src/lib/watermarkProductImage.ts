@@ -54,24 +54,37 @@ export async function applyCrystomadeWatermark(file: File): Promise<File> {
   }
 
   let bitmap: ImageBitmap | null = null
+  let canvas: HTMLCanvasElement | null = null
   try {
     bitmap = await createImageBitmap(file)
-    const canvas = document.createElement('canvas')
+    canvas = document.createElement('canvas')
     canvas.width = bitmap.width
     canvas.height = bitmap.height
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return file
 
-    const fontSize = Math.max(16, Math.round(Math.min(canvas.width, canvas.height) * 0.044))
+    const outputCanvas = canvas
+    const fontSize = Math.max(16, Math.round(Math.min(outputCanvas.width, outputCanvas.height) * 0.044))
     await ensureWatermarkFont(fontSize)
 
     ctx.drawImage(bitmap, 0, 0)
-    drawWatermark(ctx, canvas.width, canvas.height, fontSize)
+    drawWatermark(ctx, outputCanvas.width, outputCanvas.height, fontSize)
 
     const mimeType = outputMimeType(file)
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, mimeType, mimeType === 'image/jpeg' ? 0.92 : undefined)
+    const blob = await new Promise<Blob | null>((resolve, reject) => {
+      const timeoutId = window.setTimeout(
+        () => reject(new Error('浮水印處理逾時')),
+        30_000
+      )
+      outputCanvas.toBlob(
+        (result) => {
+          window.clearTimeout(timeoutId)
+          resolve(result)
+        },
+        mimeType,
+        mimeType === 'image/jpeg' ? 0.92 : undefined
+      )
     })
 
     if (!blob) return file
@@ -83,5 +96,9 @@ export async function applyCrystomadeWatermark(file: File): Promise<File> {
     return file
   } finally {
     bitmap?.close()
+    if (canvas) {
+      canvas.width = 0
+      canvas.height = 0
+    }
   }
 }

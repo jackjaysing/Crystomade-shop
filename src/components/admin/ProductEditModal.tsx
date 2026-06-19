@@ -486,6 +486,7 @@ export function ProductEditModal({
                 封面照片（不上傳則保留原圖）
               </p>
               <WatermarkedImageDownloadButton
+                key={`${product.id}-cover-download`}
                 label="下載封面浮水印圖"
                 onDownload={downloadCoverImage}
               />

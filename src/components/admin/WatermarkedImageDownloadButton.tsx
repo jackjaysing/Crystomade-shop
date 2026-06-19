@@ -1,5 +1,5 @@
 import { Download } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface WatermarkedImageDownloadButtonProps {
   onDownload: () => Promise<void>
@@ -7,6 +7,8 @@ interface WatermarkedImageDownloadButtonProps {
   label?: string
   compact?: boolean
 }
+
+const DOWNLOAD_TIMEOUT_MS = 60_000
 
 /** 下載含 Crystomade 浮水印的圖片 */
 export function WatermarkedImageDownloadButton({
@@ -16,17 +18,34 @@ export function WatermarkedImageDownloadButton({
   compact = false,
 }: WatermarkedImageDownloadButtonProps) {
   const [loading, setLoading] = useState(false)
+  const activeRef = useRef(true)
+
+  useEffect(() => {
+    activeRef.current = true
+    return () => {
+      activeRef.current = false
+      setLoading(false)
+    }
+  }, [])
 
   const handleClick = async () => {
     setLoading(true)
     try {
-      await onDownload()
+      await Promise.race([
+        onDownload(),
+        new Promise<never>((_, reject) => {
+          window.setTimeout(
+            () => reject(new Error('下載逾時，請再試一次')),
+            DOWNLOAD_TIMEOUT_MS
+          )
+        }),
+      ])
     } catch (error) {
       const message =
         error instanceof Error ? error.message : '下載失敗，請稍後再試'
       window.alert(message)
     } finally {
-      setLoading(false)
+      if (activeRef.current) setLoading(false)
     }
   }
 
