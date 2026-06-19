@@ -1,8 +1,12 @@
+import { compressImageForUpload } from './browserImage'
+import { deliverDownloadFile } from './deliverDownloadFile'
 import { applyCrystomadeWatermark } from './watermarkProductImage'
 
 function isMobileDevice(): boolean {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 }
+
+let downloadQueue: Promise<void> = Promise.resolve()
 
 async function fileFromImageSource(source: File | string): Promise<File> {
   if (source instanceof File) return source
@@ -29,34 +33,15 @@ async function fileFromImageSource(source: File | string): Promise<File> {
   return new File([blob], `image.${ext}`, { type: blob.type || 'image/jpeg' })
 }
 
-function triggerFileDownload(file: File): void {
-  const url = URL.createObjectURL(file)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = file.name
-  anchor.rel = 'noopener'
-  anchor.style.display = 'none'
-  document.body.appendChild(anchor)
+async function prepareImageForWatermark(file: File): Promise<File> {
+  if (!isMobileDevice()) return file
+  return compressImageForUpload(file, 'product')
+}
 
-  // iOS 連續下載時若過早 revoke blob，第二次常會完全沒反應
-  const revokeDelayMs = isMobileDevice() ? 60_000 : 2_000
-  const cleanup = () => {
-    window.setTimeout(() => {
-      anchor.remove()
-      URL.revokeObjectURL(url)
-    }, revokeDelayMs)
-  }
-
-  requestAnimationFrame(() => {
-    anchor.dispatchEvent(
-      new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-      })
-    )
-    cleanup()
-  })
+function runQueuedDownload(task: () => Promise<void>): Promise<void> {
+  const next = downloadQueue.then(task, task)
+  downloadQueue = next.catch(() => undefined)
+  return next
 }
 
 /** 下載已壓 Crystomade 浮水印的圖片（與上架後前台顯示一致） */
@@ -64,17 +49,22 @@ export async function downloadWatermarkedImage(
   source: File | string,
   filenameBase: string
 ): Promise<void> {
-  const original = await fileFromImageSource(source)
-  const watermarked = await applyCrystomadeWatermark(original)
-  const safeBase =
-    filenameBase.replace(/[^\w\u4e00-\u9fff-]+/g, '_').replace(/^_|_$/g, '') ||
-    'crystomade'
-  const ext = watermarked.name.split('.').pop() ?? 'jpg'
-  const finalName = `${safeBase}-watermark-${Date.now()}.${ext}`
-  triggerFileDownload(
-    new File([watermarked], finalName, {
-      type: watermarked.type,
-      lastModified: watermarked.lastModified,
-    })
-  )
+  await runQueuedDownload(async () => {
+    const original = await prepareImageForWatermark(
+      await fileFromImageSource(source)
+    )
+    const watermarked = await applyCrystomadeWatermark(original)
+    const safeBase =
+      filenameBase.replace(/[^\w\u4e00-\u9fff-]+/g, '_').replace(/^_|_$/g, '') ||
+      'crystomade'
+    const ext = watermarked.name.split('.').pop() ?? 'jpg'
+    const finalName = `${safeBase}-watermark-${Date.now()}.${ext}`
+
+    await deliverDownloadFile(
+      new File([watermarked], finalName, {
+        type: watermarked.type,
+        lastModified: watermarked.lastModified,
+      })
+    )
+  })
 }

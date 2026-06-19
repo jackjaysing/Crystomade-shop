@@ -29,12 +29,15 @@ export function WatermarkedImageDownloadButton({
   }, [])
 
   const handleClick = async () => {
+    if (loading) return
     setLoading(true)
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
     try {
       await Promise.race([
         onDownload(),
         new Promise<never>((_, reject) => {
-          window.setTimeout(
+          timeoutId = window.setTimeout(
             () => reject(new Error('下載逾時，請再試一次')),
             DOWNLOAD_TIMEOUT_MS
           )
@@ -45,6 +48,7 @@ export function WatermarkedImageDownloadButton({
         error instanceof Error ? error.message : '下載失敗，請稍後再試'
       window.alert(message)
     } finally {
+      if (timeoutId) window.clearTimeout(timeoutId)
       if (activeRef.current) setLoading(false)
     }
   }

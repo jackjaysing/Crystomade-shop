@@ -484,6 +484,9 @@ export function ProductEditModal({
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-white/50">
                 封面照片（不上傳則保留原圖）
+                <span className="mt-1 block text-[11px] text-white/35">
+                  手機下載會開啟分享選單，或長按圖片儲存
+                </span>
               </p>
               <WatermarkedImageDownloadButton
                 key={`${product.id}-cover-download`}
