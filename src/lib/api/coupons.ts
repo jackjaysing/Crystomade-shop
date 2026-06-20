@@ -4,7 +4,7 @@ import {
   buildGiftCouponUpdateSummary,
 } from '../adminChangeSummary'
 import { recordAdminActivity } from './adminActivityLog'
-import { assertBrowserDisplayableImageFile, compressImageForUpload } from '../browserImage'
+import { compressImageForUpload } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
 import { supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../supabase'
 import type {
@@ -126,7 +126,6 @@ export async function fetchAdminCartGiftCoupons(): Promise<Coupon[]> {
 }
 
 export async function uploadGiftCouponImage(file: File): Promise<string> {
-  assertBrowserDisplayableImageFile(file)
   const compressed = await compressImageForUpload(file, 'card')
   const ext = compressed.name.split('.').pop()?.toLowerCase() ?? 'jpg'
   const path = `gift-coupons/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`

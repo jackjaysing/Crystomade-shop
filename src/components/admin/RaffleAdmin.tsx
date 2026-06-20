@@ -9,9 +9,9 @@ import {
   uploadRafflePrizeImage,
 } from '../../lib/api/raffles'
 import {
-  assertBrowserDisplayableImageFile,
   BROWSER_IMAGE_ACCEPT,
   isBrowserDisplayableImageUrl,
+  normalizeImageFileForUpload,
 } from '../../lib/browserImage'
 import {
   RAFFLE_GIFT_DISPLAY_NOTE,
@@ -78,6 +78,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
   const [entriesLoading, setEntriesLoading] = useState(false)
   const [prizeImageFile, setPrizeImageFile] = useState<File | null>(null)
   const [prizeImagePreview, setPrizeImagePreview] = useState<string | null>(null)
+  const [prizeImageProcessing, setPrizeImageProcessing] = useState(false)
   const prizeImageInputRef = useRef<HTMLInputElement>(null)
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null)
 
@@ -110,24 +111,26 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
     if (prizeImageInputRef.current) prizeImageInputRef.current.value = ''
   }
 
-  const handlePrizeImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handlePrizeImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    try {
-      assertBrowserDisplayableImageFile(file)
-    } catch (err) {
-      const text = err instanceof Error ? err.message : '圖片格式不支援'
-      setMessage(text)
-      window.alert(text)
-      e.target.value = ''
-      return
-    }
-    if (prizeImagePreview?.startsWith('blob:')) {
-      URL.revokeObjectURL(prizeImagePreview)
-    }
-    setPrizeImageFile(file)
-    setPrizeImagePreview(URL.createObjectURL(file))
+
+    setPrizeImageProcessing(true)
     setMessage('')
+    try {
+      const normalized = await normalizeImageFileForUpload(file)
+      if (prizeImagePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(prizeImagePreview)
+      }
+      setPrizeImageFile(normalized)
+      setPrizeImagePreview(URL.createObjectURL(normalized))
+    } catch (err) {
+      const text = err instanceof Error ? err.message : '圖片無法使用'
+      setMessage(text)
+      e.target.value = ''
+    } finally {
+      setPrizeImageProcessing(false)
+    }
   }
 
   const loadEdit = (r: RaffleWithMeta) => {
@@ -323,18 +326,21 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                     目前照片為瀏覽器不支援的格式（如 DNG），請重新上傳 JPG 或 PNG。
                   </p>
                 )}
-              <label className="block w-full min-w-[12rem] flex-1">
-                <span className="mb-2 block text-sm text-white/50">
-                  上傳禮物照片（JPG／PNG）
-                </span>
-                <input
-                  ref={prizeImageInputRef}
-                  type="file"
-                  accept={BROWSER_IMAGE_ACCEPT}
-                  onChange={handlePrizeImageChange}
-                  className="block w-full text-sm text-white/60 file:mr-3 file:rounded file:border-0 file:bg-amber-glow/20 file:px-3 file:py-1.5 file:text-xs file:text-amber-glow"
-                />
-              </label>
+              <input
+                ref={prizeImageInputRef}
+                type="file"
+                accept={BROWSER_IMAGE_ACCEPT}
+                className="sr-only"
+                onChange={(e) => void handlePrizeImageChange(e)}
+              />
+              <button
+                type="button"
+                disabled={prizeImageProcessing}
+                onClick={() => prizeImageInputRef.current?.click()}
+                className="rounded-lg border border-dashed border-white/25 px-4 py-3 text-sm text-white/50 transition hover:border-amber-glow/40 hover:text-white/70 disabled:opacity-50"
+              >
+                {prizeImageProcessing ? '處理照片中…' : '上傳禮物照片'}
+              </button>
             </div>
           </div>
 

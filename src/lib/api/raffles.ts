@@ -1,4 +1,4 @@
-import { assertBrowserDisplayableImageFile, compressImageForUpload } from '../browserImage'
+import { compressImageForUpload } from '../browserImage'
 import {
   RAFFLE_GIFT_DESCRIPTION,
   RAFFLE_GIFT_VALID_DAYS,
@@ -62,7 +62,6 @@ function rafflePayload(data: RaffleFormData) {
 }
 
 export async function uploadRafflePrizeImage(file: File): Promise<string> {
-  assertBrowserDisplayableImageFile(file)
   const compressed = await compressImageForUpload(file, 'card')
   const ext = compressed.name.split('.').pop()?.toLowerCase() ?? 'jpg'
   const path = `raffle-prizes/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
