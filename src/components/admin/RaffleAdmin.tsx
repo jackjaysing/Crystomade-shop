@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
   createRaffle,
   deleteRaffle,
@@ -78,6 +78,7 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
   const [entriesLoading, setEntriesLoading] = useState(false)
   const [prizeImageFile, setPrizeImageFile] = useState<File | null>(null)
   const [prizeImagePreview, setPrizeImagePreview] = useState<string | null>(null)
+  const prizeImageInputRef = useRef<HTMLInputElement>(null)
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
@@ -98,18 +99,46 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
   }, [reload])
 
   const resetForm = () => {
+    if (prizeImagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(prizeImagePreview)
+    }
     setForm(emptyForm)
     setEditingId(null)
     setEditingCouponId(null)
     setPrizeImageFile(null)
     setPrizeImagePreview(null)
+    if (prizeImageInputRef.current) prizeImageInputRef.current.value = ''
+  }
+
+  const handlePrizeImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      assertBrowserDisplayableImageFile(file)
+    } catch (err) {
+      const text = err instanceof Error ? err.message : '圖片格式不支援'
+      setMessage(text)
+      window.alert(text)
+      e.target.value = ''
+      return
+    }
+    if (prizeImagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(prizeImagePreview)
+    }
+    setPrizeImageFile(file)
+    setPrizeImagePreview(URL.createObjectURL(file))
+    setMessage('')
   }
 
   const loadEdit = (r: RaffleWithMeta) => {
+    if (prizeImagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(prizeImagePreview)
+    }
     setEditingId(r.id)
     setEditingCouponId(r.prize_coupon_id)
     setPrizeImageFile(null)
     setPrizeImagePreview(r.prize_image_url)
+    if (prizeImageInputRef.current) prizeImageInputRef.current.value = ''
     setForm({
       description: r.description,
       registration_deadline: toDatetimeLocalValue(r.registration_deadline),
@@ -294,27 +323,16 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                     目前照片為瀏覽器不支援的格式（如 DNG），請重新上傳 JPG 或 PNG。
                   </p>
                 )}
-              <label className="cursor-pointer rounded-lg border border-dashed border-white/25 px-4 py-3 text-sm text-white/50 hover:border-amber-glow/40 hover:text-white/70">
-                上傳禮物照片（JPG／PNG）
+              <label className="block w-full min-w-[12rem] flex-1">
+                <span className="mb-2 block text-sm text-white/50">
+                  上傳禮物照片（JPG／PNG）
+                </span>
                 <input
+                  ref={prizeImageInputRef}
                   type="file"
                   accept={BROWSER_IMAGE_ACCEPT}
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    try {
-                      assertBrowserDisplayableImageFile(file)
-                    } catch (err) {
-                      setMessage(
-                        err instanceof Error ? err.message : '圖片格式不支援'
-                      )
-                      e.target.value = ''
-                      return
-                    }
-                    setPrizeImageFile(file)
-                    setPrizeImagePreview(URL.createObjectURL(file))
-                  }}
+                  onChange={handlePrizeImageChange}
+                  className="block w-full text-sm text-white/60 file:mr-3 file:rounded file:border-0 file:bg-amber-glow/20 file:px-3 file:py-1.5 file:text-xs file:text-amber-glow"
                 />
               </label>
             </div>
