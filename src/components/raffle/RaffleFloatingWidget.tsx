@@ -6,6 +6,11 @@ import {
   RAFFLE_FAB_STORAGE_KEY,
   type RaffleFabMode,
 } from '../../constants/raffles'
+import {
+  hasUnseenNewRaffle,
+  markRaffleActivitiesSeen,
+} from '../../lib/raffleNewSeen'
+import { isRaffleRegistrationOpen } from '../../lib/raffleRegistration'
 import { isRaffleResultSeen } from '../../lib/raffleResultSeen'
 import type { RaffleWithMeta } from '../../lib/types'
 import { FortuneConsultationFabSlot } from '../fortune-consultation/FortuneConsultationFloatingWidget'
@@ -49,6 +54,8 @@ export function RaffleFloatingWidget() {
   const [mode, setMode] = useState<RaffleFabMode>(() => readStoredMode())
   const [panelOpen, setPanelOpen] = useState(false)
   const [winPulse, setWinPulse] = useState(false)
+  const [showNewBadge, setShowNewBadge] = useState(false)
+  const [raffleRows, setRaffleRows] = useState<RaffleWithMeta[]>([])
 
   const reloadRaffles = useCallback(
     async (options?: { skipFinalize?: boolean }) => {
@@ -56,9 +63,14 @@ export function RaffleFloatingWidget() {
         const rows = await fetchPublicRaffles(user?.id ?? null, {
           skipFinalize: options?.skipFinalize,
         })
-        setWinPulse(hasUnseenWin(rows, user?.id))
+        setRaffleRows(rows)
+        const unseenWin = hasUnseenWin(rows, user?.id)
+        setWinPulse(unseenWin)
+        setShowNewBadge(!unseenWin && hasUnseenNewRaffle(rows))
       } catch {
+        setRaffleRows([])
         setWinPulse(false)
+        setShowNewBadge(false)
       }
     },
     [user?.id]
@@ -73,15 +85,23 @@ export function RaffleFloatingWidget() {
   }, [mode])
 
   useEffect(() => {
-    if (!user?.id) return
-
     void reloadRaffles({ skipFinalize: true })
     const id = window.setInterval(
       () => void reloadRaffles({ skipFinalize: true }),
       RAFFLE_POLL_MS
     )
     return () => window.clearInterval(id)
-  }, [reloadRaffles, user?.id])
+  }, [reloadRaffles])
+
+  useEffect(() => {
+    if (!panelOpen) return
+    const openIds = raffleRows
+      .filter(isRaffleRegistrationOpen)
+      .map((r) => r.id)
+    if (openIds.length === 0) return
+    markRaffleActivitiesSeen(openIds)
+    setShowNewBadge(false)
+  }, [panelOpen, raffleRows])
 
   const isCollapsed = mode === 'collapsed'
 
@@ -123,7 +143,7 @@ export function RaffleFloatingWidget() {
             }
             openPanel()
           }}
-          className={`ml-2 flex flex-col items-center justify-center border border-amber-glow/40 bg-graphite/90 text-amber-glow shadow-[0_4px_24px_rgba(0,0,0,0.45),0_0_20px_rgba(212,165,116,0.12)] backdrop-blur-md transition-all duration-300 hover:border-amber-glow/70 hover:bg-amber-glow/15 hover:text-white ${
+          className={`relative ml-2 flex flex-col items-center justify-center border border-amber-glow/40 bg-graphite/90 text-amber-glow shadow-[0_4px_24px_rgba(0,0,0,0.45),0_0_20px_rgba(212,165,116,0.12)] backdrop-blur-md transition-all duration-300 hover:border-amber-glow/70 hover:bg-amber-glow/15 hover:text-white ${
             isCollapsed
               ? 'h-11 w-10 rounded-r-2xl'
               : 'h-[4.5rem] w-[4.5rem] rounded-full'
@@ -132,13 +152,30 @@ export function RaffleFloatingWidget() {
             isCollapsed
               ? winPulse
                 ? '展開抽獎區，查看中獎結果'
-                : '展開抽獎區'
+                : showNewBadge
+                  ? '展開抽獎區，有新抽獎活動'
+                  : '展開抽獎區'
               : winPulse
                 ? '抽獎區，您已中獎'
-                : '抽獎區'
+                : showNewBadge
+                  ? '抽獎區，有新抽獎活動'
+                  : '抽獎區'
           }
-          title={winPulse ? '恭喜中獎！點擊查看' : '抽獎區'}
+          title={
+            winPulse ? '恭喜中獎！點擊查看' : showNewBadge ? '有新抽獎活動！' : '抽獎區'
+          }
         >
+          {showNewBadge && (
+            <span
+              className={`absolute z-10 rounded-full bg-red-500 px-1.5 py-0.5 font-bold leading-none text-white shadow-lg raffle-fab-new-badge ${
+                isCollapsed
+                  ? '-right-0.5 -top-1 text-[8px]'
+                  : '-right-1 -top-1 text-[10px]'
+              }`}
+            >
+              NEW
+            </span>
+          )}
           <RouletteWheelIcon
             className={
               isCollapsed

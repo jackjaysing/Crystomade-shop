@@ -13,6 +13,9 @@ export type RaffleFabMode = 'visible' | 'collapsed'
 
 export const RAFFLE_RESULT_SEEN_KEY = 'crystomade-raffle-result-seen'
 
+/** 會員已看過的開放報名抽獎（用於 NEW 標記） */
+export const RAFFLE_ACTIVITY_SEEN_KEY = 'crystomade-raffle-activity-seen'
+
 /** 抽獎禮物券說明（固定文案，前台顯示與禮物券同步） */
 export const RAFFLE_GIFT_DESCRIPTION = '不限額「隨單送」'
 

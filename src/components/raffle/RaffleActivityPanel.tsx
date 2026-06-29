@@ -4,6 +4,8 @@ import { MemberAuthForm } from '../member/MemberAuthForm'
 import { fetchMemberCartGiftCoupons } from '../../lib/api/coupons'
 import { fetchPublicRaffles, registerForRaffle } from '../../lib/api/raffles'
 import { RaffleGiftRedeemButton } from '../member/RaffleGiftRedeemButton'
+import { isRaffleActivitySeen } from '../../lib/raffleNewSeen'
+import { isRaffleRegistrationOpen } from '../../lib/raffleRegistration'
 import { markRaffleResultsSeen } from '../../lib/raffleResultSeen'
 import type { RaffleWithMeta } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -23,10 +25,6 @@ function formatDeadline(iso: string): string {
     minute: '2-digit',
     hour12: false,
   })
-}
-
-function isRegistrationOpen(r: RaffleWithMeta): boolean {
-  return r.status === 'open' && new Date(r.registration_deadline) > new Date()
 }
 
 /** 抽獎活動列表、報名與個人開獎結果 */
@@ -96,8 +94,9 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
 
   if (!open) return null
 
-  const openRaffles = raffles.filter(isRegistrationOpen)
+  const openRaffles = raffles.filter(isRaffleRegistrationOpen)
   const hasResults = myDrawnResults.length > 0
+  const hasUnseenOpenRaffles = openRaffles.some((r) => !isRaffleActivitySeen(r.id))
 
   return (
     <div
@@ -116,9 +115,14 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2
               id="raffle-panel-title"
-              className="font-display text-xl tracking-wide text-white"
+              className="flex items-center gap-2 font-display text-xl tracking-wide text-white"
             >
               抽獎活動
+              {hasUnseenOpenRaffles && (
+                <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white raffle-fab-new-badge">
+                  NEW
+                </span>
+              )}
             </h2>
             <button
               type="button"
@@ -204,8 +208,13 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
                     {openRaffles.map((r) => (
                       <li
                         key={r.id}
-                        className="rounded-xl border border-white/10 bg-white/5 p-4"
+                        className="relative rounded-xl border border-white/10 bg-white/5 p-4"
                       >
+                        {!isRaffleActivitySeen(r.id) && (
+                          <span className="absolute right-3 top-3 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white raffle-fab-new-badge">
+                            NEW
+                          </span>
+                        )}
                         <RafflePrizeDisplay raffle={r} />
                         <p className="mt-3 text-xs text-white/40">
                           報名截止：{formatDeadline(r.registration_deadline)} · 已報名{' '}
