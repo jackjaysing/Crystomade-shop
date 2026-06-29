@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
+  canReopenRaffleRegistration,
   createRaffle,
   deleteRaffle,
   drawRaffleWinner,
   fetchAllRaffles,
   fetchRaffleEntries,
+  reopenRaffleRegistration,
   updateRaffle,
   uploadRafflePrizeImage,
 } from '../../lib/api/raffles'
@@ -218,6 +220,35 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
       await reload()
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '抽獎失敗')
+    }
+  }
+
+  const handleReopen = async (r: RaffleWithMeta) => {
+    const nextDeadline = new Date()
+    nextDeadline.setDate(nextDeadline.getDate() + 7)
+    const deadlineLabel = nextDeadline.toLocaleString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+
+    if (
+      !confirm(
+        `「${prizeName(r)}」無人中獎，要重新開放報名嗎？\n\n新的截止時間：${deadlineLabel}\n（重新開放後仍可點「編輯」調整）`
+      )
+    ) {
+      return
+    }
+
+    try {
+      await reopenRaffleRegistration(r.id, nextDeadline.toISOString())
+      setMessage('已重新開放報名')
+      await reload()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '重新開放失敗')
     }
   }
 
@@ -439,6 +470,15 @@ export function RaffleAdmin({ enabled = true }: RaffleAdminProps) {
                             立即抽獎
                           </button>
                         )}
+                      {canReopenRaffleRegistration(r) && (
+                        <button
+                          type="button"
+                          onClick={() => void handleReopen(r)}
+                          className="rounded border border-sky-400/40 px-3 py-1.5 text-xs text-sky-200 hover:bg-sky-400/10"
+                        >
+                          重新開放報名
+                        </button>
+                      )}
                       {r.status === 'open' && isRegistrationOpen(r) && (
                         <button
                           type="button"

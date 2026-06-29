@@ -44,7 +44,20 @@ function migrationHint(msg: string): string | null {
   if (/raffles|raffle_entries|42P01|42703/i.test(msg)) {
     return '請在 Supabase SQL Editor 執行 supabase/migration-add-raffles.sql'
   }
+  if (/reopen_raffle_registration/i.test(msg)) {
+    return '請在 Supabase SQL Editor 執行 supabase/migration-reopen-raffle-no-winner.sql'
+  }
   return null
+}
+
+function defaultReopenRegistrationDeadline(): string {
+  const deadline = new Date()
+  deadline.setDate(deadline.getDate() + 7)
+  return deadline.toISOString()
+}
+
+export function canReopenRaffleRegistration(raffle: Pick<Raffle, 'status' | 'winner_user_id'>): boolean {
+  return raffle.status === 'drawn' && raffle.winner_user_id == null
 }
 
 function rafflePayload(data: RaffleFormData) {
@@ -472,6 +485,34 @@ export async function drawRaffleWinner(raffleId: string): Promise<Raffle> {
     summary: `抽獎開獎「${prizeName}」`,
   })
   return drawn
+}
+
+/** 後台：無人中獎時重新開放報名 */
+export async function reopenRaffleRegistration(
+  raffleId: string,
+  registrationDeadline?: string
+): Promise<Raffle> {
+  const deadline = registrationDeadline ?? defaultReopenRegistrationDeadline()
+  const { data, error } = await supabase.rpc('reopen_raffle_registration', {
+    p_raffle_id: raffleId,
+    p_registration_deadline: deadline,
+  })
+
+  if (error) {
+    const hint = migrationHint(formatErrorMessage(error))
+    throw new Error(hint ?? formatErrorMessage(error))
+  }
+
+  const reopened = normalizeRaffle(data as Record<string, unknown>)
+  const prizeName = reopened.prize_title?.trim() || reopened.title.trim() || reopened.id
+  void recordAdminActivity({
+    action: 'status',
+    entityType: 'raffle',
+    entityId: reopened.id,
+    entityLabel: prizeName,
+    summary: `重新開放抽獎報名「${prizeName}」`,
+  })
+  return reopened
 }
 
 /** 後台：報名名單 */
