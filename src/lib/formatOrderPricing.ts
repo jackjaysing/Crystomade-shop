@@ -23,6 +23,14 @@ export function formatOrderPricingAdjustments(group: OrderPricingSummary): strin
   return lines
 }
 
+export function orderGroupHasPricingBreakdown(group: OrderPricingSummary): boolean {
+  return (
+    group.shippingFeeNtd > 0 ||
+    group.pointsDiscountNtd > 0 ||
+    group.couponDiscountNtd > 0
+  )
+}
+
 export function formatOrderLineDisplayAmount(item: {
   lineSubtotal?: number
   lineTotal: number

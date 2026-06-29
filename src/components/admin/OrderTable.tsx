@@ -18,6 +18,7 @@ import {
 import {
   formatOrderLineDisplayAmount,
   formatOrderPricingAdjustments,
+  orderGroupHasPricingBreakdown,
 } from '../../lib/formatOrderPricing'
 import { adminProductThumbAlt } from '../../lib/imageAlt'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
@@ -681,7 +682,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                   ))}
                 </ul>
 
-                {formatOrderPricingAdjustments(group).length > 0 && (
+                {orderGroupHasPricingBreakdown(group) && (
                   <ul className="mt-3 space-y-1.5 border-t border-white/5 pt-3">
                     {formatOrderPricingAdjustments(group).map((line) => (
                       <li

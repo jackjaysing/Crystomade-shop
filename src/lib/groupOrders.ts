@@ -126,7 +126,8 @@ function buildLineItems(
   const lineSubtotals = reconstructLineSubtotals(
     pricingEntries,
     pricing.pointsDiscountNtd,
-    pricing.couponDiscountNtd
+    pricing.couponDiscountNtd,
+    pricing.shippingFeeNtd
   )
 
   for (const [key, item] of map) {

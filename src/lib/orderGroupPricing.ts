@@ -1,4 +1,4 @@
-import { SHIPPING_FEE } from '../constants/shipping'
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from '../constants/shipping'
 import type { Order } from './types'
 
 export function isPaidProductOrder(order: Order): boolean {
@@ -33,6 +33,8 @@ export function detectShippingFee(
   pointsDiscountNtd: number,
   couponDiscountNtd: number
 ): number {
+  const candidates: number[] = []
+
   for (const shippingFee of [0, SHIPPING_FEE]) {
     const subtotalBeforePoints =
       paidProductTotal - shippingFee + pointsDiscountNtd + couponDiscountNtd
@@ -40,9 +42,22 @@ export function detectShippingFee(
       subtotalBeforePoints >= 0 &&
       Math.abs(subtotalBeforePoints - Math.round(subtotalBeforePoints)) < 0.01
     ) {
-      return shippingFee
+      candidates.push(shippingFee)
     }
   }
+
+  if (candidates.length === 0) return 0
+  if (candidates.length === 1) return candidates[0]
+
+  const impliedProductSubtotal =
+    paidProductTotal - SHIPPING_FEE + pointsDiscountNtd + couponDiscountNtd
+  if (
+    candidates.includes(SHIPPING_FEE) &&
+    impliedProductSubtotal < FREE_SHIPPING_THRESHOLD
+  ) {
+    return SHIPPING_FEE
+  }
+
   return 0
 }
 
@@ -59,16 +74,23 @@ interface LinePricingEntry {
 export function reconstructLineSubtotals(
   lineEntries: LinePricingEntry[],
   pointsDiscountNtd: number,
-  couponDiscountNtd: number
+  couponDiscountNtd: number,
+  shippingFeeNtd: number
 ): Map<string, number> {
   const result = new Map<string, number>()
   if (lineEntries.length === 0) return result
 
   let sumAfterPoints = 0
   const afterPoints = lineEntries.map((entry) => {
-    const lineAfterPoints =
-      entry.lineTotalAfterDiscount +
-      (entry.isFirstPaidLine ? couponDiscountNtd : 0)
+    let lineAfterPoints = entry.lineTotalAfterDiscount
+    if (entry.isFirstPaidLine) {
+      if (couponDiscountNtd > 0) {
+        lineAfterPoints += couponDiscountNtd
+      }
+      if (shippingFeeNtd > 0) {
+        lineAfterPoints -= shippingFeeNtd
+      }
+    }
     sumAfterPoints += lineAfterPoints
     return { key: entry.key, lineAfterPoints }
   })
