@@ -32,7 +32,7 @@ export function WatermarkedImageDownloadButton({
     if (loading) return
     setLoading(true)
 
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let timeoutId: number | null = null
     try {
       await Promise.race([
         onDownload(),

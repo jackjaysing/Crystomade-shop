@@ -8,7 +8,7 @@ function isMobileDevice(): boolean {
 
 let persistentAnchor: HTMLAnchorElement | null = null
 let activeBlobUrl: string | null = null
-let activeCleanupTimer: ReturnType<typeof setTimeout> | null = null
+let activeCleanupTimer: number | null = null
 let mobileSaveOverlay: HTMLDivElement | null = null
 
 function getPersistentAnchor(): HTMLAnchorElement {

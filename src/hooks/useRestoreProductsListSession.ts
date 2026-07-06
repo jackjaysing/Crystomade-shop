@@ -14,7 +14,7 @@ export function useRestoreProductsListScroll(ready: boolean) {
   const sessionContext = useContext(ProductsListSessionContext)
   const startedRef = useRef(false)
   const abortedRef = useRef(false)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const timersRef = useRef<number[]>([])
   const scrollTargetRef = useRef<number | null>(null)
   const hasCarouselRestoreRef = useRef(false)
 

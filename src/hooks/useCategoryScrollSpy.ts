@@ -25,7 +25,7 @@ export function useCategoryScrollSpy(
   { enabled, visibleCategories, onActiveChange }: UseCategoryScrollSpyOptions
 ) {
   const suppressRef = useRef(false)
-  const suppressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suppressTimerRef = useRef<number | null>(null)
   const lastActiveRef = useRef<ProductCategory | null>(null)
   const onActiveChangeRef = useRef(onActiveChange)
 
@@ -38,7 +38,7 @@ export function useCategoryScrollSpy(
     if (suppressTimerRef.current !== null) {
       clearTimeout(suppressTimerRef.current)
     }
-    suppressTimerRef.current = setTimeout(() => {
+    suppressTimerRef.current = window.setTimeout(() => {
       suppressRef.current = false
       suppressTimerRef.current = null
     }, durationMs)

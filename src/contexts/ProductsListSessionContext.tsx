@@ -85,10 +85,8 @@ export function ProductsListSessionProvider({
   const pendingCarouselRestoreRef = useRef(
     loadPendingProductsListRestore()?.carouselScrollLeft ?? {}
   )
-  const carouselRestoreTimersRef = useRef(
-    new Map<ProductCategory, ReturnType<typeof setTimeout>[]>()
-  )
-  const carouselResetTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const carouselRestoreTimersRef = useRef(new Map<ProductCategory, number[]>())
+  const carouselResetTimersRef = useRef<number[]>([])
 
   const clearAllCarouselRestoreTimers = useCallback(() => {
     for (const category of carouselRestoreTimersRef.current.keys()) {
