@@ -72,13 +72,18 @@ function FulfillmentIdCardPreview({
     cardId: string,
     profile: Pick<
       FulfillmentSoulCard,
-      'element_primary' | 'magic_affiliation' | 'product_tags' | 'five_elements'
+      | 'element_primary'
+      | 'magic_affiliation'
+      | 'product_tags'
+      | 'five_elements'
+      | 'magic_title'
     >
   ) => void
   onImageSaved: (cardId: string, imageUrl: string | null) => void
 }) {
   const bespoke = isBespokeSoulCardProduct(card.product_name)
-  const showProductName = shouldShowSoulCardProductName(card.magic_title, card.product_name)
+  const [magicTitle, setMagicTitle] = useState(card.magic_title)
+  const showProductName = shouldShowSoulCardProductName(magicTitle, card.product_name)
   const [elementPrimary, setElementPrimary] = useState(card.element_primary)
   const [magicAffiliation, setMagicAffiliation] = useState(card.magic_affiliation)
   const [efficacyTags, setEfficacyTags] = useState(() => pickEfficacyTags(card.product_tags))
@@ -93,6 +98,10 @@ function FulfillmentIdCardPreview({
   useEffect(() => {
     setImageUrl(card.product_image_url)
   }, [card.id, card.product_image_url])
+
+  useEffect(() => {
+    setMagicTitle(card.magic_title)
+  }, [card.id, card.magic_title])
 
   useEffect(() => {
     setElementPrimary(card.element_primary)
@@ -132,6 +141,12 @@ function FulfillmentIdCardPreview({
   }
 
   const handleSaveProfile = async () => {
+    const trimmedTitle = magicTitle.trim()
+    if (bespoke && !trimmedTitle) {
+      setProfileMessage('請填寫手串名稱')
+      return
+    }
+
     setSavingProfile(true)
     setProfileMessage('')
     try {
@@ -139,13 +154,16 @@ function FulfillmentIdCardPreview({
         element_primary: elementPrimary,
         magic_affiliation: magicAffiliation,
         product_tags: efficacyTags,
+        ...(bespoke ? { magic_title: trimmedTitle } : {}),
       })
       setFiveElements(updated.five_elements)
+      if (updated.magic_title) setMagicTitle(updated.magic_title)
       onProfileSaved(card.id, {
         element_primary: updated.element_primary,
         magic_affiliation: updated.magic_affiliation,
         product_tags: updated.product_tags,
         five_elements: updated.five_elements,
+        magic_title: updated.magic_title ?? trimmedTitle,
       })
       setProfileMessage('靈魂卡屬性已儲存')
       window.setTimeout(() => setProfileMessage(''), 2500)
@@ -162,7 +180,7 @@ function FulfillmentIdCardPreview({
       return
     }
     openFulfillmentIdCardPrint({
-      magic_title: card.magic_title,
+      magic_title: magicTitle.trim() || card.magic_title,
       serial_number: card.serial_number,
       product_name: card.product_name,
       selected_size: card.selected_size,
@@ -225,13 +243,13 @@ function FulfillmentIdCardPreview({
         </div>
         <div className="min-w-0 flex-1">
           <p className="fid-eyebrow text-[10px] text-amber-glow/65">實體身分證預覽</p>
-          <p className="fid-title mt-1 text-sm magic-foil-heading">{card.magic_title}</p>
+          <p className="fid-title mt-1 text-sm magic-foil-heading">{magicTitle}</p>
           {showProductName && (
             <p className="mt-0.5 text-xs text-white/50">{card.product_name}</p>
           )}
           {bespoke && (
             <p className="mt-1 text-[10px] leading-relaxed text-amber-glow/75">
-              量身訂製 · 請上傳成品照片，並依客人命盤設定主屬性、魔法系別與功效後再列印
+              量身訂製 · 請為此手串命名、上傳成品照片，並依客人命盤設定主屬性、魔法系別與功效後再列印
             </p>
           )}
         </div>
@@ -294,6 +312,19 @@ function FulfillmentIdCardPreview({
         <p className="text-[10px] tracking-wider text-white/45">
           {bespoke ? '量身訂製 · 靈魂卡屬性' : '靈魂卡屬性（可調整）'}
         </p>
+        {bespoke && (
+          <label className="block text-[10px] tracking-wider text-white/45">
+            手串名稱
+            <input
+              type="text"
+              value={magicTitle}
+              onChange={(e) => setMagicTitle(e.target.value)}
+              placeholder="例如：星河守望 · 木系專屬"
+              maxLength={80}
+              className="mt-1 w-full rounded border border-white/15 bg-black/30 px-2 py-1.5 text-xs text-white placeholder:text-white/25"
+            />
+          </label>
+        )}
         <label className="block text-[10px] tracking-wider text-white/45">
           主屬性
           <select
@@ -396,7 +427,11 @@ function SoulCardQrCard({
     cardId: string,
     profile: Pick<
       FulfillmentSoulCard,
-      'element_primary' | 'magic_affiliation' | 'product_tags' | 'five_elements'
+      | 'element_primary'
+      | 'magic_affiliation'
+      | 'product_tags'
+      | 'five_elements'
+      | 'magic_title'
     >
   ) => void
   onImageSaved: (cardId: string, imageUrl: string | null) => void
@@ -569,7 +604,11 @@ export function OrderSoulCardQrPanel({ orderIds, paid }: OrderSoulCardQrPanelPro
     cardId: string,
     profile: Pick<
       FulfillmentSoulCard,
-      'element_primary' | 'magic_affiliation' | 'product_tags' | 'five_elements'
+      | 'element_primary'
+      | 'magic_affiliation'
+      | 'product_tags'
+      | 'five_elements'
+      | 'magic_title'
     >
   ) => {
     setCards((prev) =>

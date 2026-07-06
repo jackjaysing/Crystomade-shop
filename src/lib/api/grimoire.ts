@@ -325,18 +325,25 @@ export type FulfillmentSoulCardProfile = {
   magic_affiliation: string
   product_tags: string[]
   five_elements: string[]
+  magic_title?: string
 }
 
-/** 後台出貨：儲存主屬性、魔法系別、功效類別 */
+/** 後台出貨：儲存主屬性、魔法系別、功效類別（量身訂製可一併儲存手串名稱） */
 export async function setFulfillmentSoulCardProfile(
   cardId: string,
-  profile: Pick<FulfillmentSoulCardProfile, 'element_primary' | 'magic_affiliation' | 'product_tags'>
+  profile: Pick<
+    FulfillmentSoulCardProfile,
+    'element_primary' | 'magic_affiliation' | 'product_tags'
+  > & { magic_title?: string }
 ): Promise<FulfillmentSoulCardProfile> {
   const { data, error } = await supabase.rpc('set_fulfillment_soul_card_profile', {
     p_card_id: cardId,
     p_element_primary: profile.element_primary.trim(),
     p_magic_affiliation: profile.magic_affiliation.trim(),
     p_product_tags: profile.product_tags,
+    ...(profile.magic_title !== undefined
+      ? { p_magic_title: profile.magic_title.trim() }
+      : {}),
   })
 
   if (error) throw new Error(formatErrorMessage(error))
@@ -348,6 +355,7 @@ export async function setFulfillmentSoulCardProfile(
     five_elements: Array.isArray(row.five_elements)
       ? row.five_elements.map(String)
       : [],
+    magic_title: String(row.magic_title ?? ''),
   }
 }
 
