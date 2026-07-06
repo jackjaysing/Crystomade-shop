@@ -905,6 +905,18 @@
   min-height: 2.7em;
 }
 
+.magic-bookshelf-subtitle {
+  margin-top: 0.15rem;
+  font-family: var(--font-display, serif);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--magic-label);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
 .magic-bookshelf-serial {
   margin-top: 0.25rem;
   font-family: monospace;

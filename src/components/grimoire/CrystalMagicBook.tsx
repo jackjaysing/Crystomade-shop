@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { GrimoireTaskType } from '../../constants/grimoire'
 import { magicStatusTier } from '../../constants/grimoire'
+import { resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 import type { CrystalSoulCard } from '../../lib/types'
 import { markSealAnimationPlayed, shouldPlaySealAnimation } from '../../lib/grimoireUnlock'
 import { EnergyContractPanel } from './EnergyContractPanel'
@@ -75,6 +76,8 @@ export function CrystalMagicBook({
   }
 
   const showTaskPanel = isOwner && phase === 'book' && Boolean(onCompleteTask)
+  const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
+  const bookShellTitle = headlines.secondary ?? headlines.primary
 
   return (
     <div className={showTaskPanel ? 'magic-book-layout relative' : 'relative'}>
@@ -95,7 +98,7 @@ export function CrystalMagicBook({
       <div className={showTaskPanel ? 'magic-book-layout-main' : ''}>
       <MagicBookShell
         tier={card.magic_status}
-        title={phase === 'book' ? card.magic_title : undefined}
+        title={phase === 'book' ? bookShellTitle : undefined}
         subtitle={
           phase === 'book'
             ? card.serial_number

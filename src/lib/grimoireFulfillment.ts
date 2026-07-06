@@ -12,3 +12,29 @@ export function shouldShowSoulCardProductName(
   const name = productName.trim()
   return name !== '' && name !== title
 }
+
+export interface SoulCardDisplayHeadlines {
+  primary: string
+  secondary: string | null
+}
+
+/** 靈魂卡主副標：量身訂製手串品名在上、專屬名稱在下；其餘商品維持魔法物名稱在上 */
+export function resolveSoulCardDisplayHeadlines(
+  magicTitle: string,
+  productName: string
+): SoulCardDisplayHeadlines {
+  const title = magicTitle.trim()
+  const name = productName.trim()
+
+  if (isBespokeSoulCardProduct(name) && name) {
+    return {
+      primary: name,
+      secondary: title && title !== name ? title : null,
+    }
+  }
+
+  return {
+    primary: title || name || '水晶靈魂',
+    secondary: shouldShowSoulCardProductName(title, name) ? name : null,
+  }
+}

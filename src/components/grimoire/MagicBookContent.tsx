@@ -5,6 +5,7 @@ import {
   CRYSTAL_MAGIC_STATUS_LABELS,
 } from '../../constants/grimoire'
 import { crystalSoulCardPublicUrl } from '../../lib/grimoire'
+import { resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 import type { CrystalSoulCard } from '../../lib/types'
 import type { FiveElement } from '../../constants/fiveElements'
 import type { GrimoireTaskType } from '../../constants/grimoire'
@@ -59,6 +60,7 @@ export function MagicBookContent({
   const isOwner = mode === 'owner'
   const shareUrl = crystalSoulCardPublicUrl(card.public_slug)
   const rank = CRYSTAL_MAGIC_RANK[card.magic_status]
+  const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
 
   const handleCopy = async () => {
     if (!card.is_public) return
@@ -93,8 +95,10 @@ export function MagicBookContent({
         )}
         <div className="magic-book-hero-text">
           <p className="magic-book-chapter magic-foil-text-subtle">SOUL IMPRINT · 靈魂印記</p>
-          <h3 className="magic-book-name magic-foil-text">{card.magic_title}</h3>
-          <p className="magic-book-product">{card.product_name}</p>
+          <h3 className="magic-book-name magic-foil-text">{headlines.primary}</h3>
+          {headlines.secondary && (
+            <p className="magic-book-product">{headlines.secondary}</p>
+          )}
           {card.selected_size && (
             <p className="magic-book-meta">尺寸 · {card.selected_size}</p>
           )}

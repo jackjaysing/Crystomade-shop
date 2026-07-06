@@ -1,4 +1,5 @@
 import { formatEfficacyTags } from '../../lib/efficacyTags'
+import { resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 
 interface MagicContractCardPreviewProps {
   productName: string
@@ -17,6 +18,7 @@ export function MagicContractCardPreview({
   magicTitle,
 }: MagicContractCardPreviewProps) {
   const efficacyLabel = formatEfficacyTags(productTags)
+  const headlines = resolveSoulCardDisplayHeadlines(magicTitle ?? '', productName)
 
   return (
     <div className="magic-gift-preview mb-4 flex items-center gap-3">
@@ -30,10 +32,10 @@ export function MagicContractCardPreview({
         <span className="magic-gift-preview-glyph">✦</span>
       )}
       <div className="min-w-0">
-        {magicTitle && (
-          <p className="magic-gift-preview-title">{magicTitle}</p>
+        <p className="magic-gift-preview-title">{headlines.primary}</p>
+        {headlines.secondary && (
+          <p className="magic-gift-preview-name">{headlines.secondary}</p>
         )}
-        <p className="magic-gift-preview-name">{productName}</p>
         <p className="magic-gift-preview-meta">魔法系別 · {magicAffiliation}</p>
         <p className="magic-gift-preview-meta">功效類別 · {efficacyLabel}</p>
       </div>

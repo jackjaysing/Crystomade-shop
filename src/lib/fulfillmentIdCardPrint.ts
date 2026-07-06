@@ -1,6 +1,6 @@
 import { FIVE_ELEMENTS, type FiveElement } from '../constants/fiveElements'
 import { formatEfficacyTags } from './efficacyTags'
-import { shouldShowSoulCardProductName } from './grimoireFulfillment'
+import { resolveSoulCardDisplayHeadlines } from './grimoireFulfillment'
 
 export interface FulfillmentIdCardData {
   magic_title: string
@@ -368,9 +368,9 @@ export function buildFulfillmentIdCardPrintHtml(card: FulfillmentIdCardData): st
       </div>`
     : ''
 
-  const showProductName = shouldShowSoulCardProductName(card.magic_title, card.product_name)
+  const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
 
-  return `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${LABEL.cardTitle} \u00b7 ${escapeHtml(card.magic_title)}</title>
+  return `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${LABEL.cardTitle} \u00b7 ${escapeHtml(headlines.primary)}</title>
 ${PRINT_FONT_LINK}
 <style>${ID_CARD_PRINT_CSS}</style></head><body>
 <div class="sheet">
@@ -384,8 +384,8 @@ ${PRINT_FONT_LINK}
         <div class="hero">
           ${thumb}
           <div class="hero-text">
-            <p class="name">${escapeHtml(card.magic_title)}</p>
-            ${showProductName ? `<p class="product">${escapeHtml(card.product_name)}</p>` : ''}
+            <p class="name">${escapeHtml(headlines.primary)}</p>
+            ${headlines.secondary ? `<p class="product">${escapeHtml(headlines.secondary)}</p>` : ''}
           </div>
         </div>
         <dl class="grid">

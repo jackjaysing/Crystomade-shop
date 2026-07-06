@@ -6,6 +6,7 @@ import {
 } from '../../constants/grimoire'
 import { crystalSoulCardPublicUrl } from '../../lib/grimoire'
 import { nextRankLabel, tasksUntilNextRank } from '../../lib/grimoireRank'
+import { resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 import type { CrystalSoulCard } from '../../lib/types'
 import { FiveElementsDisplay } from '../products/FiveElementsDisplay'
 import type { FiveElement } from '../../constants/fiveElements'
@@ -34,6 +35,7 @@ export function CrystalSoulCardView({
     Boolean(card.contract_signed_at)
   )
   const nextRank = nextRankLabel(card.magic_status)
+  const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
 
   const handleCopyLink = async () => {
     if (!card.is_public) return
@@ -66,8 +68,10 @@ export function CrystalSoulCardView({
           <p className="text-[10px] tracking-[0.35em] text-violet-300/70">
             CRYSTAL SOUL ID
           </p>
-          <h3 className="mt-1 font-display text-lg text-white">{card.magic_title}</h3>
-          <p className="mt-0.5 truncate text-sm text-white/55">{card.product_name}</p>
+          <h3 className="mt-1 font-display text-lg text-white">{headlines.primary}</h3>
+          {headlines.secondary && (
+            <p className="mt-0.5 truncate text-sm text-white/55">{headlines.secondary}</p>
+          )}
           {card.selected_size && (
             <p className="text-xs text-white/35">尺寸 {card.selected_size}</p>
           )}

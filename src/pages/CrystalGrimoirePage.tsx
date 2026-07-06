@@ -6,6 +6,7 @@ import { GlassPanel } from '../components/ui/GlassPanel'
 import { fetchMyCrystalSoulCards, fetchPurchaseMeritCardCount } from '../lib/api/grimoire'
 import { useAuth } from '../contexts/AuthContext'
 import type { CrystalSoulCard } from '../lib/types'
+import { resolveSoulCardDisplayHeadlines } from '../lib/grimoireFulfillment'
 import { energyLevelLabel, CRYSTAL_MAGIC_RANK } from '../constants/grimoire'
 
 /** 會員：魔導書書架 */
@@ -88,7 +89,13 @@ export function CrystalGrimoirePage() {
             </GlassPanel>
           ) : (
             <ul className="magic-bookshelf-grid grid gap-5 sm:grid-cols-2">
-              {cards.map((card) => (
+              {cards.map((card) => {
+                const headlines = resolveSoulCardDisplayHeadlines(
+                  card.magic_title,
+                  card.product_name
+                )
+
+                return (
                 <li key={card.id} className="h-full">
                   <Link
                     to={`/account/grimoire/${card.id}`}
@@ -106,7 +113,10 @@ export function CrystalGrimoirePage() {
                         <span className="magic-bookshelf-glyph">✦</span>
                       )}
                       <div className="magic-bookshelf-meta">
-                        <p className="magic-bookshelf-title">{card.magic_title}</p>
+                        <p className="magic-bookshelf-title">{headlines.primary}</p>
+                        {headlines.secondary && (
+                          <p className="magic-bookshelf-subtitle">{headlines.secondary}</p>
+                        )}
                         <p className="magic-bookshelf-serial">{card.serial_number}</p>
                         <p className={`magic-bookshelf-rank magic-bookshelf-rank--${card.magic_status}`}>
                           {CRYSTAL_MAGIC_RANK[card.magic_status].roman} ·{' '}
@@ -126,7 +136,8 @@ export function CrystalGrimoirePage() {
                     </div>
                   </Link>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>

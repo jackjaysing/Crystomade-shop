@@ -13,7 +13,7 @@ import {
 import { BROWSER_IMAGE_ACCEPT } from '../../lib/browserImage'
 import { crystalSoulCardActivationUrl } from '../../lib/grimoire'
 import { pickEfficacyTags, formatEfficacyTags } from '../../lib/efficacyTags'
-import { isBespokeSoulCardProduct, shouldShowSoulCardProductName } from '../../lib/grimoireFulfillment'
+import { isBespokeSoulCardProduct, resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 import { openFulfillmentIdCardPrint, openFulfillmentQrOnlyPrint } from '../../lib/fulfillmentIdCardPrint'
 import { AdminEfficacyTagsPicker } from './AdminEfficacyTagsPicker'
 
@@ -83,7 +83,7 @@ function FulfillmentIdCardPreview({
 }) {
   const bespoke = isBespokeSoulCardProduct(card.product_name)
   const [magicTitle, setMagicTitle] = useState(card.magic_title)
-  const showProductName = shouldShowSoulCardProductName(magicTitle, card.product_name)
+  const headlines = resolveSoulCardDisplayHeadlines(magicTitle, card.product_name)
   const [elementPrimary, setElementPrimary] = useState(card.element_primary)
   const [magicAffiliation, setMagicAffiliation] = useState(card.magic_affiliation)
   const [efficacyTags, setEfficacyTags] = useState(() => pickEfficacyTags(card.product_tags))
@@ -243,9 +243,9 @@ function FulfillmentIdCardPreview({
         </div>
         <div className="min-w-0 flex-1">
           <p className="fid-eyebrow text-[10px] text-amber-glow/65">實體身分證預覽</p>
-          <p className="fid-title mt-1 text-sm magic-foil-heading">{magicTitle}</p>
-          {showProductName && (
-            <p className="mt-0.5 text-xs text-white/50">{card.product_name}</p>
+          <p className="fid-title mt-1 text-sm magic-foil-heading">{headlines.primary}</p>
+          {headlines.secondary && (
+            <p className="mt-0.5 text-xs text-white/50">{headlines.secondary}</p>
           )}
           {bespoke && (
             <p className="mt-1 text-[10px] leading-relaxed text-amber-glow/75">
