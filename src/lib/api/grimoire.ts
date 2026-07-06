@@ -17,6 +17,29 @@ export async function fetchMyCrystalSoulCards(userId: string): Promise<CrystalSo
   return (data ?? []).map((row) => normalizeCrystalSoulCard(row as Record<string, unknown>))
 }
 
+/** 會員：購入修為本數（下單人；含已轉贈出去的魔導書） */
+export async function fetchPurchaseMeritCardCount(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('count_grimoire_purchase_merit_cards', {
+    p_user_id: userId,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/count_grimoire_purchase_merit_cards|42883/i.test(msg)) {
+      const { count, error: countError } = await supabase
+        .from('crystal_soul_cards')
+        .select('id', { count: 'exact', head: true })
+        .eq('purchased_by_user_id', userId)
+
+      if (countError) return 0
+      return count ?? 0
+    }
+    throw new Error(msg)
+  }
+
+  return typeof data === 'number' ? data : Number(data) || 0
+}
+
 /** 會員：單張靈魂卡 */
 export async function fetchMyCrystalSoulCard(
   userId: string,
@@ -62,11 +85,11 @@ export async function setCrystalSoulCardPublic(
   return normalizeCrystalSoulCard(data as Record<string, unknown>)
 }
 
-/** 擁有者：推進覺醒狀態 */
-export async function advanceCrystalSoulCardStatus(
+/** 開發測試：一鍵升至極境 */
+export async function devMaxUpgradeCrystalSoulCardRpc(
   cardId: string
 ): Promise<CrystalSoulCard> {
-  const { data, error } = await supabase.rpc('advance_crystal_soul_card_status', {
+  const { data, error } = await supabase.rpc('dev_max_upgrade_crystal_soul_card', {
     p_card_id: cardId,
   })
 

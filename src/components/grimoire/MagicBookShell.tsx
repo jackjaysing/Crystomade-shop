@@ -20,7 +20,7 @@ export function MagicBookShell({
   return (
     <div className={`magic-book-outer magic-book-outer--tier-${tier} ${className}`}>
       <div className="magic-book-aura" aria-hidden />
-      {tier === 'resonating' && (
+      {tier === 'ascendant' && (
         <>
           <div className="magic-book-particles" aria-hidden />
           <div className="magic-book-crown" aria-hidden>✧</div>

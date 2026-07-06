@@ -7,6 +7,7 @@ import { EnergyContractPanel } from './EnergyContractPanel'
 import { MagicContractCardPreview } from './MagicContractCardPreview'
 import { GiftContractSharePanel } from './GiftContractSharePanel'
 import { MagicBookContent } from './MagicBookContent'
+import { MagicGrimoireTaskPanel } from './MagicGrimoireTaskPanel'
 import { MagicBookShell } from './MagicBookShell'
 import { RankUpOverlay } from './RankUpOverlay'
 import { SealUnlockOverlay } from './SealUnlockOverlay'
@@ -21,7 +22,6 @@ interface CrystalMagicBookProps {
   signerName?: string
   busy?: boolean
   onToggleShare?: (isPublic: boolean) => Promise<void>
-  onAdvanceStatus?: () => Promise<void>
   onSignContract?: () => Promise<void>
   onEnableGiftClaim?: () => Promise<void>
   onCompleteTask?: (task: GrimoireTaskType) => Promise<void>
@@ -34,7 +34,6 @@ export function CrystalMagicBook({
   signerName,
   busy = false,
   onToggleShare,
-  onAdvanceStatus,
   onSignContract,
   onEnableGiftClaim,
   onCompleteTask,
@@ -75,8 +74,10 @@ export function CrystalMagicBook({
     setPhase('book')
   }
 
+  const showTaskPanel = isOwner && phase === 'book' && Boolean(onCompleteTask)
+
   return (
-    <div className="relative">
+    <div className={showTaskPanel ? 'magic-book-layout relative' : 'relative'}>
       {rankUpStatus && (
         <RankUpOverlay
           status={rankUpStatus}
@@ -91,6 +92,7 @@ export function CrystalMagicBook({
         />
       )}
 
+      <div className={showTaskPanel ? 'magic-book-layout-main' : ''}>
       <MagicBookShell
         tier={card.magic_status}
         title={phase === 'book' ? card.magic_title : undefined}
@@ -139,7 +141,6 @@ export function CrystalMagicBook({
             mode={mode}
             busy={busy}
             onToggleShare={onToggleShare}
-            onAdvanceStatus={onAdvanceStatus}
             onCompleteTask={onCompleteTask}
           />
         )}
@@ -150,6 +151,15 @@ export function CrystalMagicBook({
           </div>
         )}
       </MagicBookShell>
+      </div>
+
+      {showTaskPanel && onCompleteTask && (
+        <MagicGrimoireTaskPanel
+          card={card}
+          busy={busy}
+          onCompleteTask={onCompleteTask}
+        />
+      )}
     </div>
   )
 }

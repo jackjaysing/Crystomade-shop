@@ -1,18 +1,27 @@
-/** 水晶靈魂卡覺醒狀態（階級） */
-export type CrystalMagicStatus = 'dormant' | 'awakening' | 'resonating'
+/** 水晶靈魂卡覺醒狀態（五階） */
+export type CrystalMagicStatus =
+  | 'dormant'
+  | 'starlight'
+  | 'awakening'
+  | 'resonating'
+  | 'ascendant'
 
 export type GrimoireTaskType = 'purify' | 'moon' | 'meditation'
 
 export const CRYSTAL_MAGIC_STATUS_ORDER: CrystalMagicStatus[] = [
   'dormant',
+  'starlight',
   'awakening',
   'resonating',
+  'ascendant',
 ]
 
 export const CRYSTAL_MAGIC_STATUS_LABELS: Record<CrystalMagicStatus, string> = {
-  dormant: '沉睡中',
-  awakening: '覺醒中',
+  dormant: '初印沉睡',
+  starlight: '星芒微亮',
+  awakening: '覺醒流動',
   resonating: '共鳴穩定',
+  ascendant: '極境永恆',
 }
 
 export const CRYSTAL_MAGIC_RANK: Record<
@@ -32,16 +41,30 @@ export const CRYSTAL_MAGIC_RANK: Record<
     epithet: '沉眠之印',
     flavor: '靈魂印記已烙下，等待契約與覺醒',
   },
-  awakening: {
+  starlight: {
     tier: 2,
     roman: 'II',
+    title: '星芒',
+    epithet: '微光乍現',
+    flavor: '契約已繕，印記開始透出第一縷光',
+  },
+  awakening: {
+    tier: 3,
+    roman: 'III',
     title: '覺醒',
     epithet: '心動之印',
     flavor: '能量開始流動，水晶與你同頻呼吸',
   },
   resonating: {
-    tier: 3,
-    roman: 'III',
+    tier: 4,
+    roman: 'IV',
+    title: '共鳴',
+    epithet: '同頻之印',
+    flavor: '意念與晶石穩定共振，光痕漸趨清晰',
+  },
+  ascendant: {
+    tier: 5,
+    roman: 'V',
     title: '極境',
     epithet: '永恆共鳴',
     flavor: '光與意念完全交融，身分證綻放極致光華',
@@ -50,13 +73,6 @@ export const CRYSTAL_MAGIC_RANK: Record<
 
 export function magicStatusTier(status: CrystalMagicStatus): number {
   return CRYSTAL_MAGIC_RANK[status].tier
-}
-
-export const CRYSTAL_MAGIC_STATUS_NEXT_LABEL: Partial<
-  Record<CrystalMagicStatus, string>
-> = {
-  dormant: '晉升 · 覺醒階',
-  awakening: '晉升 · 極境階',
 }
 
 export const ENERGY_CONTRACT_TEXT =
@@ -111,3 +127,82 @@ export const MAGIC_AFFILIATION_OPTIONS = [
 ] as const
 
 export type MagicAffiliation = (typeof MAGIC_AFFILIATION_OPTIONS)[number]
+
+/** 每個魔法師等級內的子階（星） */
+export const MAGICIAN_STARS_PER_LEVEL = 3
+
+export const MAGICIAN_STAR_LABELS = ['一星', '二星', '三星'] as const
+
+/** 會員魔法師等級（依魔導書修為累積；每級再分三星） */
+export const MAGICIAN_LEVELS = [
+  {
+    tier: 1,
+    roman: 'I',
+    title: '見習魔法師',
+    epithet: '靈感初啟',
+    flavor: '魔法之門為你敞開，每一本魔導書都是一段修行。',
+    minXp: 0,
+  },
+  {
+    tier: 2,
+    roman: 'II',
+    title: '符文學徒',
+    epithet: '印記學徒',
+    flavor: '你已能讀懂水晶的細語，符文開始在指尖流轉。',
+    minXp: 100,
+  },
+  {
+    tier: 3,
+    roman: 'III',
+    title: '水晶行者',
+    epithet: '脈動行者',
+    flavor: '意念與晶石同頻，行走之間自有光痕跟隨。',
+    minXp: 280,
+  },
+  {
+    tier: 4,
+    roman: 'IV',
+    title: '能量編織者',
+    epithet: '織光之手',
+    flavor: '你編織的不只是能量，而是與水晶之間的永恆連結。',
+    minXp: 500,
+  },
+  {
+    tier: 5,
+    roman: 'V',
+    title: '占星術士',
+    epithet: '星盤守望',
+    flavor: '五行與星軌皆在掌中，魔導書群為你共鳴。',
+    minXp: 720,
+  },
+  {
+    tier: 6,
+    roman: 'VI',
+    title: '大魔法師',
+    epithet: '晶光宗師',
+    flavor: '你的修行已臻高深，光與意志融為一體。',
+    minXp: 900,
+  },
+  {
+    tier: 7,
+    roman: 'VII',
+    title: '永恆大魔導',
+    epithet: '晶刻至尊',
+    flavor: '傳說級的共鳴者，晶刻殿堂為你留名。',
+    minXp: 1100,
+  },
+] as const
+
+/** 極境後每完成一次任務額外獲得的巫師修為 */
+export const GRIMOIRE_MERIT_PER_TASK = 2
+
+/** 下單人每本魔導書的固定修為（轉贈後仍保留在下單人） */
+export const GRIMOIRE_BUYER_XP_PER_CARD = 15
+
+/** 全帳號每日日常巫師修為上限（極境任務） */
+export const GRIMOIRE_MERIT_DAILY_CAP = 6
+
+/** 建議極境典藏本數（達永恆大魔導） */
+export const GRIMOIRE_ASCENDANT_COLLECTION_GOAL = 4
+
+export type MagicianLevelDef = (typeof MAGICIAN_LEVELS)[number]

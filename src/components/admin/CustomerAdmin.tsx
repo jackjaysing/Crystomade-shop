@@ -6,9 +6,25 @@ import {
   fetchRegisteredCustomers,
   formatPhoneDisplay,
 } from '../../lib/api/adminCustomers'
-import type { AdminGuestCustomer, AdminRegisteredCustomer } from '../../lib/types'
+import { recordAdminActivity } from '../../lib/api/adminActivityLog'
+import { fetchAdminCrystalSoulCards, fetchAdminPurchaseMeritCounts } from '../../lib/api/adminGrimoire'
+import type { AdminLegacyGrimoireIssueRow } from '../../lib/api/adminGrimoire'
+import {
+  formatMemberMagicianBookSummary,
+  formatMemberMagicianXpBreakdown,
+  groupSoulCardsByUser,
+  resolvePurchaseMeritByUser,
+  summarizeMemberMagician,
+} from '../../lib/adminMemberMagician'
+import type {
+  AdminGuestCustomer,
+  AdminRegisteredCustomer,
+  CrystalSoulCard,
+} from '../../lib/types'
 import { useAdminSession } from '../../hooks/useAdminSession'
+import { BirthdayMembersPanel } from './BirthdayMembersPanel'
 import { DeleteMemberConfirmModal } from './DeleteMemberConfirmModal'
+import { LegacyGrimoireIssueModal } from './LegacyGrimoireIssueModal'
 import { GlassPanel } from '../ui/GlassPanel'
 
 type CustomerView = 'registered' | 'guest'
@@ -42,6 +58,10 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
   const [view, setView] = useState<CustomerView>('registered')
   const [registered, setRegistered] = useState<AdminRegisteredCustomer[]>([])
   const [guests, setGuests] = useState<AdminGuestCustomer[]>([])
+  const [soulCards, setSoulCards] = useState<CrystalSoulCard[]>([])
+  const [purchaseMeritByUser, setPurchaseMeritByUser] = useState<Map<string, number>>(
+    () => new Map()
+  )
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [search, setSearch] = useState('')
@@ -55,8 +75,10 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
   const [deletingMember, setDeletingMember] =
     useState<AdminRegisteredCustomer | null>(null)
   const [deleteSubmitting, setDeleteSubmitting] = useState(false)
+  const [legacyIssueMember, setLegacyIssueMember] =
+    useState<AdminRegisteredCustomer | null>(null)
 
-  const reload = useCallback(async () => {
+  const reloadMembers = useCallback(async () => {
     if (!enabled) return
     setLoading(true)
     setMessage('')
@@ -74,13 +96,58 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
     }
   }, [enabled])
 
-  useEffect(() => {
-    void reload()
-  }, [reload])
+  const reloadSoulCards = useCallback(async () => {
+    if (!enabled) return
+    try {
+      const [cards, meritCounts] = await Promise.all([
+        fetchAdminCrystalSoulCards(),
+        fetchAdminPurchaseMeritCounts(),
+      ])
+      setSoulCards(cards)
+      setPurchaseMeritByUser(resolvePurchaseMeritByUser(meritCounts, cards))
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '靈魂卡載入失敗')
+    }
+  }, [enabled])
+
+  const handleLegacyGrimoireIssued = useCallback(
+    async (member: AdminRegisteredCustomer, rows: AdminLegacyGrimoireIssueRow[]) => {
+      await reloadSoulCards()
+      const serials = rows
+        .map((row) => row.serialNumber)
+        .filter((value): value is string => Boolean(value))
+      setMessage(
+        `已為 ${member.real_name} 補登 ${rows.length} 本魔導書${
+          serials.length > 0 ? `（${serials.join('、')}）` : ''
+        }`
+      )
+      void recordAdminActivity({
+        action: 'create',
+        entityType: 'order',
+        entityId: rows[0]?.orderId,
+        entityLabel: `${member.real_name} · ${formatPhoneDisplay(member.phone)}`,
+        summary: `補登歷史魔導書 ${rows.length} 本：${member.real_name}`,
+      })
+    },
+    [reloadSoulCards]
+  )
+
+  const reloadAll = useCallback(async () => {
+    await reloadMembers()
+    if (view === 'registered') await reloadSoulCards()
+  }, [reloadMembers, reloadSoulCards, view])
 
   useEffect(() => {
-    if (reloadSignal > 0) void reload()
-  }, [reloadSignal, reload])
+    void reloadMembers()
+  }, [reloadMembers])
+
+  useEffect(() => {
+    if (view === 'registered' && enabled) void reloadSoulCards()
+  }, [view, enabled, reloadSoulCards])
+
+  useEffect(() => {
+    if (reloadSignal > 0) void reloadAll()
+  }, [reloadSignal, reloadAll])
 
   const filteredRegistered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -92,6 +159,8 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         c.phone.includes(q)
     )
   }, [registered, search])
+
+  const cardsByUser = useMemo(() => groupSoulCardsByUser(soulCards), [soulCards])
 
   const filteredGuests = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -137,7 +206,7 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
       setMessage(`已刪除 ${deletingMember.real_name} 的註冊資料`)
       setDeletingMember(null)
       if (editing?.id === deletingMember.id) setEditing(null)
-      await reload()
+      await reloadAll()
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '刪除失敗')
     } finally {
@@ -176,7 +245,7 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
       })
       setMessage(`已更新 ${editing.real_name} 的點數`)
       setEditing(null)
-      await reload()
+      await reloadAll()
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '儲存失敗')
     } finally {
@@ -219,13 +288,21 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         </div>
         <button
           type="button"
-          onClick={() => void reload()}
+          onClick={() => void reloadAll()}
           disabled={loading}
           className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/60 transition hover:border-amber-glow/40 hover:text-amber-glow disabled:opacity-50"
         >
           重新整理
         </button>
       </div>
+
+      {view === 'registered' && (
+        <BirthdayMembersPanel
+          members={registered}
+          soulCards={soulCards}
+          purchaseMeritByUser={purchaseMeritByUser}
+        />
+      )}
 
       <GlassPanel className="p-4 sm:p-5">
         <input
@@ -258,7 +335,7 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         </GlassPanel>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[880px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.03] text-xs tracking-wider text-white/45">
                 {view === 'registered' ? (
@@ -266,6 +343,8 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                     <th className="px-4 py-3 font-medium">姓名</th>
                     <th className="px-4 py-3 font-medium">電話</th>
                     <th className="px-4 py-3 font-medium">生日</th>
+                    <th className="px-4 py-3 font-medium">魔法師等級</th>
+                    <th className="px-4 py-3 font-medium">修為</th>
                     <th className="px-4 py-3 font-medium">點數</th>
                     <th className="px-4 py-3 font-medium">訂單</th>
                     <th className="px-4 py-3 font-medium">註冊日</th>
@@ -287,7 +366,15 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
             </thead>
             <tbody>
               {view === 'registered'
-                ? filteredRegistered.map((c) => (
+                ? filteredRegistered.map((c) => {
+                    const magician = summarizeMemberMagician(
+                      c,
+                      cardsByUser,
+                      soulCards,
+                      purchaseMeritByUser
+                    )
+                    const bookSummary = formatMemberMagicianBookSummary(magician)
+                    return (
                     <tr
                       key={c.id}
                       className="border-b border-white/5 transition hover:bg-white/[0.02]"
@@ -297,6 +384,21 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                         {formatPhoneDisplay(c.phone)}
                       </td>
                       <td className="px-4 py-3 text-white/60">{c.birthday}</td>
+                      <td className="px-4 py-3 text-white/75">
+                        <span className="block">{magician.title}</span>
+                        <span className="text-xs text-white/40">
+                          Lv.{magician.tier} · {magician.starLabel}
+                          {bookSummary && ` · ${bookSummary}`}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-amber-glow/85">
+                        <span className="block">{magician.totalXp}</span>
+                        {formatMemberMagicianXpBreakdown(magician) && (
+                          <span className="block text-xs text-white/40">
+                            {formatMemberMagicianXpBreakdown(magician)}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 font-medium text-amber-glow">
                         {c.points}
                       </td>
@@ -316,6 +418,13 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                           <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
+                              onClick={() => setLegacyIssueMember(c)}
+                              className="rounded border border-violet-400/35 px-3 py-1 text-xs text-violet-200 transition hover:bg-violet-500/10"
+                            >
+                              補登魔導書
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => openEdit(c)}
                               className="rounded border border-amber-glow/35 px-3 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/10"
                             >
@@ -332,7 +441,8 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                         </td>
                       )}
                     </tr>
-                  ))
+                    )
+                  })
                 : filteredGuests.map((c) => (
                     <tr
                       key={c.id}
@@ -363,6 +473,14 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         <p className="text-xs text-white/35">
           未註冊客戶為訪客下單紀錄（無會員帳號），依電話彙總；若已註冊同號碼則僅顯示於「已註冊會員」。
         </p>
+      )}
+
+      {legacyIssueMember && (
+        <LegacyGrimoireIssueModal
+          member={legacyIssueMember}
+          onClose={() => setLegacyIssueMember(null)}
+          onIssued={(rows) => void handleLegacyGrimoireIssued(legacyIssueMember, rows)}
+        />
       )}
 
       {deletingMember && (

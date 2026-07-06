@@ -4,7 +4,8 @@
 -- 前置：請先跑完 grimoire 相關 migration（至少 add-crystal-grimoire、magic-book、activation-qr、product-tags）
 --
 -- 補發規則：
---   ✓ 已付款、未取消、有會員帳號
+--   ✓ 已付款或已出貨、未取消、有會員帳號
+--   ✓ 非點數兌換訂單
 --   ✓ 該訂單尚未有靈魂卡
 --   ✓ 商品未關閉「發行魔法身分證」
 --   ✗ 無會員帳號的訂單無法發卡（user_id 為 NULL）
@@ -37,7 +38,7 @@ SELECT
   c.product_tags
 FROM orders o
 LEFT JOIN crystal_soul_cards c ON c.order_id = o.id
-WHERE o.is_paid = true
+WHERE (o.is_paid = true OR o.status = 'shipped')
   AND o.status <> 'cancelled'
 ORDER BY o.created_at DESC
 LIMIT 50;

@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AccountGate } from '../components/account/AccountGate'
+import { MagicianLevelPanel } from '../components/grimoire/MagicianLevelPanel'
 import { GlassPanel } from '../components/ui/GlassPanel'
-import { fetchMyCrystalSoulCards } from '../lib/api/grimoire'
+import { fetchMyCrystalSoulCards, fetchPurchaseMeritCardCount } from '../lib/api/grimoire'
 import { useAuth } from '../contexts/AuthContext'
 import type { CrystalSoulCard } from '../lib/types'
-import { energyLevelLabel } from '../constants/grimoire'
+import { energyLevelLabel, CRYSTAL_MAGIC_RANK } from '../constants/grimoire'
 
 /** 會員：魔導書書架 */
 export function CrystalGrimoirePage() {
-  const { user, profile, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
   const [cards, setCards] = useState<CrystalSoulCard[]>([])
+  const [purchaseMeritCardCount, setPurchaseMeritCardCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
 
@@ -19,14 +21,20 @@ export function CrystalGrimoirePage() {
     setLoading(true)
     setMessage('')
     try {
-      setCards(await fetchMyCrystalSoulCards(user.id))
+      await refreshProfile()
+      const [nextCards, purchaseCount] = await Promise.all([
+        fetchMyCrystalSoulCards(user.id),
+        fetchPurchaseMeritCardCount(user.id),
+      ])
+      setCards(nextCards)
+      setPurchaseMeritCardCount(purchaseCount)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '載入失敗')
       setCards([])
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, refreshProfile])
 
   useEffect(() => {
     if (!user?.id) return
@@ -63,7 +71,15 @@ export function CrystalGrimoirePage() {
           </p>
         )}
 
-        <div className="mt-10">
+        <div className="mt-8">
+          <MagicianLevelPanel
+            cards={cards}
+            meritXp={profile.grimoire_merit_xp}
+            purchaseMeritCardCount={purchaseMeritCardCount}
+          />
+        </div>
+
+        <div className="mt-8">
           {loading ? (
             <GlassPanel className="p-6 text-sm text-white/40">魔導書感應中…</GlassPanel>
           ) : cards.length === 0 ? (
@@ -71,12 +87,12 @@ export function CrystalGrimoirePage() {
               書架空無一物。付款確認後，水晶的靈魂將在此顯現。
             </GlassPanel>
           ) : (
-            <ul className="grid gap-5 sm:grid-cols-2">
+            <ul className="magic-bookshelf-grid grid gap-5 sm:grid-cols-2">
               {cards.map((card) => (
-                <li key={card.id}>
+                <li key={card.id} className="h-full">
                   <Link
                     to={`/account/grimoire/${card.id}`}
-                    className={`magic-bookshelf-item magic-bookshelf-item--tier-${card.magic_status} group block`}
+                    className={`magic-bookshelf-item magic-bookshelf-item--tier-${card.magic_status} group block h-full`}
                   >
                     <div className="magic-bookshelf-spine" aria-hidden />
                     <div className="magic-bookshelf-cover">
@@ -93,20 +109,19 @@ export function CrystalGrimoirePage() {
                         <p className="magic-bookshelf-title">{card.magic_title}</p>
                         <p className="magic-bookshelf-serial">{card.serial_number}</p>
                         <p className={`magic-bookshelf-rank magic-bookshelf-rank--${card.magic_status}`}>
-                          {card.magic_status === 'resonating'
-                            ? 'III · 極境'
-                            : card.magic_status === 'awakening'
-                              ? 'II · 覺醒'
-                              : 'I · 初印'}
+                          {CRYSTAL_MAGIC_RANK[card.magic_status].roman} ·{' '}
+                          {CRYSTAL_MAGIC_RANK[card.magic_status].title}
                         </p>
                         <p className="magic-bookshelf-energy">
                           {energyLevelLabel(card.energy_level)} · {card.energy_level}%
                         </p>
-                        {!card.contract_signed_at && (
-                          <span className="magic-bookshelf-badge">
-                            {card.gift_claim_slug ? '待朋友簽署' : '待簽契約'}
-                          </span>
-                        )}
+                        <div className="magic-bookshelf-badge-slot">
+                          {!card.contract_signed_at && (
+                            <span className="magic-bookshelf-badge">
+                              {card.gift_claim_slug ? '待朋友簽署' : '待簽契約'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>

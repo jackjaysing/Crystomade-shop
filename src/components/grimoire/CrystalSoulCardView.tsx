@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link2, Sparkles } from 'lucide-react'
+import { Link2 } from 'lucide-react'
 import {
+  CRYSTAL_MAGIC_RANK,
   CRYSTAL_MAGIC_STATUS_LABELS,
-  CRYSTAL_MAGIC_STATUS_NEXT_LABEL,
 } from '../../constants/grimoire'
 import { crystalSoulCardPublicUrl } from '../../lib/grimoire'
+import { nextRankLabel, tasksUntilNextRank } from '../../lib/grimoireRank'
 import type { CrystalSoulCard } from '../../lib/types'
 import { FiveElementsDisplay } from '../products/FiveElementsDisplay'
 import type { FiveElement } from '../../constants/fiveElements'
@@ -15,7 +16,6 @@ interface CrystalSoulCardProps {
   card: CrystalSoulCard
   mode?: CrystalSoulCardMode
   onToggleShare?: (isPublic: boolean) => Promise<void>
-  onAdvanceStatus?: () => Promise<void>
   busy?: boolean
 }
 
@@ -23,14 +23,17 @@ export function CrystalSoulCardView({
   card,
   mode = 'owner',
   onToggleShare,
-  onAdvanceStatus,
   busy = false,
 }: CrystalSoulCardProps) {
   const [copied, setCopied] = useState(false)
   const isOwner = mode === 'owner'
   const shareUrl = crystalSoulCardPublicUrl(card.public_slug)
-  const canAdvance = isOwner && card.magic_status !== 'resonating'
-  const nextActionLabel = CRYSTAL_MAGIC_STATUS_NEXT_LABEL[card.magic_status]
+  const tasksRemaining = tasksUntilNextRank(
+    card.magic_status,
+    card.grimoire_task_count,
+    Boolean(card.contract_signed_at)
+  )
+  const nextRank = nextRankLabel(card.magic_status)
 
   const handleCopyLink = async () => {
     if (!card.is_public) return
@@ -146,16 +149,16 @@ export function CrystalSoulCardView({
         </div>
       )}
 
-      {isOwner && canAdvance && onAdvanceStatus && nextActionLabel && (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void onAdvanceStatus()}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-400/40 bg-violet-500/15 px-4 py-2.5 text-sm text-violet-100 transition hover:bg-violet-500/25 disabled:opacity-50"
-        >
-          <Sparkles className="h-4 w-4" />
-          {nextActionLabel}
-        </button>
+      {isOwner && tasksRemaining !== null && nextRank && (
+        <p className="mt-4 text-center text-sm text-amber-glow/75">
+          累積修行 {card.grimoire_task_count} 次 · 距離「{nextRank}」還需 {tasksRemaining} 次
+        </p>
+      )}
+
+      {isOwner && card.magic_status === 'ascendant' && (
+        <p className="mt-4 text-center text-sm text-amber-glow/75">
+          已達極境 · {CRYSTAL_MAGIC_RANK.ascendant.epithet}
+        </p>
       )}
 
       {!isOwner && (

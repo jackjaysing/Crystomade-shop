@@ -8,7 +8,7 @@ interface MagicRankLadderProps {
   current: CrystalMagicStatus
 }
 
-/** 三階晉升路徑 */
+/** 五階晉升路徑 */
 export function MagicRankLadder({ current }: MagicRankLadderProps) {
   const currentTier = CRYSTAL_MAGIC_RANK[current].tier
 

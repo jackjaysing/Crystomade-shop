@@ -3,7 +3,6 @@ import { useState } from 'react'
 import {
   CRYSTAL_MAGIC_RANK,
   CRYSTAL_MAGIC_STATUS_LABELS,
-  CRYSTAL_MAGIC_STATUS_NEXT_LABEL,
 } from '../../constants/grimoire'
 import { crystalSoulCardPublicUrl } from '../../lib/grimoire'
 import type { CrystalSoulCard } from '../../lib/types'
@@ -28,7 +27,6 @@ interface MagicBookContentProps {
   mode: MagicBookMode
   busy?: boolean
   onToggleShare?: (isPublic: boolean) => Promise<void>
-  onAdvanceStatus?: () => Promise<void>
   onCompleteTask?: (task: GrimoireTaskType) => Promise<void>
 }
 
@@ -56,15 +54,10 @@ export function MagicBookContent({
   mode,
   busy = false,
   onToggleShare,
-  onAdvanceStatus,
-  onCompleteTask,
 }: MagicBookContentProps) {
   const [copied, setCopied] = useState(false)
   const isOwner = mode === 'owner'
   const shareUrl = crystalSoulCardPublicUrl(card.public_slug)
-  const canAdvance =
-    isOwner && card.magic_status !== 'resonating' && onAdvanceStatus
-  const nextActionLabel = CRYSTAL_MAGIC_STATUS_NEXT_LABEL[card.magic_status]
   const rank = CRYSTAL_MAGIC_RANK[card.magic_status]
 
   const handleCopy = async () => {
@@ -108,12 +101,9 @@ export function MagicBookContent({
         </div>
       </div>
 
-      <MagicEnergyMeter
-        card={card}
-        interactive={isOwner}
-        busy={busy}
-        onCompleteTask={onCompleteTask}
-      />
+      {!isOwner && (
+        <MagicEnergyMeter card={card} interactive={false} showTasks={false} />
+      )}
 
       <dl className="magic-book-stats">
         <div>
@@ -198,17 +188,6 @@ export function MagicBookContent({
             </button>
           )}
         </div>
-      )}
-
-      {canAdvance && nextActionLabel && (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void onAdvanceStatus()}
-          className={`magic-book-ritual-btn magic-book-ritual-btn--advance magic-book-ritual-btn--from-${card.magic_status}`}
-        >
-          {nextActionLabel}
-        </button>
       )}
 
       {!isOwner && (

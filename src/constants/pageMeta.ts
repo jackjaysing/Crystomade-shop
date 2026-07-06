@@ -52,6 +52,17 @@ export const PAGE_META: Record<string, PageMeta> = {
 }
 
 export function getPageMeta(pathname: string): PageMeta {
+  if (
+    pathname.startsWith('/account/grimoire/') &&
+    pathname.length > '/account/grimoire/'.length
+  ) {
+    return {
+      title: `魔導書詳情｜${SITE_NAME}`,
+      description:
+        '翻閱水晶魔導書、簽署能量契約並完成修行任務，滋養靈魂印記與巫師修為。',
+    }
+  }
+
   return (
     PAGE_META[pathname] ?? {
       title: SITE_TITLE,

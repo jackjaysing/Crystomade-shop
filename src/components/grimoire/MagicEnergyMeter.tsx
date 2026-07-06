@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import {
   ENERGY_CONTRACT_TITLE,
-  GRIMOIRE_TASKS,
   energyLevelLabel,
   type GrimoireTaskType,
 } from '../../constants/grimoire'
-import { formatCooldownRemaining, getTaskCooldownRemainingMs } from '../../lib/grimoireTasks'
 import type { CrystalSoulCard } from '../../lib/types'
+
+import { MagicGrimoireTaskList } from './MagicGrimoireTaskList'
 
 interface MagicEnergyMeterProps {
   card: CrystalSoulCard
   interactive?: boolean
   busy?: boolean
+  compact?: boolean
+  showTasks?: boolean
   onCompleteTask?: (task: GrimoireTaskType) => Promise<void>
 }
 
@@ -20,6 +22,8 @@ export function MagicEnergyMeter({
   card,
   interactive = false,
   busy = false,
+  compact = false,
+  showTasks = true,
   onCompleteTask,
 }: MagicEnergyMeterProps) {
   const [displayLevel, setDisplayLevel] = useState(card.energy_level)
@@ -53,7 +57,7 @@ export function MagicEnergyMeter({
 
   return (
     <section
-      className={`magic-meter magic-meter--tier-${card.magic_status}${pulse ? ' magic-meter--pulse' : ''}`}
+      className={`magic-meter magic-meter--tier-${card.magic_status}${pulse ? ' magic-meter--pulse' : ''}${compact ? ' magic-meter--compact' : ''}`}
       aria-labelledby="magic-meter-heading"
     >
       <div className="magic-meter-header">
@@ -80,38 +84,12 @@ export function MagicEnergyMeter({
         />
       </div>
 
-      {interactive && onCompleteTask && card.contract_signed_at && (
-        <ul className="magic-meter-tasks">
-          {GRIMOIRE_TASKS.map((task) => {
-            const cooldownMs = getTaskCooldownRemainingMs(
-              card,
-              task.type,
-              task.cooldownHours
-            )
-            const onCooldown = cooldownMs > 0
-            return (
-              <li key={task.type} className="magic-meter-task">
-                <div className="magic-meter-task-text">
-                  <p className="magic-meter-task-label">{task.label}</p>
-                  {task.description ? (
-                    <p className="magic-meter-task-desc">{task.description}</p>
-                  ) : null}
-                  <p className="magic-meter-task-boost">+{task.boost} 能量</p>
-                </div>
-                <button
-                  type="button"
-                  disabled={busy || onCooldown}
-                  onClick={() => void onCompleteTask(task.type)}
-                  className="magic-meter-task-btn"
-                >
-                  {onCooldown
-                    ? `冷卻 ${formatCooldownRemaining(cooldownMs)}`
-                    : '完成'}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+      {interactive && showTasks && onCompleteTask && card.contract_signed_at && (
+        <MagicGrimoireTaskList
+          card={card}
+          busy={busy}
+          onCompleteTask={onCompleteTask}
+        />
       )}
 
       {!interactive && card.contract_signed_at && (

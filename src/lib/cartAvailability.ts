@@ -1,9 +1,8 @@
+import { calcProductSubtotal } from './cartShipping'
 import {
-  calcGrandTotal,
-  calcGrandTotalBeforeDiscount,
-  calcProductSubtotal,
-  calcShippingFeeForCart,
-} from './cartShipping'
+  calcShippingFeeWithMagicianPerk,
+  type MagicianShippingOptions,
+} from './grimoireMagicianShipping'
 import { isPointRedemptionItem, isRaffleGiftItem } from './cartItemKinds'
 import { isProductSoldOut } from './productStock'
 import type { CartItem, Product } from './types'
@@ -67,11 +66,12 @@ export function toCheckoutItems(resolved: ResolvedCartItem[]): CartItem[] {
 
 export function calcCheckoutTotals(
   items: CartItem[],
-  pointsDiscountNtd = 0
+  pointsDiscountNtd = 0,
+  magicianShipping: MagicianShippingOptions = {}
 ) {
   const subtotal = calcProductSubtotal(items)
-  const shippingFee = calcShippingFeeForCart(items)
-  const grandTotalBeforeDiscount = calcGrandTotalBeforeDiscount(items)
-  const grandTotal = calcGrandTotal(items, pointsDiscountNtd)
+  const shippingFee = calcShippingFeeWithMagicianPerk(items, magicianShipping)
+  const grandTotalBeforeDiscount = subtotal + shippingFee
+  const grandTotal = Math.max(0, subtotal - pointsDiscountNtd) + shippingFee
   return { subtotal, shippingFee, grandTotal, grandTotalBeforeDiscount }
 }

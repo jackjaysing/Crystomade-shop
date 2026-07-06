@@ -121,7 +121,8 @@ export async function createMemberCheckoutFromCart(
   form: OrderFormData,
   shippingFee: number,
   userId: string,
-  pointsForDiscount: number
+  pointsForDiscount: number,
+  useMagicianShipping = false
 ): Promise<Order[]> {
   const checkoutId = crypto.randomUUID()
 
@@ -138,6 +139,7 @@ export async function createMemberCheckoutFromCart(
     p_points_for_discount: Math.max(0, Math.floor(pointsForDiscount)),
     p_shipping_fee: shippingFee,
     p_raffle_gifts: buildRaffleGiftsJson(items),
+    p_use_magician_shipping: useMagicianShipping,
   })
 
   if (error) {
@@ -162,7 +164,8 @@ export async function createOrdersFromCart(
   form: OrderFormData,
   shippingFee: number,
   userId?: string | null,
-  pointsForDiscount = 0
+  pointsForDiscount = 0,
+  useMagicianShipping = false
 ): Promise<Order[]> {
   if (!userId) {
     throw new Error('請先登入會員後再結帳')
@@ -186,7 +189,8 @@ export async function createOrdersFromCart(
     form,
     shippingFee,
     userId,
-    pointsForDiscount
+    pointsForDiscount,
+    useMagicianShipping
   )
 }
 

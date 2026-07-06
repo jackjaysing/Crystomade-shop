@@ -28,6 +28,10 @@ function normalizeProfile(row: Record<string, unknown>): MemberProfile {
     points: typeof row.points === 'number' ? row.points : Number(row.points) || 0,
     referral_code: referralCode || null,
     referred_by: row.referred_by != null ? String(row.referred_by) : null,
+    grimoire_merit_xp:
+      typeof row.grimoire_merit_xp === 'number'
+        ? row.grimoire_merit_xp
+        : Number(row.grimoire_merit_xp) || 0,
     created_at: String(row.created_at ?? ''),
     updated_at: String(row.updated_at ?? ''),
   }

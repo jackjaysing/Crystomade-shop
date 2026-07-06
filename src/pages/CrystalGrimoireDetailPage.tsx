@@ -4,7 +4,6 @@ import { CrystalMagicBook } from '../components/grimoire/CrystalMagicBook'
 import { AccountGate } from '../components/account/AccountGate'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import {
-  advanceCrystalSoulCardStatus,
   completeCrystalGrimoireTask,
   enableCrystalSoulCardGiftClaim,
   fetchMyCrystalSoulCard,
@@ -20,7 +19,7 @@ import type { CrystalSoulCard } from '../lib/types'
 export function CrystalGrimoireDetailPage() {
   const { cardId } = useParams<{ cardId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { user, profile, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
   const [card, setCard] = useState<CrystalSoulCard | null>(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
@@ -51,7 +50,7 @@ export function CrystalGrimoireDetailPage() {
     setBusy(true)
     setMessage('開發升級中…')
     try {
-      const upgraded = await devMaxUpgradeCrystalSoulCard(card, profile.real_name)
+      const upgraded = await devMaxUpgradeCrystalSoulCard(card)
       setCard(upgraded)
       setMessage(
         `已晉升至 ${CRYSTAL_MAGIC_RANK[upgraded.magic_status].title}階 · ${CRYSTAL_MAGIC_RANK[upgraded.magic_status].epithet} · 能量 ${upgraded.energy_level}%`
@@ -89,7 +88,11 @@ export function CrystalGrimoireDetailPage() {
     setBusy(true)
     setMessage('')
     try {
-      setCard(await action())
+      const updated = await action()
+      setCard(updated)
+      if (updated.magic_status === 'ascendant') {
+        await refreshProfile()
+      }
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '操作失敗')
     } finally {
@@ -98,8 +101,8 @@ export function CrystalGrimoireDetailPage() {
   }
 
   return (
-    <div className="magic-bookshelf-page min-h-screen pt-24 pb-16 max-md:pb-[calc(14rem+env(safe-area-inset-bottom,0px))]">
-      <div className="mx-auto max-w-lg px-4 sm:px-6">
+    <div className="magic-bookshelf-page magic-grimoire-detail-page min-h-screen pt-24 pb-16 max-md:pb-[calc(14rem+env(safe-area-inset-bottom,0px))]">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <Link
           to="/account/grimoire"
           className="magic-link-back"
@@ -120,7 +123,7 @@ export function CrystalGrimoireDetailPage() {
             onClick={() => void runDevUpgrade()}
             className="mt-4 rounded-lg border border-dashed border-amber-glow/35 bg-amber-glow/5 px-4 py-2 text-xs tracking-wide text-amber-glow/80 transition hover:bg-amber-glow/10 disabled:opacity-50"
           >
-            開發：一鍵升級至共鳴滿級
+            開發：一鍵升級至極境滿級
           </button>
         )}
 
@@ -145,9 +148,6 @@ export function CrystalGrimoireDetailPage() {
               }
               onToggleShare={(isPublic) =>
                 runAction(() => setCrystalSoulCardPublic(card.id, isPublic))
-              }
-              onAdvanceStatus={() =>
-                runAction(() => advanceCrystalSoulCardStatus(card.id))
               }
               onCompleteTask={(task) =>
                 runAction(() => completeCrystalGrimoireTask(card.id, task))

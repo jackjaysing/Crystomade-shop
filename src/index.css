@@ -184,11 +184,13 @@
 /* ── 水晶魔法身分證：神秘深色燙金 ── */
 .magic-bookshelf-page,
 .magic-book-page {
-  --magic-body: rgba(255, 247, 238, 0.94);
-  --magic-body-soft: rgba(240, 232, 220, 0.84);
-  --magic-label: rgba(230, 205, 160, 0.8);
-  --magic-label-soft: rgba(212, 185, 140, 0.68);
-  --magic-gold: rgba(255, 235, 200, 0.92);
+  --magic-body: rgba(255, 247, 238, 0.96);
+  --magic-body-soft: rgba(240, 232, 220, 0.9);
+  --magic-label: rgba(235, 215, 175, 0.95);
+  --magic-label-soft: rgba(220, 198, 155, 0.88);
+  --magic-gold: rgba(255, 235, 200, 0.96);
+  font-size: 1rem;
+  line-height: 1.65;
 }
 
 .magic-foil-text {
@@ -277,20 +279,546 @@
 }
 
 .magic-page-eyebrow {
-  font-size: 0.72rem;
-  letter-spacing: 0.38em;
-  color: var(--magic-label-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.32em;
+  color: var(--magic-label);
 }
 
 .magic-page-lead {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* 會員魔法師等級 */
+.magician-level-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(212, 175, 116, 0.22);
+  background:
+    radial-gradient(ellipse 80% 70% at 50% -20%, rgba(212, 175, 116, 0.14), transparent 60%),
+    linear-gradient(155deg, rgba(28, 22, 16, 0.95) 0%, rgba(12, 10, 14, 0.98) 100%);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 235, 200, 0.08);
+}
+
+.magician-level-panel-glow {
+  position: absolute;
+  inset: -30% -10% auto;
+  height: 70%;
+  background: radial-gradient(ellipse at center, rgba(212, 175, 116, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.magician-level-panel--tier-5 .magician-level-panel-glow,
+.magician-level-panel--tier-6 .magician-level-panel-glow,
+.magician-level-panel--tier-7 .magician-level-panel-glow {
+  background: radial-gradient(ellipse at center, rgba(255, 235, 180, 0.16), transparent 70%);
+}
+
+.magician-level-panel-inner {
+  position: relative;
+  padding: 1.35rem 1.25rem 1.15rem;
+}
+
+@media (min-width: 640px) {
+  .magician-level-panel-inner {
+    padding: 1.5rem 1.5rem 1.25rem;
+  }
+}
+
+.magician-level-panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.magician-level-badge {
+  flex-shrink: 0;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 116, 0.45);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 235, 200, 0.2), rgba(212, 175, 116, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 20px rgba(212, 175, 116, 0.2),
+    inset 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
+.magician-level-panel--tier-6 .magician-level-badge,
+.magician-level-panel--tier-7 .magician-level-badge {
+  border-color: rgba(255, 235, 180, 0.55);
+  box-shadow:
+    0 0 28px rgba(255, 235, 180, 0.28),
+    inset 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
+.magician-level-badge-roman {
+  font-family: var(--font-display, serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #f5e6b8;
+  text-shadow: 0 0 12px rgba(255, 235, 180, 0.35);
+}
+
+.magician-level-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+  color: var(--magic-label);
+}
+
+.magician-level-title {
+  margin-top: 0.2rem;
+  font-family: var(--font-display, serif);
+  font-size: 1.45rem;
+  line-height: 1.25;
+}
+
+.magician-level-epithet {
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.14em;
+  color: rgba(230, 205, 160, 0.88);
+}
+
+.magician-level-star-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.magician-level-stars {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.magician-level-star {
+  font-size: 0.875rem;
+  color: rgba(212, 185, 140, 0.28);
+  text-shadow: none;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.magician-level-star--on {
+  color: #f5e6b8;
+  text-shadow: 0 0 10px rgba(255, 235, 180, 0.45);
+}
+
+.magician-level-star-label {
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 235, 180, 0.92);
+}
+
+.magician-level-star-steps {
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.magician-level-star-step {
+  text-align: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: rgba(212, 185, 140, 0.55);
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid rgba(212, 175, 116, 0.12);
+}
+
+.magician-level-star-step--on {
+  color: rgba(255, 235, 180, 0.88);
+  border-bottom-color: rgba(212, 175, 116, 0.45);
+}
+
+.magician-level-xp-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--magic-label);
+}
+
+.magician-level-xp-value {
+  margin-top: 0.1rem;
+  font-family: var(--font-display, serif);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #f5e6b8;
+  text-shadow: 0 0 16px rgba(255, 235, 180, 0.25);
+}
+
+.magician-level-flavor {
+  margin-top: 0.9rem;
   font-size: 0.9375rem;
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.58);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.magician-level-progress-wrap {
+  margin-top: 1rem;
+}
+
+.magician-level-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  color: rgba(212, 185, 140, 0.88);
+}
+
+.magician-level-progress-track {
+  margin-top: 0.45rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(212, 175, 116, 0.18);
+  overflow: hidden;
+}
+
+.magician-level-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(166, 124, 26, 0.95) 0%,
+    rgba(232, 200, 114, 0.95) 45%,
+    rgba(255, 248, 220, 0.9) 100%
+  );
+  box-shadow: 0 0 12px rgba(212, 175, 116, 0.45);
+  transition: width 0.5s ease;
+}
+
+.magician-level-max {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: rgba(255, 235, 180, 0.82);
+  text-shadow: 0 0 14px rgba(255, 235, 180, 0.2);
+}
+
+.magician-level-stats {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(212, 175, 116, 0.14);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.magician-level-stats dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: rgba(212, 185, 140, 0.82);
+}
+
+.magician-level-stats dd {
+  margin-top: 0.2rem;
+  font-family: var(--font-display, serif);
+  font-size: 1.0625rem;
+  color: rgba(245, 230, 184, 0.96);
+}
+
+.magician-level-hint {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.magician-level-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.magician-level-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(212, 175, 116, 0.55);
+  transition: color 0.2s;
+}
+
+.magician-level-info-btn:hover {
+  color: rgba(255, 235, 200, 0.9);
+}
+
+.magician-level-xp-sub {
+  margin-top: 0.15rem;
+  font-size: 0.6875rem;
+  color: rgba(212, 175, 116, 0.65);
+}
+
+.magician-level-collection-hint {
+  margin-top: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.18);
+  background: rgba(212, 175, 116, 0.06);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(255, 235, 200, 0.82);
+  text-align: center;
+}
+
+.magician-level-stats-note {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.625rem;
+  color: rgba(212, 175, 116, 0.55);
+}
+
+.magician-ladder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.magician-ladder-modal {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.magician-ladder-modal > .relative {
+  touch-action: auto;
+}
+
+.magician-ladder-item {
+  border-radius: 0.6rem;
+  border: 1px solid rgba(212, 175, 116, 0.12);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.75rem 0.85rem;
+}
+
+.magician-ladder-item--current {
+  border-color: rgba(212, 175, 116, 0.38);
+  background: rgba(212, 175, 116, 0.08);
+  box-shadow: 0 0 20px rgba(212, 175, 116, 0.1);
+}
+
+.magician-ladder-item--passed {
+  opacity: 0.72;
+}
+
+.magician-ladder-item-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.magician-ladder-roman {
+  font-family: var(--font-display, serif);
+  font-size: 1rem;
+  color: var(--magic-gold);
+  flex-shrink: 0;
+}
+
+.magician-ladder-title {
+  font-family: var(--font-display, serif);
+  font-size: 1rem;
+  color: var(--magic-body);
+}
+
+.magician-ladder-epithet {
+  margin-top: 0.1rem;
+  font-size: 0.8125rem;
+  color: var(--magic-label);
+}
+
+.magician-ladder-xp {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: rgba(212, 175, 116, 0.75);
+}
+
+.magician-ladder-flavor {
+  margin-top: 0.45rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.magician-ladder-stars {
+  margin-top: 0.35rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: rgba(212, 175, 116, 0.55);
+}
+
+.magician-ladder-perks {
+  margin-top: 0.55rem;
+}
+
+.magician-ladder-perks--new {
+  margin-top: 0.65rem;
+}
+
+.magician-ladder-perks-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: rgba(212, 175, 116, 0.65);
+}
+
+.magician-ladder-perks ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1rem;
+  list-style: disc;
+}
+
+.magician-ladder-perks li {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(255, 235, 200, 0.78);
+}
+
+.magician-ladder-perks--new .magician-ladder-perks-label {
+  color: rgba(255, 235, 180, 0.85);
+}
+
+.magician-ladder-perks--new li {
+  color: #ffe9a8;
+}
+
+.magician-perk-table-heading,
+.magician-ladder-section-heading {
+  margin: 0 0 0.65rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  color: rgba(212, 175, 116, 0.75);
+}
+
+.magician-ladder-section-heading {
+  margin-top: 1.25rem;
+}
+
+.magician-perk-table-wrap {
+  overflow-x: auto;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(212, 175, 116, 0.15);
+  background: rgba(0, 0, 0, 0.22);
+  -webkit-overflow-scrolling: touch;
+}
+
+.magician-perk-table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.magician-perk-table thead th {
+  padding: 0.55rem 0.5rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(212, 175, 116, 0.7);
+  border-bottom: 1px solid rgba(212, 175, 116, 0.12);
+  background: rgba(212, 175, 116, 0.04);
+  white-space: nowrap;
+}
+
+.magician-perk-table tbody td {
+  padding: 0.55rem 0.5rem;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.magician-perk-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.magician-perk-table-row--current {
+  background: rgba(212, 175, 116, 0.1);
+}
+
+.magician-perk-table-row--current td {
+  box-shadow: inset 3px 0 0 rgba(212, 175, 116, 0.65);
+}
+
+.magician-perk-table-row--passed {
+  opacity: 0.78;
+}
+
+.magician-perk-table-roman {
+  font-family: var(--font-display, serif);
+  color: var(--magic-gold);
+}
+
+.magician-perk-table-title {
+  display: block;
+  font-family: var(--font-display, serif);
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.35;
+}
+
+.magician-perk-table-epithet {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.magician-perk-table-xp {
+  white-space: nowrap;
+  color: rgba(212, 175, 116, 0.8);
+}
+
+.magician-perk-table-cell {
+  display: inline-block;
+  line-height: 1.45;
+}
+
+.magician-perk-table-empty {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.magician-level-active-perks {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  padding: 0;
+}
+
+.magician-level-active-perks li {
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 116, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  color: rgba(255, 235, 200, 0.82);
+}
+
+.magic-bookshelf-grid {
+  align-items: stretch;
 }
 
 .magic-bookshelf-item {
   position: relative;
+  display: flex;
   min-height: 11rem;
+  height: 100%;
   border-radius: 0.35rem 0.85rem 0.85rem 0.35rem;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
@@ -316,6 +844,9 @@
 .magic-bookshelf-cover {
   margin-left: 0.45rem;
   display: flex;
+  flex: 1;
+  width: calc(100% - 0.45rem);
+  min-height: 7.5rem;
   gap: 0.85rem;
   padding: 1rem 1.1rem;
   border-radius: 0.3rem 0.75rem 0.75rem 0.3rem;
@@ -357,41 +888,53 @@
 .magic-bookshelf-meta {
   min-width: 0;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .magic-bookshelf-title {
   font-family: var(--font-display, serif);
   font-size: 1.1rem;
+  line-height: 1.35;
   color: var(--magic-body);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 2.7em;
 }
 
 .magic-bookshelf-serial {
   margin-top: 0.25rem;
   font-family: monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  color: var(--magic-label-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  color: var(--magic-label);
 }
 
 .magic-bookshelf-energy {
   margin-top: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.9375rem;
   color: var(--magic-label);
 }
 
 .magic-bookshelf-badge {
-  margin-top: 0.5rem;
   display: inline-block;
   width: fit-content;
   border-radius: 9999px;
   border: 1px solid rgba(212, 175, 116, 0.25);
   background: rgba(212, 175, 116, 0.08);
-  padding: 0.2rem 0.6rem;
-  font-size: 0.72rem;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.04em;
   color: var(--magic-gold);
+}
+
+.magic-bookshelf-badge-slot {
+  margin-top: auto;
+  min-height: 1.85rem;
+  padding-top: 0.5rem;
 }
 
 .magic-book-outer {
@@ -693,9 +1236,9 @@
 
 /* 能量契約 */
 .magic-contract-eyebrow {
-  font-size: 0.72rem;
-  letter-spacing: 0.28em;
-  color: var(--magic-label-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.22em;
+  color: var(--magic-label);
 }
 
 .magic-contract-title {
@@ -838,20 +1381,20 @@
 }
 
 .magic-gift-preview-title {
-  font-size: 0.8125rem;
-  letter-spacing: 0.08em;
-  color: rgba(212, 175, 116, 0.82);
+  font-size: 0.875rem;
+  letter-spacing: 0.06em;
+  color: rgba(212, 175, 116, 0.92);
 }
 
 .magic-gift-preview-name {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  color: rgba(255, 245, 230, 0.88);
+  color: rgba(255, 245, 230, 0.92);
 }
 
 .magic-gift-preview-meta {
-  font-size: 0.8125rem;
-  color: var(--magic-label-soft);
+  font-size: 0.875rem;
+  color: var(--magic-label);
 }
 
 .magic-contract-body {
@@ -886,9 +1429,9 @@
 }
 
 .magic-contract-sign-label {
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
-  color: var(--magic-label-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.16em;
+  color: var(--magic-label);
 }
 
 .magic-contract-sign-name {
@@ -984,50 +1527,50 @@
 }
 
 .magic-book-chapter {
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.18em;
   color: var(--magic-label);
 }
 
 .magic-book-name {
   font-family: var(--font-display, serif);
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   line-height: 1.35;
 }
 
-.magic-book-product { margin-top: 0.2rem; font-size: 0.9rem; color: var(--magic-body-soft); }
-.magic-book-meta { font-size: 0.8125rem; color: var(--magic-label-soft); }
+.magic-book-product { margin-top: 0.2rem; font-size: 1rem; color: var(--magic-body-soft); }
+.magic-book-meta { font-size: 0.9375rem; color: var(--magic-label); }
 
 .magic-book-stats {
   margin-top: 1.25rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .magic-book-stats dt {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  color: var(--magic-label-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  color: var(--magic-label);
 }
 
-.magic-book-stats dd { margin-top: 0.2rem; color: var(--magic-body); }
-.magic-book-serial { font-family: monospace; font-size: 0.8125rem; color: var(--magic-label); }
-.magic-book-primary { font-size: 1.15rem; color: var(--magic-gold); }
+.magic-book-stats dd { margin-top: 0.25rem; color: var(--magic-body); font-size: 0.9375rem; }
+.magic-book-serial { font-family: monospace; font-size: 0.875rem; color: var(--magic-label); }
+.magic-book-primary { font-size: 1.2rem; color: var(--magic-gold); }
 
 .magic-book-section { margin-top: 1rem; }
 .magic-book-section-label {
   margin-bottom: 0.5rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  color: var(--magic-label-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: var(--magic-label);
 }
 
 .magic-book-verse-label,
 .magic-book-keyword {
   margin-top: 0.65rem;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   color: var(--magic-label);
 }
 
@@ -1036,13 +1579,13 @@
 .magic-book-element,
 .magic-book-element-active {
   display: inline-flex;
-  height: 2rem;
-  min-width: 2rem;
+  height: 2.125rem;
+  min-width: 2.125rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
   border: 1px solid rgba(212, 175, 116, 0.15);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
 }
 
 .magic-book-element {
@@ -1076,7 +1619,7 @@
   background: rgba(212, 175, 116, 0.04);
 }
 
-.magic-book-contract-date { margin-top: 0.2rem; font-size: 0.8125rem; color: var(--magic-label-soft); }
+.magic-book-contract-date { margin-top: 0.2rem; font-size: 0.9375rem; color: var(--magic-label); }
 
 .magic-book-owner-actions {
   margin-top: 1.25rem;
@@ -1088,7 +1631,7 @@
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   color: var(--magic-body-soft);
   cursor: pointer;
 }
@@ -1102,7 +1645,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--magic-label);
   transition: color 0.2s;
 }
@@ -1130,8 +1673,8 @@
 .magic-book-guest-note {
   margin-top: 1rem;
   text-align: center;
-  font-size: 0.8125rem;
-  color: var(--magic-label-soft);
+  font-size: 0.9375rem;
+  color: var(--magic-label);
 }
 
 .magic-link-back {
@@ -1196,7 +1739,7 @@
 }
 
 .magic-meter-label {
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   color: var(--magic-label);
   white-space: nowrap;
 }
@@ -1248,17 +1791,17 @@
   padding: 0.55rem 0.65rem;
 }
 
-.magic-meter-task-label { font-size: 0.875rem; font-weight: 500; color: var(--magic-body); }
-.magic-meter-task-desc { font-size: 0.75rem; line-height: 1.45; color: var(--magic-label-soft); }
-.magic-meter-task-boost { font-size: 0.75rem; color: var(--magic-label); }
+.magic-meter-task-label { font-size: 0.9375rem; font-weight: 500; color: var(--magic-body); }
+.magic-meter-task-desc { font-size: 0.875rem; line-height: 1.5; color: var(--magic-label); }
+.magic-meter-task-boost { font-size: 0.875rem; color: var(--magic-label); }
 
 .magic-meter-task-btn {
   flex-shrink: 0;
   border-radius: 0.4rem;
   border: 1px solid rgba(212, 175, 116, 0.3);
   background: rgba(212, 175, 116, 0.08);
-  padding: 0.45rem 0.7rem;
-  font-size: 0.8125rem;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.875rem;
   color: var(--magic-gold);
   white-space: nowrap;
   transition: background 0.2s;
@@ -1275,9 +1818,9 @@
 
 .magic-meter-readonly {
   margin-top: 0.65rem;
-  font-size: 0.8125rem;
-  line-height: 1.55;
-  color: var(--magic-label-soft);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--magic-label);
   text-align: center;
 }
 
@@ -1294,6 +1837,180 @@
 @keyframes meter-percent-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.06); }
+}
+
+.magic-meter--compact {
+  margin-top: 0;
+  padding: 0.65rem 0.75rem;
+}
+
+/* 魔導書雙欄：左書右任務 */
+.magic-book-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15.5rem, 17.5rem);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.magic-book-layout-main {
+  min-width: 0;
+}
+
+.magic-grimoire-task-panel {
+  position: sticky;
+  top: 6rem;
+  max-height: calc(100vh - 7.5rem);
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(212, 175, 116, 0.22);
+  background:
+    linear-gradient(165deg, rgba(26, 20, 32, 0.95), rgba(8, 6, 12, 0.98));
+  padding: 1rem;
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 235, 200, 0.06);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.magic-grimoire-task-panel-eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  color: var(--magic-label);
+}
+
+.magic-grimoire-task-panel-title {
+  margin-top: 0.25rem;
+  margin-bottom: 0.85rem;
+  font-family: var(--font-display, serif);
+  font-size: 1.15rem;
+  color: var(--magic-body);
+}
+
+.magic-grimoire-tasks {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.magic-grimoire-task {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.12);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.65rem 0.7rem;
+}
+
+.magic-grimoire-task-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--magic-body);
+}
+
+.magic-grimoire-task-desc {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--magic-label);
+}
+
+.magic-grimoire-task-boost {
+  font-size: 0.8125rem;
+  color: var(--magic-label-soft);
+}
+
+.magic-grimoire-task-btn {
+  width: 100%;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(212, 175, 116, 0.32);
+  background: rgba(212, 175, 116, 0.1);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--magic-gold);
+  transition: background 0.2s;
+}
+
+.magic-grimoire-task-btn:hover:not(:disabled) {
+  background: rgba(212, 175, 116, 0.18);
+}
+
+.magic-grimoire-task-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.magic-grimoire-task-panel-hint {
+  margin-top: 0.85rem;
+  border-top: 1px solid rgba(212, 175, 116, 0.12);
+  padding-top: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--magic-label);
+}
+
+.magic-grimoire-task-panel-hint--max {
+  color: #ffe9a8;
+}
+
+.magic-grimoire-task-panel-thresholds {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: rgba(212, 175, 116, 0.6);
+}
+
+@media (max-width: 767px) {
+  .magic-book-layout {
+    display: block;
+  }
+
+  .magic-grimoire-task-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    top: auto;
+    max-height: min(42vh, 22rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    border-radius: 1rem 1rem 0 0;
+    border-bottom: none;
+    padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.65);
+  }
+
+  .magic-grimoire-detail-page {
+    padding-bottom: calc(15rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .magic-grimoire-tasks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .magic-grimoire-task {
+    padding: 0.5rem;
+  }
+
+  .magic-grimoire-task-desc {
+    display: none;
+  }
+
+  .magic-grimoire-task-btn {
+    padding: 0.45rem 0.35rem;
+    font-size: 0.75rem;
+  }
+
+  .magic-grimoire-task-panel-thresholds {
+    display: none;
+  }
 }
 
 /* ── 階級系統：越高階視覺越華麗 ── */
@@ -1325,9 +2042,9 @@
 }
 
 .magic-rank-badge-tier {
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  color: var(--magic-label-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.18em;
+  color: var(--magic-label);
 }
 
 .magic-rank-badge-title {
@@ -1338,7 +2055,7 @@
 
 .magic-rank-badge-epithet {
   margin-top: 0.15rem;
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   color: var(--magic-label);
 }
 
@@ -1385,8 +2102,8 @@
   border: 1px solid rgba(212, 175, 116, 0.1);
   background: rgba(0, 0, 0, 0.2);
   padding: 0.55rem 0.3rem;
-  font-size: 0.75rem;
-  color: rgba(212, 175, 116, 0.42);
+  font-size: 0.875rem;
+  color: rgba(212, 175, 116, 0.55);
   transition: border-color 0.3s, box-shadow 0.3s, color 0.3s;
 }
 
@@ -1419,9 +2136,9 @@
 
 .magic-rank-flavor {
   margin-bottom: 1rem;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: var(--magic-label-soft);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--magic-label);
   font-style: italic;
   text-align: center;
 }
@@ -1439,6 +2156,158 @@
 .magic-book-status--resonating {
   color: #ffe9a8;
   text-shadow: 0 0 14px rgba(255, 235, 180, 0.45);
+}
+
+.magic-book-rank-progress {
+  margin-top: 1rem;
+}
+
+.magic-book-rank-hint {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--magic-label);
+  text-align: center;
+}
+
+.magic-book-rank-hint--max {
+  border-color: rgba(255, 235, 180, 0.35);
+  color: #ffe9a8;
+}
+
+.magic-book-rank-thresholds {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  color: rgba(212, 175, 116, 0.65);
+}
+
+.magic-rank-badge--starlight {
+  border-color: rgba(212, 175, 116, 0.28);
+  box-shadow: 0 0 20px rgba(212, 175, 116, 0.08);
+}
+
+.magic-rank-badge--ascendant {
+  border-color: rgba(255, 235, 180, 0.45);
+  background:
+    linear-gradient(135deg, rgba(212, 175, 116, 0.12), rgba(0, 0, 0, 0.35));
+  box-shadow:
+    0 0 36px rgba(212, 175, 116, 0.18),
+    inset 0 1px 0 rgba(255, 235, 200, 0.1);
+}
+
+.magic-rank-badge--ascendant .magic-rank-badge-roman {
+  border-color: rgba(255, 235, 180, 0.55);
+  background: linear-gradient(145deg, rgba(212, 175, 116, 0.25), rgba(140, 100, 40, 0.15));
+  box-shadow: 0 0 20px rgba(255, 235, 180, 0.3);
+  animation: rank-roman-glow 2.5s ease-in-out infinite;
+}
+
+.magic-rank-step--current.magic-rank-step--ascendant {
+  border-color: rgba(255, 235, 180, 0.55);
+  box-shadow: 0 0 24px rgba(255, 235, 180, 0.2);
+  animation: rank-step-pulse 2s ease-in-out infinite;
+}
+
+.magic-book-content--tier-starlight .magic-rank-flavor,
+.magic-book-content--tier-ascendant .magic-rank-flavor {
+  color: var(--magic-label);
+}
+
+.magic-book-status--starlight {
+  color: rgba(255, 235, 200, 0.82);
+}
+
+.magic-book-status--ascendant {
+  color: #ffe9a8;
+  text-shadow: 0 0 14px rgba(255, 235, 180, 0.45);
+}
+
+.magic-book-outer--tier-starlight .magic-book-cover {
+  border-color: rgba(212, 175, 116, 0.32);
+  box-shadow:
+    0 26px 60px rgba(0, 0, 0, 0.68),
+    0 0 28px rgba(212, 175, 116, 0.08);
+}
+
+.magic-book-outer--tier-starlight .magic-book-aura {
+  background: radial-gradient(circle, rgba(212, 175, 116, 0.1), transparent 65%);
+}
+
+.magic-book-outer--tier-ascendant .magic-book-cover {
+  border-color: rgba(255, 235, 180, 0.42);
+  background: linear-gradient(160deg, #1a1420 0%, #0e0c14 45%, #060508 100%);
+  box-shadow:
+    0 32px 72px rgba(0, 0, 0, 0.75),
+    0 0 56px rgba(212, 175, 116, 0.16),
+    0 0 0 1px rgba(255, 235, 180, 0.12),
+    inset 0 1px 0 rgba(255, 235, 200, 0.12);
+}
+
+.magic-book-outer--tier-ascendant .magic-book-page {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(255, 235, 180, 0.1), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 100%, rgba(212, 175, 116, 0.08), transparent),
+    linear-gradient(180deg, #12101a 0%, #0a090f 40%, #060508 100%);
+}
+
+.magic-book-outer--tier-ascendant .magic-book-aura {
+  background: radial-gradient(circle, rgba(255, 235, 180, 0.12), transparent 60%);
+  animation: aura-breathe 3s ease-in-out infinite;
+}
+
+.magic-book-outer--tier-ascendant .magic-book-foil-border {
+  opacity: 1;
+  animation: foil-border-shimmer 4s ease-in-out infinite;
+}
+
+.magic-book-crystal-frame--starlight {
+  box-shadow: 0 0 24px rgba(212, 175, 116, 0.15);
+}
+
+.magic-book-crystal-frame--ascendant {
+  box-shadow:
+    0 0 32px rgba(255, 235, 180, 0.25),
+    inset 0 0 20px rgba(212, 175, 116, 0.12);
+}
+
+.magic-meter--tier-starlight .magic-meter-fill {
+  background: linear-gradient(90deg, rgba(212, 175, 116, 0.55), rgba(255, 235, 200, 0.75));
+}
+
+.magic-meter--tier-ascendant {
+  border-color: rgba(255, 235, 180, 0.35);
+}
+
+.magic-meter--tier-ascendant .magic-meter-fill {
+  background: linear-gradient(90deg, #c9a050, #ffe9a8, #fff6d8);
+  box-shadow: 0 0 12px rgba(255, 235, 180, 0.45);
+}
+
+.magic-meter--tier-ascendant .magic-meter-percent {
+  color: #ffe9a8;
+  text-shadow: 0 0 10px rgba(255, 235, 180, 0.35);
+}
+
+.magic-bookshelf-rank--starlight {
+  color: rgba(212, 175, 116, 0.75);
+}
+
+.magic-bookshelf-rank--ascendant {
+  color: #ffe9a8;
+  text-shadow: 0 0 10px rgba(255, 235, 180, 0.25);
+}
+
+.magic-bookshelf-item--tier-starlight .magic-bookshelf-cover {
+  border-color: rgba(212, 175, 116, 0.28);
+}
+
+.magic-bookshelf-item--tier-ascendant .magic-bookshelf-cover {
+  border-color: rgba(255, 235, 180, 0.38);
+  box-shadow: 0 0 24px rgba(212, 175, 116, 0.14);
 }
 
 .magic-book-ritual-btn--advance {
@@ -1570,9 +2439,9 @@
 
 .magic-bookshelf-rank {
   margin-top: 0.35rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: var(--magic-label-soft);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  color: var(--magic-label);
 }
 
 .magic-bookshelf-rank--awakening {

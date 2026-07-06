@@ -113,6 +113,8 @@ export interface MemberProfile {
   referral_code: string | null
   /** 推薦人會員 ID */
   referred_by: string | null
+  /** 極境後日常修行累積的巫師修為 */
+  grimoire_merit_xp: number
   created_at: string
   updated_at: string
 }
@@ -460,6 +462,7 @@ export interface CrystalSoulCard {
   id: string
   order_id: string
   user_id: string
+  purchased_by_user_id: string | null
   product_id: string | null
   serial_number: string
   public_slug: string
@@ -477,6 +480,7 @@ export interface CrystalSoulCard {
   awakening_verse: string | null
   magic_status: CrystalMagicStatus
   awakened_at: string | null
+  grimoire_task_count: number
   is_public: boolean
   energy_level: number
   contract_signed_at: string | null

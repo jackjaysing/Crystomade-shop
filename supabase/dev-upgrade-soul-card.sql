@@ -3,8 +3,9 @@
 
 UPDATE crystal_soul_cards
 SET
-  magic_status = 'resonating',
+  magic_status = 'ascendant',
   energy_level = 100,
+  grimoire_task_count = 30,
   contract_signed_at = COALESCE(contract_signed_at, now()),
   contract_signer_name = COALESCE(contract_signer_name, '測試守護者'),
   awakened_at = COALESCE(awakened_at, now()),

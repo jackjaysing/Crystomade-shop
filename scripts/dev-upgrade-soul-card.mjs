@@ -66,8 +66,9 @@ const now = new Date().toISOString()
 const { data: after, error: updateErr } = await supabase
   .from('crystal_soul_cards')
   .update({
-    magic_status: 'resonating',
+    magic_status: 'ascendant',
     energy_level: 100,
+    grimoire_task_count: 30,
     contract_signed_at: before.contract_signed_at ?? now,
     awakened_at: now,
     last_purify_at: now,

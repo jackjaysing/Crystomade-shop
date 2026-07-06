@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { CartItemSizeEditor } from '../components/cart/CartItemSizeEditor'
 import { OrderSuccessModal } from '../components/cart/OrderSuccessModal'
@@ -17,6 +17,14 @@ import {
 } from '../lib/cartCheckoutRules'
 import { CVS_BRANDS } from '../constants/cvs'
 import { FREE_SHIPPING_THRESHOLD } from '../constants/shipping'
+import { CheckoutMagicianShipping } from '../components/checkout/CheckoutMagicianShipping'
+import { fetchMemberMagicianShippingQuota } from '../lib/api/grimoireMagicianShipping'
+import { calcProductSubtotal } from '../lib/cartShipping'
+import {
+  calcShippingFeeWithMagicianPerk,
+  canOfferMagicianShipping,
+  type MagicianShippingQuota,
+} from '../lib/grimoireMagicianShipping'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
 import { useCartAvailability } from '../hooks/useCartAvailability'
@@ -46,10 +54,9 @@ export function CheckoutPage() {
   const { items, clearCart } = useCart()
   const {
     resolvedItems,
+    checkoutItems,
     checkoutItemCount,
     subtotal,
-    shippingFee,
-    grandTotal,
     hasSnatchedItems,
     loading,
     refresh,
@@ -69,6 +76,8 @@ export function CheckoutPage() {
   >([])
   const [hasCompletedPurchase, setHasCompletedPurchase] = useState(false)
   const [firstPurchaseLoading, setFirstPurchaseLoading] = useState(false)
+  const [magicianQuota, setMagicianQuota] = useState<MagicianShippingQuota | null>(null)
+  const [useMagicianShipping, setUseMagicianShipping] = useState(true)
 
   useEffect(() => {
     if (!user?.id) {
@@ -100,6 +109,14 @@ export function CheckoutPage() {
   }, [user?.id])
 
   useEffect(() => {
+    if (!user?.id) {
+      setMagicianQuota(null)
+      return
+    }
+    void fetchMemberMagicianShippingQuota(user.id).then(setMagicianQuota)
+  }, [user?.id])
+
+  useEffect(() => {
     if (profile) {
       setForm((prev) => ({
         ...prev,
@@ -109,6 +126,33 @@ export function CheckoutPage() {
       }))
     }
   }, [profile?.id])
+
+  const magicianShippingOffered = useMemo(
+    () => canOfferMagicianShipping(checkoutItems, magicianQuota),
+    [checkoutItems, magicianQuota]
+  )
+  const magicianShippingApplied = useMemo(
+    () =>
+      magicianShippingOffered &&
+      useMagicianShipping &&
+      (magicianQuota?.remaining ?? 0) > 0,
+    [magicianShippingOffered, useMagicianShipping, magicianQuota?.remaining]
+  )
+  const shippingFee = useMemo(
+    () =>
+      calcShippingFeeWithMagicianPerk(checkoutItems, {
+        useMagicianShipping: magicianShippingApplied,
+        magicianRemaining: magicianQuota?.remaining,
+      }),
+    [checkoutItems, magicianQuota?.remaining, magicianShippingApplied]
+  )
+  const productSubtotalForShipping = useMemo(
+    () => calcProductSubtotal(checkoutItems),
+    [checkoutItems]
+  )
+  const freeShippingByThreshold =
+    productSubtotalForShipping > 0 &&
+    productSubtotalForShipping >= FREE_SHIPPING_THRESHOLD
 
   if (items.length === 0 && !showSuccess) {
     return <Navigate to="/products" replace />
@@ -154,7 +198,7 @@ export function CheckoutPage() {
   const couponDiscountNtd = couponPreview?.discountNtd ?? 0
   const payableTotal = Math.max(
     0,
-    grandTotal - pointsDiscountNtd - couponDiscountNtd
+    subtotal - pointsDiscountNtd - couponDiscountNtd + shippingFee
   )
 
   const handleSubmit = async (e: FormEvent) => {
@@ -201,12 +245,23 @@ export function CheckoutPage() {
         throw new Error('部分商品剛被搶先收藏，已無可結帳品項，請返回購物車確認。')
       }
 
+      const submitOffered = canOfferMagicianShipping(latest.checkoutItems, magicianQuota)
+      const submitApplied =
+        submitOffered &&
+        useMagicianShipping &&
+        (magicianQuota?.remaining ?? 0) > 0
+      const latestShippingFee = calcShippingFeeWithMagicianPerk(latest.checkoutItems, {
+        useMagicianShipping: submitApplied,
+        magicianRemaining: magicianQuota?.remaining,
+      })
+
       const createdOrders = await createOrdersFromCart(
         latest.checkoutItems,
         form,
-        latest.shippingFee,
+        latestShippingFee,
         user.id,
-        clampedPointsToUse
+        clampedPointsToUse,
+        submitApplied
       )
 
       const checkoutId = createdOrders[0]?.checkout_id
@@ -359,15 +414,19 @@ export function CheckoutPage() {
             <div className="flex justify-between text-white/60">
               <span>
                 運費
-                {subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD && (
+                {productSubtotalForShipping > 0 &&
+                  productSubtotalForShipping < FREE_SHIPPING_THRESHOLD &&
+                  !magicianShippingApplied && (
                   <span className="ml-1 text-xs text-white/30">
                     （未滿 {FREE_SHIPPING_THRESHOLD} 元）
                   </span>
                 )}
               </span>
               <span>
-                {shippingFee === 0 && subtotal >= FREE_SHIPPING_THRESHOLD ? (
+                {shippingFee === 0 && freeShippingByThreshold ? (
                   <span className="text-emerald-400">免運</span>
+                ) : shippingFee === 0 && magicianShippingApplied ? (
+                  <span className="text-emerald-400">魔法師免運</span>
                 ) : shippingFee === 0 ? (
                   '—'
                 ) : (
@@ -375,6 +434,14 @@ export function CheckoutPage() {
                 )}
               </span>
             </div>
+            {magicianShippingOffered && magicianQuota && (
+              <CheckoutMagicianShipping
+                quota={magicianQuota}
+                useMagicianShipping={useMagicianShipping}
+                onUseMagicianShippingChange={setUseMagicianShipping}
+                applied={magicianShippingApplied}
+              />
+            )}
             {profile && pointsDiscountNtd > 0 && (
               <div className="flex justify-between text-emerald-400/90">
                 <span>點數折抵</span>

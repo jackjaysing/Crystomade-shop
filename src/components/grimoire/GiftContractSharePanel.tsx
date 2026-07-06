@@ -9,7 +9,7 @@ interface GiftContractSharePanelProps {
   onEnableGift: () => Promise<void>
 }
 
-/** 代購者：產生贈送契約連結給朋友簽署 */
+/** 下單人：產生贈送契約連結給朋友簽署 */
 export function GiftContractSharePanel({
   card,
   busy = false,
@@ -47,7 +47,7 @@ export function GiftContractSharePanel({
         <h4 className="magic-gift-panel-title">轉贈朋友簽署契約</h4>
       </div>
       <p className="magic-gift-panel-desc">
-        若這是幫朋友代購，可產生專屬連結。朋友登入後簽署能量契約，此本魔導書將轉入朋友的帳戶。
+        若要將此本魔導書送給朋友簽署契約，可產生專屬連結。朋友登入後簽署能量契約，魔導書將轉入朋友的帳戶。
       </p>
 
       {giftUrl ? (
