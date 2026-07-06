@@ -1,5 +1,6 @@
 /** 資料庫型別定義（對應 Supabase 表格） */
 
+import type { CrystalMagicStatus } from '../constants/grimoire'
 import type { FiveElement } from '../constants/fiveElements'
 import type { ProductSubcategory } from '../constants/productSubcategories'
 
@@ -48,6 +49,8 @@ export interface Product {
   is_hot: boolean
   /** 購物車快捷加購推薦 */
   is_quick_add: boolean
+  /** 付款後是否發行水晶魔法身分證 */
+  generates_soul_card: boolean
   /** 排序：數字越小越前面（熱門商品仍置頂） */
   sort_order: number
 }
@@ -338,6 +341,8 @@ export interface ProductFormData {
   is_hot: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
+  /** 付款後是否發行水晶魔法身分證 */
+  generates_soul_card: boolean
   /** 封面圖 */
   coverFile: File | null
   /** 詳情頁額外圖片 */
@@ -442,8 +447,47 @@ export interface ProductEditData {
   is_hot: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
+  /** 付款後是否發行水晶魔法身分證 */
+  generates_soul_card: boolean
   /** 新封面；null 表示沿用原圖 */
   coverFile: File | null
   /** 詳情相簿（封面之後的順序） */
   galleryItems: ProductGalleryEditItem[]
+}
+
+/** 水晶靈魂卡（魔法身分證） */
+export interface CrystalSoulCard {
+  id: string
+  order_id: string
+  user_id: string
+  product_id: string | null
+  serial_number: string
+  public_slug: string
+  product_name: string
+  product_image_url: string | null
+  selected_size: string | null
+  product_category: string | null
+  product_tags: string[]
+  five_elements: string[]
+  element_primary: string
+  magic_title: string
+  magic_affiliation: string
+  chakra: string | null
+  resonance_keyword: string | null
+  awakening_verse: string | null
+  magic_status: CrystalMagicStatus
+  awakened_at: string | null
+  is_public: boolean
+  energy_level: number
+  contract_signed_at: string | null
+  contract_signer_name: string | null
+  last_purify_at: string | null
+  last_moon_charge_at: string | null
+  last_meditation_at: string | null
+  gift_claim_slug: string | null
+  activation_slug: string | null
+  gifted_from_user_id: string | null
+  gifted_at: string | null
+  magic_birth_date: string | null
+  created_at: string
 }

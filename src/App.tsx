@@ -15,6 +15,11 @@ import { ProductsPage } from './pages/ProductsPage'
 import { AcademyArticlePage } from './pages/AcademyArticlePage'
 import { AcademyPage } from './pages/AcademyPage'
 import { WishBoardPage } from './pages/WishBoardPage'
+import { CrystalGrimoirePage } from './pages/CrystalGrimoirePage'
+import { CrystalGrimoireDetailPage } from './pages/CrystalGrimoireDetailPage'
+import { CrystalSoulCardGiftClaimPage } from './pages/CrystalSoulCardGiftClaimPage'
+import { CrystalSoulCardActivationPage } from './pages/CrystalSoulCardActivationPage'
+import { CrystalSoulCardPublicPage } from './pages/CrystalSoulCardPublicPage'
 import { RaffleFloatingWidget } from './components/raffle/RaffleFloatingWidget'
 import { SiteMetaSync } from './components/seo/SiteMetaSync'
 
@@ -53,6 +58,11 @@ export default function App() {
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/register" element={<RegisterRedirect />} />
               <Route path="/account" element={<AccountPage />} />
+              <Route path="/account/grimoire" element={<CrystalGrimoirePage />} />
+              <Route path="/account/grimoire/:cardId" element={<CrystalGrimoireDetailPage />} />
+              <Route path="/grimoire/gift/:slug" element={<CrystalSoulCardGiftClaimPage />} />
+              <Route path="/grimoire/sign/:slug" element={<CrystalSoulCardActivationPage />} />
+              <Route path="/grimoire/:slug" element={<CrystalSoulCardPublicPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
           </main>

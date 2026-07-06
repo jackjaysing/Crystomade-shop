@@ -245,6 +245,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       status: 'available',
       is_hot: form.is_hot,
       is_quick_add: form.is_quick_add,
+      generates_soul_card: form.generates_soul_card,
       sort_order,
     })
     .select()
@@ -309,6 +310,7 @@ export async function updateProduct(
       status,
       is_hot: form.is_hot,
       is_quick_add: form.is_quick_add,
+      generates_soul_card: form.generates_soul_card,
     })
     .eq('id', productId)
     .select()

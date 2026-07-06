@@ -156,6 +156,22 @@ export function AccountPage() {
           </div>
         </GlassPanel>
 
+        <GlassPanel className="mt-6 overflow-hidden p-0">
+          <div className="bg-gradient-to-br from-amber-glow/10 via-transparent to-transparent px-8 py-8">
+            <p className="magic-page-eyebrow">GRIMOIRE</p>
+            <h2 className="mt-2 font-display text-2xl magic-foil-text">我的水晶魔導書</h2>
+        <p className="mt-2 text-sm text-white/50">
+          付款確認後，每一件水晶都會化作一本魔導書。解開封印、簽署契約，並透過淨化儀式滋養能量。
+        </p>
+            <Link
+              to="/account/grimoire"
+              className="mt-5 inline-block rounded-lg border border-amber-glow/35 bg-amber-glow/10 px-5 py-2.5 text-sm tracking-wide text-amber-glow transition hover:bg-amber-glow/20"
+            >
+              開啟魔導書
+            </Link>
+          </div>
+        </GlassPanel>
+
         <MemberChangePasswordPanel />
 
         <MemberClaimReferralPanel

@@ -178,6 +178,13 @@ export function buildProductUpdateSummary(before: Product, after: Product): stri
     formatAdminBool(after.is_quick_add)
   )
 
+  pushTextChange(
+    changes,
+    '魔法身分證',
+    formatAdminBool(before.generates_soul_card),
+    formatAdminBool(after.generates_soul_card)
+  )
+
   if (before.image_url !== after.image_url) changes.push('更換封面圖')
   if (JSON.stringify(before.gallery_urls) !== JSON.stringify(after.gallery_urls)) {
     changes.push('調整相簿圖片')

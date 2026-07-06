@@ -180,3 +180,1555 @@
 .masonry-column {
   padding-left: 1rem;
 }
+
+/* ── 水晶魔法身分證：神秘深色燙金 ── */
+.magic-bookshelf-page,
+.magic-book-page {
+  --magic-body: rgba(255, 247, 238, 0.94);
+  --magic-body-soft: rgba(240, 232, 220, 0.84);
+  --magic-label: rgba(230, 205, 160, 0.8);
+  --magic-label-soft: rgba(212, 185, 140, 0.68);
+  --magic-gold: rgba(255, 235, 200, 0.92);
+}
+
+.magic-foil-text {
+  background: linear-gradient(
+    105deg,
+    #a67c1a 0%,
+    #e8c872 18%,
+    #fff8dc 36%,
+    #f0d878 52%,
+    #fffce8 68%,
+    #d4af37 84%,
+    #c9a227 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* 深色底上的主標題：實色金 + 浮雕光，比 clip 漸層更穩定 */
+.magic-foil-heading {
+  color: #f5e6b8;
+  text-shadow:
+    0 0 20px rgba(255, 235, 180, 0.35),
+    0 0 6px rgba(212, 175, 116, 0.5),
+    0 1px 0 #6b4e12,
+    0 2px 4px rgba(0, 0, 0, 0.65);
+}
+
+/* 封面緞帶「水晶魔法身分證」 */
+.magic-foil-ribbon {
+  color: #ffe9a8;
+  font-weight: 600;
+  font-size: 0.95em;
+  text-shadow:
+    0 0 14px rgba(255, 235, 180, 0.4),
+    0 1px 0 #7a5a18,
+    0 -1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.magic-foil-text-subtle {
+  color: rgba(230, 205, 160, 0.88);
+  text-shadow: 0 0 10px rgba(212, 175, 116, 0.2);
+}
+
+/* 後台實體身分證預覽：與列印卡同系字型 */
+.fulfillment-id-preview {
+  font-family: 'LXGW WenKai TC', 'PingFang TC', 'Microsoft JhengHei', serif;
+}
+.fulfillment-id-preview .fid-eyebrow {
+  font-family: 'Cinzel', 'LXGW WenKai TC', serif;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+}
+.fulfillment-id-preview .fid-title {
+  font-family: 'LXGW WenKai TC', 'PingFang TC', serif;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.fulfillment-id-preview .fid-label {
+  font-family: 'Cinzel', 'LXGW WenKai TC', serif;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+.fulfillment-id-preview .fid-serial {
+  font-family: 'Cinzel', ui-monospace, monospace;
+  letter-spacing: 0.05em;
+}
+.fulfillment-id-preview .fid-primary {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.magic-bookshelf-page {
+  background:
+    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(180, 140, 70, 0.07), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 10% 90%, rgba(60, 40, 100, 0.12), transparent),
+    radial-gradient(ellipse 40% 30% at 95% 20%, rgba(120, 80, 40, 0.06), transparent),
+    #050508;
+}
+
+.magic-page-heading {
+  font-family: var(--font-display, serif);
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+.magic-page-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.38em;
+  color: var(--magic-label-soft);
+}
+
+.magic-page-lead {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.magic-bookshelf-item {
+  position: relative;
+  min-height: 11rem;
+  border-radius: 0.35rem 0.85rem 0.85rem 0.35rem;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.magic-bookshelf-item:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.65),
+    0 0 32px rgba(212, 175, 116, 0.08);
+}
+
+.magic-bookshelf-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0.6rem;
+  border-radius: 0.3rem 0 0 0.3rem;
+  background: linear-gradient(180deg, #1a1410, #080604);
+  box-shadow: inset -1px 0 0 rgba(212, 175, 116, 0.15);
+}
+
+.magic-bookshelf-cover {
+  margin-left: 0.45rem;
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: 0.3rem 0.75rem 0.75rem 0.3rem;
+  border: 1px solid rgba(212, 175, 116, 0.22);
+  background:
+    linear-gradient(145deg, rgba(212, 175, 116, 0.06) 0%, transparent 40%),
+    linear-gradient(165deg, #12101a 0%, #0a090f 55%, #060508 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 200, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.magic-bookshelf-thumb {
+  height: 5.5rem;
+  width: 5.5rem;
+  flex-shrink: 0;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(212, 175, 116, 0.28);
+  object-fit: cover;
+  box-shadow:
+    0 0 20px rgba(212, 175, 116, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.magic-bookshelf-glyph {
+  display: flex;
+  height: 5.5rem;
+  width: 5.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(212, 175, 116, 0.2);
+  font-size: 1.75rem;
+  color: rgba(212, 175, 116, 0.45);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.magic-bookshelf-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.magic-bookshelf-title {
+  font-family: var(--font-display, serif);
+  font-size: 1.1rem;
+  color: var(--magic-body);
+}
+
+.magic-bookshelf-serial {
+  margin-top: 0.25rem;
+  font-family: monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--magic-label-soft);
+}
+
+.magic-bookshelf-energy {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--magic-label);
+}
+
+.magic-bookshelf-badge {
+  margin-top: 0.5rem;
+  display: inline-block;
+  width: fit-content;
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 116, 0.25);
+  background: rgba(212, 175, 116, 0.08);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--magic-gold);
+}
+
+.magic-book-outer {
+  position: relative;
+  perspective: 1400px;
+}
+
+.magic-book-aura {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 116, 0.07), transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.magic-book-spine {
+  position: absolute;
+  left: -0.3rem;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  width: 0.45rem;
+  border-radius: 0.2rem 0 0 0.2rem;
+  background: linear-gradient(180deg, #1c1612, #060504);
+  box-shadow: -3px 0 10px rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+.magic-book-cover {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.4rem 1rem 1rem 0.4rem;
+  border: 1px solid rgba(212, 175, 116, 0.28);
+  background: linear-gradient(160deg, #16121c 0%, #0a080e 50%, #050406 100%);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(212, 175, 116, 0.08),
+    inset 0 1px 0 rgba(255, 235, 200, 0.07);
+  padding: 0.55rem;
+  z-index: 2;
+}
+
+.magic-book-foil-border {
+  position: absolute;
+  inset: 0.35rem;
+  border-radius: 0.3rem 0.85rem 0.85rem 0.3rem;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(135deg, rgba(212, 175, 116, 0.35), rgba(255, 248, 220, 0.08), rgba(140, 100, 40, 0.25))
+    border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+.magic-book-dimmed .magic-book-page {
+  filter: blur(3px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.magic-book-cover-header {
+  padding: 0.35rem 0.75rem 0.5rem;
+  text-align: center;
+}
+
+.magic-book-cover-header--solo {
+  padding-bottom: 0.25rem;
+}
+
+.magic-id-ribbon {
+  display: inline-block;
+  border-top: 1px solid rgba(212, 175, 116, 0.45);
+  border-bottom: 1px solid rgba(212, 175, 116, 0.45);
+  padding: 0.45rem 1.4rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.26em;
+  background: rgba(212, 175, 116, 0.06);
+  box-shadow: 0 0 24px rgba(212, 175, 116, 0.08);
+}
+
+.magic-book-eyebrow {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  color: var(--magic-gold);
+  font-family: var(--font-display, serif);
+  text-shadow: 0 0 12px rgba(212, 175, 116, 0.25);
+}
+
+.magic-book-eyebrow--prominent {
+  margin-top: 0.65rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.22em;
+}
+
+.magic-book-cover-title {
+  margin-top: 0.4rem;
+  font-family: var(--font-display, serif);
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+
+.magic-book-page {
+  position: relative;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(212, 175, 116, 0.12);
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(212, 175, 116, 0.07), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(80, 50, 120, 0.08), transparent),
+    linear-gradient(180deg, #100e14 0%, #0a090f 40%, #060508 100%);
+  color: var(--magic-body-soft);
+  padding: 1.35rem 1.15rem 1.6rem;
+  min-height: 20rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.45);
+}
+
+.magic-id-divider {
+  height: 1px;
+  margin-bottom: 1.1rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 116, 0.45) 20%,
+    rgba(255, 248, 220, 0.65) 50%,
+    rgba(212, 175, 116, 0.45) 80%,
+    transparent
+  );
+  opacity: 0.7;
+}
+
+.magic-book-corner {
+  position: absolute;
+  font-size: 0.75rem;
+  color: rgba(212, 175, 116, 0.35);
+  text-shadow: 0 0 8px rgba(212, 175, 116, 0.25);
+  pointer-events: none;
+}
+
+.magic-book-corner-tl { top: 0.65rem; left: 0.85rem; }
+.magic-book-corner-tr { top: 0.65rem; right: 0.85rem; }
+.magic-book-corner-bl { bottom: 0.65rem; left: 0.85rem; }
+.magic-book-corner-br { bottom: 0.65rem; right: 0.85rem; }
+
+.magic-book-locked-placeholder {
+  display: flex;
+  min-height: 16rem;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, serif);
+  font-size: 1rem;
+  letter-spacing: 0.16em;
+  color: var(--magic-label-soft);
+}
+
+/* 封印動畫 */
+.magic-seal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem 1rem 1rem 0.4rem;
+  background:
+    radial-gradient(circle at center, rgba(20, 12, 8, 0.92), rgba(2, 2, 4, 0.98));
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.magic-seal-breaking .magic-seal-ring-1 {
+  animation: seal-ring-burst 2s ease-out forwards;
+}
+
+.magic-seal-breaking .magic-seal-ring-2 {
+  animation: seal-ring-burst 2s ease-out 0.15s forwards;
+}
+
+.magic-seal-breaking .magic-seal-crystal {
+  animation: seal-crystal-reveal 2.2s ease-out forwards;
+}
+
+.magic-seal-breaking .magic-seal-rune {
+  animation: seal-rune-flash 1.8s ease-in-out forwards;
+}
+
+.magic-seal-breaking .magic-seal-glow {
+  animation: seal-glow-spread 2.4s ease-out forwards;
+}
+
+.magic-seal-glow {
+  position: absolute;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 116, 0.35), transparent 70%);
+  opacity: 0.5;
+}
+
+.magic-seal-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 116, 0.45);
+  box-shadow: 0 0 20px rgba(212, 175, 116, 0.15);
+}
+
+.magic-seal-ring-1 { width: 7rem; height: 7rem; }
+.magic-seal-ring-2 { width: 10rem; height: 10rem; opacity: 0.45; }
+
+.magic-seal-crystal {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  height: 5.25rem;
+  width: 5.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 235, 180, 0.5);
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 248, 220, 0.2), rgba(30, 20, 40, 0.6));
+  box-shadow:
+    0 0 40px rgba(212, 175, 116, 0.35),
+    inset 0 0 20px rgba(212, 175, 116, 0.1);
+}
+
+.magic-seal-element {
+  font-family: var(--font-display, serif);
+  font-size: 2rem;
+  background: linear-gradient(180deg, #fff8dc, #d4af37, #8f6b1f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.magic-seal-runes {
+  position: absolute;
+  width: 12rem;
+  height: 12rem;
+}
+
+.magic-seal-rune {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 1rem;
+  color: rgba(212, 175, 116, 0.55);
+  transform: rotate(calc(var(--rune-i) * 45deg)) translateY(-5.5rem);
+  transform-origin: center center;
+  opacity: 0.55;
+}
+
+.magic-seal-caption {
+  margin-top: 7.5rem;
+  font-family: var(--font-display, serif);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 235, 200, 0.9);
+}
+
+.magic-seal-hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  color: var(--magic-label-soft);
+}
+
+@keyframes seal-ring-burst {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; border-color: rgba(212, 175, 116, 0); }
+}
+
+@keyframes seal-crystal-reveal {
+  0% { transform: scale(1); box-shadow: 0 0 30px rgba(212, 175, 116, 0.3); }
+  50% { transform: scale(1.12); box-shadow: 0 0 70px rgba(255, 235, 180, 0.55); }
+  100% { transform: scale(1); box-shadow: 0 0 16px rgba(212, 175, 116, 0.15); opacity: 0; }
+}
+
+@keyframes seal-rune-flash {
+  0%, 100% { opacity: 0.25; color: rgba(212, 175, 116, 0.4); }
+  25%, 75% { opacity: 1; color: #fff8dc; text-shadow: 0 0 14px rgba(255, 235, 180, 0.9); }
+  50% { opacity: 0.75; }
+}
+
+@keyframes seal-glow-spread {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+/* 能量契約 */
+.magic-contract-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  color: var(--magic-label-soft);
+}
+
+.magic-contract-title {
+  margin-top: 0.35rem;
+  font-family: var(--font-display, serif);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+.magic-contract-intro {
+  margin-top: 0.65rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--magic-body-soft);
+}
+
+.magic-contract-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.magic-contract-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem;
+  color: var(--magic-label-soft);
+  font-size: 0.875rem;
+}
+
+.magic-contract-divider::before,
+.magic-contract-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 116, 0.35),
+    transparent
+  );
+}
+
+.magic-gift-panel {
+  margin-top: 0.5rem;
+  border-radius: 0.65rem;
+  border: 1px dashed rgba(212, 175, 116, 0.28);
+  background: rgba(212, 175, 116, 0.04);
+  padding: 0.85rem;
+}
+
+.magic-gift-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.magic-gift-panel-icon {
+  color: rgba(212, 175, 116, 0.65);
+}
+
+.magic-gift-panel-title {
+  font-family: var(--font-display, serif);
+  font-size: 1rem;
+  color: var(--magic-body);
+}
+
+.magic-gift-panel-desc {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--magic-body-soft);
+}
+
+.magic-gift-enable-btn,
+.magic-gift-copy-btn {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.35);
+  background: rgba(212, 175, 116, 0.08);
+  padding: 0.6rem 0.95rem;
+  font-size: 0.875rem;
+  color: var(--magic-gold);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.magic-gift-enable-btn:hover,
+.magic-gift-copy-btn:hover {
+  background: rgba(212, 175, 116, 0.14);
+  border-color: rgba(212, 175, 116, 0.5);
+}
+
+.magic-gift-link-box {
+  margin-top: 0.75rem;
+}
+
+.magic-gift-link-url {
+  word-break: break-all;
+  font-size: 0.8rem;
+  color: var(--magic-label);
+}
+
+.magic-gift-hint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--magic-label-soft);
+}
+
+.magic-gift-preview {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.65rem;
+}
+
+.magic-gift-preview img,
+.magic-gift-preview-thumb {
+  height: 4rem;
+  width: 4rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.25);
+  object-fit: cover;
+  box-shadow: 0 0 16px rgba(212, 175, 116, 0.12);
+}
+
+.magic-gift-preview-glyph {
+  display: flex;
+  height: 4rem;
+  width: 4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.25);
+  font-size: 1.25rem;
+  color: rgba(212, 175, 116, 0.45);
+}
+
+.magic-gift-preview-title {
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: rgba(212, 175, 116, 0.82);
+}
+
+.magic-gift-preview-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 245, 230, 0.88);
+}
+
+.magic-gift-preview-meta {
+  font-size: 0.8125rem;
+  color: var(--magic-label-soft);
+}
+
+.magic-contract-body {
+  margin-top: 1rem;
+}
+
+.magic-contract-text {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--magic-body-soft);
+}
+
+.magic-contract-check {
+  margin-top: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.9375rem;
+  color: var(--magic-body-soft);
+  cursor: pointer;
+}
+
+.magic-contract-check input {
+  accent-color: #d4af37;
+  margin-top: 0.15rem;
+}
+
+.magic-contract-signature {
+  margin-top: 1.25rem;
+  border-top: 1px dashed rgba(212, 175, 116, 0.22);
+  padding-top: 1rem;
+}
+
+.magic-contract-sign-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--magic-label-soft);
+}
+
+.magic-contract-sign-name {
+  margin-top: 0.35rem;
+  min-height: 2rem;
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 1.5rem;
+  color: transparent;
+}
+
+.magic-contract-ink {
+  background: linear-gradient(90deg, #c9a227, #fff4c4, #d4af37);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: contract-ink 0.9s ease-out forwards;
+}
+
+@keyframes contract-ink {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.magic-contract-button {
+  margin-top: 1.25rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.4);
+  background: linear-gradient(
+    180deg,
+    rgba(212, 175, 116, 0.18),
+    rgba(140, 100, 40, 0.08)
+  );
+  padding: 0.85rem 1rem;
+  font-size: 0.9375rem;
+  letter-spacing: 0.05em;
+  color: var(--magic-body);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.magic-contract-button:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    rgba(212, 175, 116, 0.28),
+    rgba(140, 100, 40, 0.12)
+  );
+  box-shadow: 0 0 20px rgba(212, 175, 116, 0.15);
+}
+
+.magic-contract-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 魔導書內頁 */
+.magic-book-content { font-size: 1rem; }
+
+.magic-book-hero {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.magic-book-crystal-frame {
+  flex-shrink: 0;
+  padding: 0.25rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(212, 175, 116, 0.3);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 0 24px rgba(212, 175, 116, 0.12),
+    inset 0 0 12px rgba(212, 175, 116, 0.05);
+}
+
+.magic-book-crystal-img {
+  height: 5rem;
+  width: 5rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.magic-book-crystal-placeholder {
+  display: flex;
+  height: 5rem;
+  width: 5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.25);
+  font-size: 1.5rem;
+  color: rgba(212, 175, 116, 0.4);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.magic-book-chapter {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--magic-label);
+}
+
+.magic-book-name {
+  font-family: var(--font-display, serif);
+  font-size: 1.3rem;
+  line-height: 1.35;
+}
+
+.magic-book-product { margin-top: 0.2rem; font-size: 0.9rem; color: var(--magic-body-soft); }
+.magic-book-meta { font-size: 0.8125rem; color: var(--magic-label-soft); }
+
+.magic-book-stats {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  font-size: 0.9375rem;
+}
+
+.magic-book-stats dt {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--magic-label-soft);
+}
+
+.magic-book-stats dd { margin-top: 0.2rem; color: var(--magic-body); }
+.magic-book-serial { font-family: monospace; font-size: 0.8125rem; color: var(--magic-label); }
+.magic-book-primary { font-size: 1.15rem; color: var(--magic-gold); }
+
+.magic-book-section { margin-top: 1rem; }
+.magic-book-section-label {
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--magic-label-soft);
+}
+
+.magic-book-verse-label,
+.magic-book-keyword {
+  margin-top: 0.65rem;
+  font-size: 0.9rem;
+  color: var(--magic-label);
+}
+
+.magic-book-elements { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.magic-book-element,
+.magic-book-element-active {
+  display: inline-flex;
+  height: 2rem;
+  min-width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 116, 0.15);
+  font-size: 0.875rem;
+}
+
+.magic-book-element {
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(212, 175, 116, 0.38);
+}
+.magic-book-element-active {
+  border-color: rgba(212, 175, 116, 0.45);
+  background: rgba(212, 175, 116, 0.1);
+  color: var(--magic-gold);
+  box-shadow: 0 0 12px rgba(212, 175, 116, 0.2);
+}
+
+.magic-book-quote {
+  margin-top: 1rem;
+  border-left: 2px solid rgba(212, 175, 116, 0.35);
+  padding-left: 0.75rem;
+  font-style: italic;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--magic-body-soft);
+}
+
+.magic-book-contract-stamp {
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(212, 175, 116, 0.3);
+  padding: 0.75rem 0.85rem;
+  text-align: center;
+  font-size: 0.875rem;
+  background: rgba(212, 175, 116, 0.04);
+}
+
+.magic-book-contract-date { margin-top: 0.2rem; font-size: 0.8125rem; color: var(--magic-label-soft); }
+
+.magic-book-owner-actions {
+  margin-top: 1.25rem;
+  border-top: 1px solid rgba(212, 175, 116, 0.12);
+  padding-top: 1rem;
+}
+
+.magic-book-share-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  color: var(--magic-body-soft);
+  cursor: pointer;
+}
+
+.magic-book-share-toggle input {
+  accent-color: #d4af37;
+}
+
+.magic-book-copy-link {
+  margin-top: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--magic-label);
+  transition: color 0.2s;
+}
+
+.magic-book-copy-link:hover {
+  color: rgba(255, 235, 200, 0.9);
+}
+
+.magic-book-ritual-btn {
+  margin-top: 1rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.35);
+  background: rgba(212, 175, 116, 0.08);
+  padding: 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--magic-body);
+  transition: background 0.2s;
+}
+
+.magic-book-ritual-btn:hover:not(:disabled) {
+  background: rgba(212, 175, 116, 0.15);
+}
+
+.magic-book-guest-note {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--magic-label-soft);
+}
+
+.magic-link-back {
+  font-size: 0.9375rem;
+  color: var(--magic-label-soft);
+  transition: color 0.2s;
+}
+
+.magic-link-back:hover {
+  color: rgba(255, 235, 200, 0.75);
+}
+
+/* 能量槽 */
+.magic-meter {
+  margin-top: 1.25rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(212, 175, 116, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.85rem;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.35);
+}
+
+.magic-meter-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.magic-meter-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.magic-meter-percent {
+  font-family: var(--font-display, serif);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #fff4d4;
+  text-shadow:
+    0 0 18px rgba(255, 235, 180, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+.magic-meter-percent-unit {
+  margin-left: 0.1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 235, 200, 0.85);
+}
+
+.magic-meter-title {
+  font-family: var(--font-display, serif);
+  font-size: 1.05rem;
+  color: var(--magic-body);
+  padding-bottom: 0.15rem;
+}
+
+.magic-meter-label {
+  font-size: 0.8125rem;
+  color: var(--magic-label);
+  white-space: nowrap;
+}
+
+.magic-meter-track {
+  position: relative;
+  margin-top: 0.75rem;
+  height: 0.875rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(212, 175, 116, 0.1);
+}
+
+.magic-meter-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #5c3d10, #c9a227, #fff4c4, #d4af37, #8f6b1f);
+  background-size: 200% 100%;
+  animation: meter-shimmer 3s ease-in-out infinite;
+  transition: width 0.5s ease-out;
+  box-shadow: 0 0 14px rgba(212, 175, 116, 0.4);
+}
+
+.magic-meter-pulse .magic-meter-fill {
+  animation: meter-shimmer 0.8s ease-in-out 2, meter-pulse 0.6s ease-out;
+}
+
+.magic-meter--pulse .magic-meter-percent {
+  animation: meter-percent-pulse 0.6s ease-out;
+}
+
+.magic-meter-tasks {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.magic-meter-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  padding: 0.55rem 0.65rem;
+}
+
+.magic-meter-task-label { font-size: 0.875rem; font-weight: 500; color: var(--magic-body); }
+.magic-meter-task-desc { font-size: 0.75rem; line-height: 1.45; color: var(--magic-label-soft); }
+.magic-meter-task-boost { font-size: 0.75rem; color: var(--magic-label); }
+
+.magic-meter-task-btn {
+  flex-shrink: 0;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(212, 175, 116, 0.3);
+  background: rgba(212, 175, 116, 0.08);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.8125rem;
+  color: var(--magic-gold);
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.magic-meter-task-btn:hover:not(:disabled) {
+  background: rgba(212, 175, 116, 0.15);
+}
+
+.magic-meter-task-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.magic-meter-readonly {
+  margin-top: 0.65rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--magic-label-soft);
+  text-align: center;
+}
+
+@keyframes meter-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes meter-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+
+@keyframes meter-percent-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+/* ── 階級系統：越高階視覺越華麗 ── */
+
+.magic-rank-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(212, 175, 116, 0.22);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.magic-rank-badge-roman {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 116, 0.35);
+  font-family: var(--font-display, serif);
+  font-size: 1.1rem;
+  color: rgba(255, 235, 200, 0.9);
+  background: rgba(212, 175, 116, 0.08);
+}
+
+.magic-rank-badge-tier {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  color: var(--magic-label-soft);
+}
+
+.magic-rank-badge-title {
+  font-family: var(--font-display, serif);
+  font-size: 1.25rem;
+  color: var(--magic-body);
+}
+
+.magic-rank-badge-epithet {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  color: var(--magic-label);
+}
+
+.magic-rank-badge--awakening {
+  border-color: rgba(212, 175, 116, 0.38);
+  box-shadow: 0 0 28px rgba(212, 175, 116, 0.1);
+}
+
+.magic-rank-badge--awakening .magic-rank-badge-roman {
+  box-shadow: 0 0 16px rgba(212, 175, 116, 0.25);
+}
+
+.magic-rank-badge--resonating {
+  border-color: rgba(255, 235, 180, 0.45);
+  background:
+    linear-gradient(135deg, rgba(212, 175, 116, 0.12), rgba(0, 0, 0, 0.35));
+  box-shadow:
+    0 0 36px rgba(212, 175, 116, 0.18),
+    inset 0 1px 0 rgba(255, 235, 200, 0.1);
+}
+
+.magic-rank-badge--resonating .magic-rank-badge-roman {
+  border-color: rgba(255, 235, 180, 0.55);
+  background: linear-gradient(145deg, rgba(212, 175, 116, 0.25), rgba(140, 100, 40, 0.15));
+  box-shadow: 0 0 20px rgba(255, 235, 180, 0.3);
+  animation: rank-roman-glow 2.5s ease-in-out infinite;
+}
+
+.magic-rank-ladder {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+  list-style: none;
+  padding: 0;
+}
+
+.magic-rank-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(212, 175, 116, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.55rem 0.3rem;
+  font-size: 0.75rem;
+  color: rgba(212, 175, 116, 0.42);
+  transition: border-color 0.3s, box-shadow 0.3s, color 0.3s;
+}
+
+.magic-rank-step-roman {
+  font-family: var(--font-display, serif);
+  font-size: 0.95rem;
+}
+
+.magic-rank-step-label {
+  letter-spacing: 0.12em;
+}
+
+.magic-rank-step--passed {
+  color: var(--magic-label-soft);
+  border-color: rgba(212, 175, 116, 0.18);
+}
+
+.magic-rank-step--current {
+  color: var(--magic-body);
+  border-color: rgba(212, 175, 116, 0.45);
+  background: rgba(212, 175, 116, 0.08);
+  box-shadow: 0 0 16px rgba(212, 175, 116, 0.12);
+}
+
+.magic-rank-step--current.magic-rank-step--resonating {
+  border-color: rgba(255, 235, 180, 0.55);
+  box-shadow: 0 0 24px rgba(255, 235, 180, 0.2);
+  animation: rank-step-pulse 2s ease-in-out infinite;
+}
+
+.magic-rank-flavor {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--magic-label-soft);
+  font-style: italic;
+  text-align: center;
+}
+
+.magic-book-content--tier-awakening .magic-rank-flavor,
+.magic-book-content--tier-resonating .magic-rank-flavor {
+  color: var(--magic-label);
+}
+
+.magic-book-status--awakening {
+  color: rgba(255, 235, 200, 0.9);
+  text-shadow: 0 0 10px rgba(212, 175, 116, 0.3);
+}
+
+.magic-book-status--resonating {
+  color: #ffe9a8;
+  text-shadow: 0 0 14px rgba(255, 235, 180, 0.45);
+}
+
+.magic-book-ritual-btn--advance {
+  font-family: var(--font-display, serif);
+  letter-spacing: 0.12em;
+}
+
+.magic-book-ritual-btn--from-dormant {
+  border-color: rgba(212, 175, 116, 0.45);
+  background: linear-gradient(180deg, rgba(212, 175, 116, 0.15), rgba(0, 0, 0, 0.2));
+}
+
+.magic-book-ritual-btn--from-awakening {
+  border-color: rgba(255, 235, 180, 0.4);
+  background: linear-gradient(180deg, rgba(255, 235, 180, 0.12), rgba(212, 175, 116, 0.08));
+  box-shadow: 0 0 20px rgba(212, 175, 116, 0.1);
+}
+
+/* 書殼階級外觀 */
+.magic-book-outer--tier-awakening .magic-book-cover {
+  border-color: rgba(212, 175, 116, 0.38);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.7),
+    0 0 40px rgba(212, 175, 116, 0.1),
+    inset 0 1px 0 rgba(255, 235, 200, 0.09);
+}
+
+.magic-book-outer--tier-awakening .magic-book-aura {
+  background: radial-gradient(circle, rgba(212, 175, 116, 0.14), transparent 65%);
+  animation: aura-breathe 4s ease-in-out infinite;
+}
+
+.magic-book-outer--tier-awakening .magic-book-foil-border {
+  opacity: 0.85;
+}
+
+.magic-book-outer--tier-resonating .magic-book-cover {
+  border-color: rgba(255, 235, 180, 0.42);
+  background: linear-gradient(160deg, #1a1420 0%, #0e0c14 45%, #060508 100%);
+  box-shadow:
+    0 32px 72px rgba(0, 0, 0, 0.75),
+    0 0 56px rgba(212, 175, 116, 0.16),
+    0 0 0 1px rgba(255, 235, 180, 0.12),
+    inset 0 1px 0 rgba(255, 235, 200, 0.12);
+}
+
+.magic-book-outer--tier-resonating .magic-book-page {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(255, 235, 180, 0.1), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 100%, rgba(212, 175, 116, 0.08), transparent),
+    linear-gradient(180deg, #12101a 0%, #0a090f 40%, #060508 100%);
+}
+
+.magic-book-outer--tier-resonating .magic-book-aura {
+  background: radial-gradient(circle, rgba(255, 235, 180, 0.12), transparent 60%);
+  animation: aura-breathe 3s ease-in-out infinite;
+}
+
+.magic-book-outer--tier-resonating .magic-book-foil-border {
+  opacity: 1;
+  animation: foil-border-shimmer 4s ease-in-out infinite;
+}
+
+.magic-book-crown {
+  position: absolute;
+  top: -0.35rem;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  font-size: 1.1rem;
+  color: rgba(255, 235, 180, 0.85);
+  text-shadow: 0 0 16px rgba(255, 235, 180, 0.6);
+  animation: crown-float 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.magic-book-particles {
+  position: absolute;
+  inset: -8%;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(255, 235, 180, 0.5), transparent),
+    radial-gradient(1px 1px at 70% 20%, rgba(212, 175, 116, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 50% 80%, rgba(255, 248, 220, 0.45), transparent),
+    radial-gradient(1px 1px at 85% 65%, rgba(212, 175, 116, 0.35), transparent);
+  animation: particles-drift 8s linear infinite;
+  opacity: 0.7;
+}
+
+.magic-book-crystal-frame--awakening {
+  box-shadow:
+    0 0 28px rgba(212, 175, 116, 0.2),
+    inset 0 0 12px rgba(212, 175, 116, 0.08);
+}
+
+.magic-book-crystal-frame--resonating {
+  border-color: rgba(255, 235, 180, 0.45);
+  box-shadow:
+    0 0 36px rgba(255, 235, 180, 0.25),
+    0 0 12px rgba(212, 175, 116, 0.3),
+    inset 0 0 16px rgba(212, 175, 116, 0.1);
+  animation: crystal-halo 2.5s ease-in-out infinite;
+}
+
+.magic-meter--tier-awakening .magic-meter-fill {
+  box-shadow: 0 0 16px rgba(212, 175, 116, 0.45);
+}
+
+.magic-meter--tier-resonating {
+  border-color: rgba(255, 235, 180, 0.28);
+  background: rgba(212, 175, 116, 0.06);
+  box-shadow:
+    inset 0 0 28px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(212, 175, 116, 0.08);
+}
+
+.magic-meter--tier-resonating .magic-meter-fill {
+  background: linear-gradient(90deg, #8f6b1f, #ffe9a8, #fffce8, #d4af37, #c9a227);
+  box-shadow: 0 0 20px rgba(255, 235, 180, 0.5);
+}
+
+.magic-meter--tier-resonating .magic-meter-percent {
+  color: #fffce8;
+  text-shadow:
+    0 0 22px rgba(255, 235, 180, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.magic-bookshelf-rank {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--magic-label-soft);
+}
+
+.magic-bookshelf-rank--awakening {
+  color: var(--magic-label);
+}
+
+.magic-bookshelf-rank--resonating {
+  color: var(--magic-gold);
+  text-shadow: 0 0 10px rgba(212, 175, 116, 0.3);
+}
+
+.magic-bookshelf-item--tier-awakening .magic-bookshelf-cover {
+  border-color: rgba(212, 175, 116, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 200, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(212, 175, 116, 0.08);
+}
+
+.magic-bookshelf-item--tier-resonating .magic-bookshelf-cover {
+  border-color: rgba(255, 235, 180, 0.35);
+  background:
+    linear-gradient(145deg, rgba(255, 235, 180, 0.08) 0%, transparent 45%),
+    linear-gradient(165deg, #14101c 0%, #0a090f 55%, #060508 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 200, 0.1),
+    0 14px 36px rgba(0, 0, 0, 0.55),
+    0 0 32px rgba(212, 175, 116, 0.12);
+}
+
+/* 階級晉升慶祝 */
+.magic-rank-up-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem 1rem 1rem 0.4rem;
+  background: rgba(2, 2, 6, 0.88);
+  backdrop-filter: blur(4px);
+  animation: rank-up-enter 0.5s ease-out;
+}
+
+.magic-rank-up-overlay--fade {
+  animation: rank-up-fade 0.8s ease-out forwards;
+}
+
+.magic-rank-up-burst {
+  position: absolute;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 235, 180, 0.35), transparent 70%);
+  animation: rank-up-burst 2s ease-out forwards;
+}
+
+.magic-rank-up-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.magic-rank-up-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.38em;
+  color: var(--magic-label);
+}
+
+.magic-rank-up-roman {
+  margin-top: 0.75rem;
+  font-family: var(--font-display, serif);
+  font-size: 3.25rem;
+  line-height: 1;
+  color: rgba(255, 235, 180, 0.95);
+  text-shadow: 0 0 30px rgba(255, 235, 180, 0.5);
+  animation: rank-up-roman-pop 0.7s ease-out 0.15s both;
+}
+
+.magic-rank-up-title {
+  margin-top: 0.35rem;
+  font-family: var(--font-display, serif);
+  font-size: 1.9rem;
+  color: #fff8dc;
+  text-shadow: 0 0 20px rgba(212, 175, 116, 0.4);
+}
+
+.magic-rank-up-epithet {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  color: var(--magic-label);
+  letter-spacing: 0.16em;
+}
+
+.magic-rank-up-flavor {
+  margin-top: 0.85rem;
+  max-width: 18rem;
+  margin-inline: auto;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.62);
+  font-style: italic;
+}
+
+@keyframes aura-breathe {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes foil-border-shimmer {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+@keyframes crown-float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+
+@keyframes particles-drift {
+  0% { transform: translateY(0); opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(-8px); opacity: 0.5; }
+}
+
+@keyframes crystal-halo {
+  0%, 100% { box-shadow: 0 0 28px rgba(255, 235, 180, 0.2), inset 0 0 12px rgba(212, 175, 116, 0.08); }
+  50% { box-shadow: 0 0 40px rgba(255, 235, 180, 0.35), inset 0 0 18px rgba(212, 175, 116, 0.12); }
+}
+
+@keyframes rank-roman-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(212, 175, 116, 0.2); }
+  50% { box-shadow: 0 0 24px rgba(255, 235, 180, 0.4); }
+}
+
+@keyframes rank-step-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(212, 175, 116, 0.12); }
+  50% { box-shadow: 0 0 28px rgba(255, 235, 180, 0.25); }
+}
+
+@keyframes rank-up-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rank-up-fade {
+  to { opacity: 0; pointer-events: none; }
+}
+
+@keyframes rank-up-burst {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes rank-up-roman-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

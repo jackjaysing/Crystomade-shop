@@ -44,6 +44,11 @@ export const PAGE_META: Record<string, PageMeta> = {
     title: `會員中心｜${SITE_NAME}`,
     description: '晶刻 Crystomade 會員中心：查看訂單、點數、禮物券與會員資料。',
   },
+  '/account/grimoire': {
+    title: `我的水晶魔導書｜${SITE_NAME}`,
+    description:
+      '查看已賁得水晶的魔法身分證、五行屬性與覺醒狀態，並可分享給友人瀏覽。',
+  },
 }
 
 export function getPageMeta(pathname: string): PageMeta {

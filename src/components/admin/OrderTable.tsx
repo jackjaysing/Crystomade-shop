@@ -23,6 +23,7 @@ import {
 import { adminProductThumbAlt } from '../../lib/imageAlt'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
+import { OrderSoulCardQrPanel } from './OrderSoulCardQrPanel'
 import {
   countOrderGroupsByFilter,
   formatOrderGroupStatus,
@@ -699,6 +700,11 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                 )}
 
                 <div className="mt-4">{renderActionButtons(group)}</div>
+
+                <OrderSoulCardQrPanel
+                  orderIds={group.orderIds}
+                  paid={group.paymentStatus === 'paid'}
+                />
               </div>
             )}
 

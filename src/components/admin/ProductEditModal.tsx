@@ -50,6 +50,7 @@ function toEditForm(product: Product): ProductEditData {
     stock: product.stock,
     is_hot: product.is_hot,
     is_quick_add: product.is_quick_add,
+    generates_soul_card: product.generates_soul_card,
     coverFile: null,
     galleryItems: product.gallery_urls.map((url) => ({
       kind: 'existing' as const,
@@ -335,6 +336,18 @@ export function ProductEditModal({
               className="rounded border-white/20 bg-void"
             />
             推薦加購（顯示於購物車快捷推薦區）
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={form.generates_soul_card}
+              onChange={(e) =>
+                setForm({ ...form, generates_soul_card: e.target.checked })
+              }
+              className="rounded border-white/20 bg-void"
+            />
+            付款後發行水晶魔法身分證（魔導書）
           </label>
 
           <div>
