@@ -198,6 +198,38 @@ function resolveMagicianLevel(totalXp: number): {
 
 
 
+/** 將等級區間均分為三星邊界（整數 XP，餘數補在前幾星） */
+
+function magicianStarBoundaries(levelStart: number, levelEnd: number): number[] {
+
+  const span = levelEnd - levelStart
+
+  if (span <= 0) return [levelStart, levelStart, levelStart, levelStart]
+
+
+
+  const base = Math.floor(span / MAGICIAN_STARS_PER_LEVEL)
+
+  const remainder = span % MAGICIAN_STARS_PER_LEVEL
+
+  const bounds = [levelStart]
+
+
+
+  for (let i = 0; i < MAGICIAN_STARS_PER_LEVEL; i++) {
+
+    bounds.push(bounds[i] + base + (i < remainder ? 1 : 0))
+
+  }
+
+
+
+  return bounds
+
+}
+
+
+
 function resolveMagicianStars(
 
   totalXp: number,
@@ -208,21 +240,11 @@ function resolveMagicianStars(
 
 ): MagicianStar {
 
-  const span = levelEnd - levelStart
+  const bounds = magicianStarBoundaries(levelStart, levelEnd)
 
-  if (span <= 0) return MAGICIAN_STARS_PER_LEVEL as MagicianStar
+  if (totalXp < bounds[1]) return 1
 
-
-
-  const into = Math.max(0, totalXp - levelStart)
-
-  const step = span / MAGICIAN_STARS_PER_LEVEL
-
-
-
-  if (into < step) return 1
-
-  if (into < step * 2) return 2
+  if (totalXp < bounds[2]) return 2
 
   return 3
 
@@ -280,17 +302,17 @@ export function computeMagicianLevelProgress(
 
 
 
-  const starStep = levelSpan / MAGICIAN_STARS_PER_LEVEL
+  const starBounds = magicianStarBoundaries(levelStart, levelEnd)
 
-  const starStart = levelStart + (stars - 1) * starStep
+  const starStart = starBounds[stars - 1]
 
-  const starEnd = nextLevel ? levelStart + stars * starStep : levelStart + levelSpan
+  const starEnd = nextLevel ? starBounds[stars] : starBounds[MAGICIAN_STARS_PER_LEVEL]
 
   const starSpan = Math.max(starEnd - starStart, 1)
 
   const xpIntoStar = Math.max(0, totalXp - starStart)
 
-  const xpForNextStar = nextLevel ? Math.ceil(starSpan) : xpIntoStar
+  const xpForNextStar = nextLevel ? starSpan : xpIntoStar
 
 
 

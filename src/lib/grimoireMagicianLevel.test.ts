@@ -119,4 +119,14 @@ describe('computeMagicianLevelProgress', () => {
     expect(progress.totalXp).toBe(195)
     expect(progress.purchaseXp).toBe(195)
   })
+
+  it('star progress uses integer XP (no floating display)', () => {
+    const progress = computeMagicianLevelProgress([], 383)
+    expect(progress.level.tier).toBe(3)
+    expect(progress.stars).toBe(2)
+    expect(progress.xpIntoStar).toBe(29)
+    expect(progress.xpForNextStar).toBe(73)
+    expect(Number.isInteger(progress.xpIntoStar)).toBe(true)
+    expect(Number.isInteger(progress.xpForNextStar)).toBe(true)
+  })
 })
