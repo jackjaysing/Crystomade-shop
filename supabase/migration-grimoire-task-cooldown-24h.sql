@@ -1,5 +1,5 @@
--- 調整魔導書任務能量加成（已部署環境執行此檔即可）
--- 淨化、對話 +10；靜心冥想 +15
+-- 水晶魔導書任務：統一冷卻 24 小時
+-- 於 Supabase SQL Editor 執行（可重複執行）
 
 CREATE OR REPLACE FUNCTION complete_crystal_grimoire_task(
   p_card_id UUID,

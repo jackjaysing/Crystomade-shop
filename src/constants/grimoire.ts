@@ -83,14 +83,14 @@ export const GRIMOIRE_TASKS: {
     label: '與水晶對話',
     description: '無聲亦可，心意相通',
     boost: 10,
-    cooldownHours: 12,
+    cooldownHours: 24,
   },
   {
     type: 'meditation',
     label: '靜心冥想',
     description: '同頻呼吸，安定意念',
     boost: 15,
-    cooldownHours: 8,
+    cooldownHours: 24,
   },
 ]
 
