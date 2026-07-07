@@ -31,6 +31,15 @@ async function orderGroupSummary(orderIds: string[], verb: string): Promise<stri
   return `${verb}${orderIds.length} 筆訂單`
 }
 
+function throwOrderMutationError(message: string): never {
+  if (/invalid input value for enum order_status/i.test(message)) {
+    throw new Error(
+      '訂單狀態更新失敗：請在 Supabase SQL Editor 執行 supabase/migration-fix-order-delete-trigger.sql'
+    )
+  }
+  throw new Error(message)
+}
+
 /** 建立訂單（買家前台 · 超商取件 · 原子扣庫存） */
 export async function createOrder(
   productId: string,
@@ -257,7 +266,7 @@ export async function shipOrder(orderId: string): Promise<void> {
     .update({ status: 'shipped' })
     .eq('id', orderId)
 
-  if (error) throw new Error(formatErrorMessage(error))
+  if (error) throwOrderMutationError(formatErrorMessage(error))
 
   void recordAdminActivity({
     action: 'status',
@@ -277,7 +286,7 @@ export async function shipOrderGroup(orderIds: string[]): Promise<void> {
     .in('id', orderIds)
     .eq('status', 'pending')
 
-  if (error) throw new Error(formatErrorMessage(error))
+  if (error) throwOrderMutationError(formatErrorMessage(error))
 
   void recordAdminActivity({
     action: 'status',
@@ -296,7 +305,7 @@ export async function unshipOrderGroup(orderIds: string[]): Promise<void> {
     .in('id', orderIds)
     .eq('status', 'shipped')
 
-  if (error) throw new Error(formatErrorMessage(error))
+  if (error) throwOrderMutationError(formatErrorMessage(error))
 
   void recordAdminActivity({
     action: 'status',
@@ -314,7 +323,7 @@ export async function markOrderGroupPaid(orderIds: string[]): Promise<void> {
     .update({ is_paid: true })
     .in('id', orderIds)
 
-  if (error) throw new Error(formatErrorMessage(error))
+  if (error) throwOrderMutationError(formatErrorMessage(error))
 
   void recordAdminActivity({
     action: 'status',
@@ -332,7 +341,7 @@ export async function markOrderGroupUnpaid(orderIds: string[]): Promise<void> {
     .update({ is_paid: false })
     .in('id', orderIds)
 
-  if (error) throw new Error(formatErrorMessage(error))
+  if (error) throwOrderMutationError(formatErrorMessage(error))
 
   void recordAdminActivity({
     action: 'status',
@@ -390,7 +399,7 @@ export async function softDeleteOrderGroup(
         '資料庫尚未啟用訂單刪除功能，請在 Supabase SQL Editor 執行 supabase/migration-add-order-soft-delete.sql'
       )
     }
-    throw new Error(msg)
+    throwOrderMutationError(msg)
   }
 
   const count = typeof data === 'number' ? data : Number(data) || 0
@@ -448,7 +457,7 @@ export async function cancelOrderGroup(orderIds: string[]): Promise<number> {
         '資料庫尚未啟用取消訂單功能，請在 Supabase SQL Editor 執行 supabase/migration-add-order-cancel.sql'
       )
     }
-    throw new Error(msg)
+    throwOrderMutationError(msg)
   }
 
   const count = typeof data === 'number' ? data : Number(data) || 0

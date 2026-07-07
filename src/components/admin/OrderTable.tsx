@@ -130,6 +130,9 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
   const [deleteTarget, setDeleteTarget] = useState<
     ReturnType<typeof groupOrders>[number] | null
   >(null)
+  const [cancelTarget, setCancelTarget] = useState<
+    ReturnType<typeof groupOrders>[number] | null
+  >(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const orderGroups = useMemo(() => groupOrders(orders), [orders])
@@ -221,17 +224,10 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
   }
 
   const handleCancelGroup = async (groupId: string, orderIds: string[]) => {
-    if (
-      !confirm(
-        '確定取消此訂單？\n將標記為「訂單未完成」並把商品庫存加回去。'
-      )
-    ) {
-      return
-    }
-
     setCancellingId(groupId)
     try {
       await cancelOrderGroup(orderIds)
+      setCancelTarget(null)
       onUpdated()
     } catch (e) {
       alert(e instanceof Error ? e.message : '取消失敗')
@@ -304,7 +300,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
 
     if (isCancelled) {
       return (
-        <div className="w-full">
+        <div className="order-admin-actions w-full">
           <div className="flex flex-wrap gap-2">
             {renderCopyButtons(group)}
             {renderDeleteButton(group)}
@@ -314,7 +310,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
     }
 
     return (
-      <div className="w-full">
+      <div className="order-admin-actions w-full">
         <OrderTrackingNumberEditor
           orderIds={group.orderIds}
           savedTrackingNumber={group.trackingNumber}
@@ -381,7 +377,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
             disabled={isCancelling}
             onClick={(e) => {
               e.stopPropagation()
-              void handleCancelGroup(group.id, group.pendingOrderIds)
+              setCancelTarget(group)
             }}
             className="rounded border border-red-400/40 px-3 py-1.5 text-xs text-red-300 transition hover:bg-red-500/10 disabled:opacity-50"
           >
@@ -569,11 +565,18 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
             key={group.id}
             className={`overflow-hidden p-0 ${panelAccentClassName(group.paymentStatus, group.status)}`}
           >
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => toggleExpanded(group.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  toggleExpanded(group.id)
+                }
+              }}
               aria-expanded={isExpanded}
-              className="flex w-full flex-col gap-4 p-4 text-left transition hover:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5"
+              className="flex w-full cursor-pointer flex-col gap-4 p-4 text-left transition hover:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5"
             >
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03]">
@@ -647,7 +650,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                   />
                 </span>
               </div>
-            </button>
+            </div>
 
             {isExpanded && (
               <div className="border-t border-white/10 bg-white/[0.02] px-4 py-4 sm:px-5">
@@ -717,6 +720,50 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
         )
       })}
       </div>
+
+      {cancelTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-order-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-void/80 backdrop-blur-sm"
+            onClick={() => setCancelTarget(null)}
+            aria-label="關閉"
+          />
+          <GlassPanel className="relative z-10 w-full max-w-md p-6">
+            <h2 id="cancel-order-title" className="font-display text-lg text-red-200">
+              取消訂單
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-white/65">
+              確定取消此訂單？將標記為「訂單未完成」並把商品庫存加回去。
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCancelTarget(null)}
+                disabled={cancellingId === cancelTarget.id}
+                className="flex-1 rounded-lg border border-white/15 py-2.5 text-sm text-white/60 transition hover:text-white/80 disabled:opacity-40"
+              >
+                返回
+              </button>
+              <button
+                type="button"
+                disabled={cancellingId === cancelTarget.id}
+                onClick={() =>
+                  void handleCancelGroup(cancelTarget.id, cancelTarget.pendingOrderIds)
+                }
+                className="flex-1 rounded-lg border border-red-400/50 bg-red-500/15 py-2.5 text-sm text-red-200 transition hover:bg-red-500/25 disabled:opacity-40"
+              >
+                {cancellingId === cancelTarget.id ? '處理中…' : '確認取消'}
+              </button>
+            </div>
+          </GlassPanel>
+        </div>
+      )}
 
       {deleteTarget && (
         <DeleteOrderConfirmModal

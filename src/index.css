@@ -2694,3 +2694,20 @@
   from { transform: scale(0.5); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+.order-admin-actions button {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  .order-admin-actions button {
+    min-height: 2.75rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .order-admin-actions {
+    position: relative;
+    z-index: 1;
+  }
+}
