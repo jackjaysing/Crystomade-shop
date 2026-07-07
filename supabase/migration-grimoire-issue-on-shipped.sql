@@ -163,7 +163,10 @@ BEGIN
        AND (NEW.is_paid = true OR NEW.status = 'shipped')
        AND (
          (NEW.is_paid = true AND COALESCE(OLD.is_paid, false) IS DISTINCT FROM true)
-         OR (NEW.status = 'shipped' AND COALESCE(OLD.status, '') IS DISTINCT FROM 'shipped')
+         OR (
+           NEW.status = 'shipped'::order_status
+           AND OLD.status IS DISTINCT FROM 'shipped'::order_status
+         )
        ) THEN
       PERFORM issue_crystal_soul_card_for_order(NEW.id);
     END IF;
