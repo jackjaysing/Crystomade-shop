@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import {
   energyLevelLabel,
-  GRIMOIRE_RANK_TASK_THRESHOLDS,
   type GrimoireTaskType,
 } from '../../constants/grimoire'
 import {
+  GRIMOIRE_RANK_TASK_THRESHOLDS,
   nextRankLabel,
   tasksUntilNextRank,
 } from '../../lib/grimoireRank'
