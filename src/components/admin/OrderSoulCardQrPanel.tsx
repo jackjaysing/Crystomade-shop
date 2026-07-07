@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import QRCode from 'qrcode'
-import { Copy, IdCard, ImageUp, Printer, QrCode, Save } from 'lucide-react'
+import { Copy, IdCard, ImageDown, ImageUp, Printer, QrCode, Save } from 'lucide-react'
 import { FIVE_ELEMENTS, type FiveElement } from '../../constants/fiveElements'
 import { MAGIC_AFFILIATION_OPTIONS } from '../../constants/grimoire'
 import {
@@ -15,6 +15,7 @@ import { crystalSoulCardActivationUrl } from '../../lib/grimoire'
 import { pickEfficacyTags, formatEfficacyTags } from '../../lib/efficacyTags'
 import { isBespokeSoulCardProduct, resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 import { openFulfillmentIdCardPrint, openFulfillmentQrOnlyPrint } from '../../lib/fulfillmentIdCardPrint'
+import { shareOrDownloadFulfillmentIdCard } from '../../lib/fulfillmentIdCardImage'
 import { AdminEfficacyTagsPicker } from './AdminEfficacyTagsPicker'
 
 interface OrderSoulCardQrPanelProps {
@@ -93,6 +94,7 @@ function FulfillmentIdCardPreview({
   const [imageUrl, setImageUrl] = useState(card.product_image_url)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imageMessage, setImageMessage] = useState('')
+  const [savingCardImage, setSavingCardImage] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -174,26 +176,45 @@ function FulfillmentIdCardPreview({
     }
   }
 
+  const buildCardData = () => ({
+    magic_title: magicTitle.trim() || card.magic_title,
+    serial_number: card.serial_number,
+    product_name: card.product_name,
+    selected_size: card.selected_size,
+    element_primary: elementPrimary,
+    magic_affiliation: magicAffiliation,
+    five_elements: fiveElements,
+    product_tags: efficacyTags,
+    chakra: card.chakra,
+    resonance_keyword: card.resonance_keyword,
+    product_image_url: imageUrl,
+    magic_birth_date: birthDate || card.magic_birth_date,
+    qr_data_url: qrDataUrl,
+  })
+
   const printCard = () => {
     if (!qrDataUrl) {
       window.alert('QR 碼尚未產生，請稍候再試')
       return
     }
-    openFulfillmentIdCardPrint({
-      magic_title: magicTitle.trim() || card.magic_title,
-      serial_number: card.serial_number,
-      product_name: card.product_name,
-      selected_size: card.selected_size,
-      element_primary: elementPrimary,
-      magic_affiliation: magicAffiliation,
-      five_elements: fiveElements,
-      product_tags: efficacyTags,
-      chakra: card.chakra,
-      resonance_keyword: card.resonance_keyword,
-      product_image_url: imageUrl,
-      magic_birth_date: birthDate || card.magic_birth_date,
-      qr_data_url: qrDataUrl,
-    })
+    openFulfillmentIdCardPrint(buildCardData())
+  }
+
+  const handleSaveCardImage = async () => {
+    if (!qrDataUrl) {
+      window.alert('QR 碼尚未產生，請稍候再試')
+      return
+    }
+    setSavingCardImage(true)
+    try {
+      const result = await shareOrDownloadFulfillmentIdCard(buildCardData())
+      setImageMessage(result === 'shared' ? '已開啟分享' : '身分證圖片已儲存')
+      window.setTimeout(() => setImageMessage(''), 2500)
+    } catch (err) {
+      setImageMessage(err instanceof Error ? err.message : '圖片產生失敗')
+    } finally {
+      setSavingCardImage(false)
+    }
   }
 
   return (
@@ -403,6 +424,15 @@ function FulfillmentIdCardPreview({
           >
             <IdCard className="h-3 w-3" />
             列印身分證
+          </button>
+          <button
+            type="button"
+            disabled={!qrDataUrl || savingCardImage}
+            onClick={() => void handleSaveCardImage()}
+            className="inline-flex items-center gap-1 rounded border border-violet-400/35 bg-violet-400/10 px-2.5 py-1 text-[11px] text-violet-200 hover:bg-violet-400/20 disabled:opacity-40"
+          >
+            <ImageDown className="h-3 w-3" />
+            {savingCardImage ? '產生中…' : '儲存／分享身分證'}
           </button>
         </div>
         {birthDateMessage && (
