@@ -78,8 +78,9 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
   const [beadsRestocking, setBeadsRestocking] = useState(false)
   const dragFromRef = useRef<number | null>(null)
-  /** 加珠時鎖住視窗捲動，避免上方「已選珠序」變高觸發瀏覽器錨定滾動 */
+  /** 加珠時鎖住視窗捲動，並把珠序列表捲到最新一顆 */
   const lockScrollYRef = useRef<number | null>(null)
+  const selectedListRef = useRef<HTMLDivElement>(null)
 
   const soldOut = isProductSoldOut(product)
   const beadHint = suggestedBeadCount(wristSize)
@@ -91,6 +92,8 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
     const root = document.scrollingElement ?? document.documentElement
     root.scrollTop = y
     window.scrollTo({ top: y, left: 0, behavior: 'auto' })
+    const list = selectedListRef.current
+    if (list) list.scrollTop = list.scrollHeight
   }, [selected])
 
   useEffect(() => {
@@ -466,9 +469,16 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
               </div>
             </div>
 
-            <div className="min-w-0 max-w-full [overflow-anchor:none]">
+            <div className="flex min-h-0 min-w-0 max-w-full flex-col [overflow-anchor:none]">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm tracking-wider text-amber-glow/80">已選珠序（串製順序）</h2>
+                <h2 className="text-sm tracking-wider text-amber-glow/80">
+                  已選珠序（串製順序）
+                  {selected.length > 0 ? (
+                    <span className="ml-2 font-sans text-xs tracking-normal text-white/40">
+                      {selected.length} 顆
+                    </span>
+                  ) : null}
+                </h2>
                 {selected.length > 0 && (
                   <button
                     type="button"
@@ -483,68 +493,76 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
               <p className="mt-1 text-sm text-white/45">
                 點選圓盤珠子後出現＋／－；拖曳或列表握把可調順序
               </p>
-              {selected.length === 0 ? (
-                <p className="mt-3 text-sm text-white/40">尚未選珠</p>
-              ) : (
-                <ol className="mt-3 max-h-[420px] space-y-2 overflow-y-auto pr-1 [overflow-anchor:none]">
-                  {selected.map((bead, index) => {
-                    const px = BEAD_SIZE_DISPLAY_PX[bead.size] ?? 40
-                    const isDragging = draggingIndex === index
-                    return (
-                      <li
-                        key={`${bead.bead_id}-${bead.size}-${index}`}
-                        data-bead-index={index}
-                        className={`flex items-center gap-2 rounded border p-2 transition ${
-                          isDragging
-                            ? 'border-amber-glow/50 bg-amber-glow/10 opacity-90 shadow-lg'
-                            : 'border-white/10 bg-black/20'
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          aria-label={`拖曳調整第 ${index + 1} 顆順序`}
-                          onPointerDown={(e) => onDragHandlePointerDown(e, index)}
-                          onPointerMove={onDragHandlePointerMove}
-                          onPointerUp={onDragHandlePointerUp}
-                          onPointerCancel={onDragHandlePointerUp}
-                          className="touch-none cursor-grab rounded border border-white/10 p-1.5 text-white/50 active:cursor-grabbing hover:border-amber-glow/40 hover:text-amber-glow"
+              {/* 固定高度：加珠只在框內捲動，不撐高整頁 */}
+              <div
+                ref={selectedListRef}
+                className="mt-3 h-[280px] overflow-y-auto overscroll-contain rounded-lg border border-white/10 bg-black/20 p-2 [overflow-anchor:none]"
+              >
+                {selected.length === 0 ? (
+                  <p className="flex h-full items-center justify-center text-sm text-white/40">
+                    尚未選珠
+                  </p>
+                ) : (
+                  <ol className="space-y-2 pr-0.5">
+                    {selected.map((bead, index) => {
+                      const px = BEAD_SIZE_DISPLAY_PX[bead.size] ?? 40
+                      const isDragging = draggingIndex === index
+                      return (
+                        <li
+                          key={`${bead.bead_id}-${bead.size}-${index}`}
+                          data-bead-index={index}
+                          className={`flex items-center gap-2 rounded border p-2 transition ${
+                            isDragging
+                              ? 'border-amber-glow/50 bg-amber-glow/10 opacity-90 shadow-lg'
+                              : 'border-white/10 bg-black/25'
+                          }`}
                         >
-                          <GripVertical className="h-4 w-4" />
-                        </button>
-                        <span className="w-6 shrink-0 text-center text-xs text-white/35">
-                          {index + 1}
-                        </span>
-                        <BeadThumb
-                          imageUrl={bead.image_url}
-                          name={bead.name}
-                          elements={bead.elements}
-                          sizePx={Math.min(px, 44)}
-                          className="pointer-events-none"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-white">{bead.name}</p>
-                          <p className="text-[11px] text-white/40">
-                            {formatBeadElements(bead.elements)}
-                            {' · '}
-                            {formatBeadSizeLabel(bead.size)}
-                            {bead.efficacy_tags.length > 0
-                              ? ` · ${bead.efficacy_tags.join('、')}`
-                              : ''}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          aria-label="移除"
-                          onClick={() => removeAt(index)}
-                          className="shrink-0 rounded border border-white/10 p-1.5 text-white/50 hover:text-rose-300"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </li>
-                    )
-                  })}
-                </ol>
-              )}
+                          <button
+                            type="button"
+                            aria-label={`拖曳調整第 ${index + 1} 顆順序`}
+                            onPointerDown={(e) => onDragHandlePointerDown(e, index)}
+                            onPointerMove={onDragHandlePointerMove}
+                            onPointerUp={onDragHandlePointerUp}
+                            onPointerCancel={onDragHandlePointerUp}
+                            className="touch-none cursor-grab rounded border border-white/10 p-1.5 text-white/50 active:cursor-grabbing hover:border-amber-glow/40 hover:text-amber-glow"
+                          >
+                            <GripVertical className="h-4 w-4" />
+                          </button>
+                          <span className="w-6 shrink-0 text-center text-xs text-white/35">
+                            {index + 1}
+                          </span>
+                          <BeadThumb
+                            imageUrl={bead.image_url}
+                            name={bead.name}
+                            elements={bead.elements}
+                            sizePx={Math.min(px, 44)}
+                            className="pointer-events-none"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm text-white">{bead.name}</p>
+                            <p className="text-[11px] text-white/40">
+                              {formatBeadElements(bead.elements)}
+                              {' · '}
+                              {formatBeadSizeLabel(bead.size)}
+                              {bead.efficacy_tags.length > 0
+                                ? ` · ${bead.efficacy_tags.join('、')}`
+                                : ''}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label="移除"
+                            onClick={() => removeAt(index)}
+                            className="shrink-0 rounded border border-white/10 p-1.5 text-white/50 hover:text-rose-300"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ol>
+                )}
+              </div>
             </div>
           </section>
 
