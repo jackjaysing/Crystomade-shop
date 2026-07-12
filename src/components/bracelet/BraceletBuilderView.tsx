@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eraser, GripVertical, Search, Trash2 } from 'lucide-react'
 import { FIVE_ELEMENTS, type FiveElement } from '../../constants/fiveElements'
@@ -71,9 +78,20 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
   const [beadsRestocking, setBeadsRestocking] = useState(false)
   const dragFromRef = useRef<number | null>(null)
+  /** 加珠時鎖住視窗捲動，避免上方「已選珠序」變高觸發瀏覽器錨定滾動 */
+  const lockScrollYRef = useRef<number | null>(null)
 
   const soldOut = isProductSoldOut(product)
   const beadHint = suggestedBeadCount(wristSize)
+
+  useLayoutEffect(() => {
+    const y = lockScrollYRef.current
+    if (y == null) return
+    lockScrollYRef.current = null
+    const root = document.scrollingElement ?? document.documentElement
+    root.scrollTop = y
+    window.scrollTo({ top: y, left: 0, behavior: 'auto' })
+  }, [selected])
 
   useEffect(() => {
     let cancelled = false
@@ -133,6 +151,8 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
   }
 
   const addBead = (bead: BraceletBead, size: BeadSizeCategory) => {
+    const root = document.scrollingElement ?? document.documentElement
+    lockScrollYRef.current = root.scrollTop
     setSelected((prev) => [...prev, toConfigBead(bead, size)])
   }
 
@@ -360,8 +380,8 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
             </div>
           </section>
 
-          <section className="mt-8 grid min-w-0 gap-6 lg:grid-cols-2">
-            <div className="min-w-0 max-w-full">
+          <section className="mt-8 grid min-w-0 gap-6 lg:grid-cols-2 [overflow-anchor:none]">
+            <div className="min-w-0 max-w-full [overflow-anchor:none]">
               <h2 className="text-sm tracking-wider text-amber-glow/80">
                 4. 預覽與平衡提示（僅供參考）
               </h2>
@@ -446,7 +466,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
               </div>
             </div>
 
-            <div className="min-w-0 max-w-full">
+            <div className="min-w-0 max-w-full [overflow-anchor:none]">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm tracking-wider text-amber-glow/80">已選珠序（串製順序）</h2>
                 {selected.length > 0 && (
@@ -466,7 +486,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
               {selected.length === 0 ? (
                 <p className="mt-3 text-sm text-white/40">尚未選珠</p>
               ) : (
-                <ol className="mt-3 max-h-[420px] space-y-2 overflow-y-auto pr-1">
+                <ol className="mt-3 max-h-[420px] space-y-2 overflow-y-auto pr-1 [overflow-anchor:none]">
                   {selected.map((bead, index) => {
                     const px = BEAD_SIZE_DISPLAY_PX[bead.size] ?? 40
                     const isDragging = draggingIndex === index
@@ -658,6 +678,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                           <button
                             key={size}
                             type="button"
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => addBead(bead, size)}
                             className="rounded-full border border-amber-glow/35 bg-amber-glow/10 px-2.5 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/20"
                           >
