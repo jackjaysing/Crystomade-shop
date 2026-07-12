@@ -5,7 +5,7 @@ export interface CrystalColorFilterOption {
   label: string
   /** 圓形圖示色 */
   hex: string
-  /** 比對商品 tags（後台勾選）；keywords 僅供文件參考，不再用於自動判斷 */
+  /** 商品 tags／珠材名稱關鍵字 */
   keywords: string[]
 }
 
@@ -15,7 +15,18 @@ export const CRYSTAL_COLOR_FILTERS: CrystalColorFilterOption[] = [
     id: 'red',
     label: '紅',
     hex: '#ef4444',
-    keywords: ['紅晶', '紅寶', '石榴石', '紅瑪瑙', '紅玉髓', '紅碧璽', '紅'],
+    keywords: [
+      '紅晶',
+      '紅寶',
+      '石榴石',
+      '紅瑪瑙',
+      '紅玉髓',
+      '紅碧璽',
+      '紅虎眼',
+      '金草莓',
+      '草莓晶',
+      '紅',
+    ],
   },
   {
     id: 'orange',
@@ -27,37 +38,84 @@ export const CRYSTAL_COLOR_FILTERS: CrystalColorFilterOption[] = [
     id: 'yellow',
     label: '黃',
     hex: '#eab308',
-    keywords: ['黃水晶', '鈦晶', '金髮晶', '虎眼', '黃玉', '黃'],
+    keywords: [
+      '黃水晶',
+      '鈦晶',
+      '金髮晶',
+      '黃虎眼',
+      '夢幻虎眼',
+      '黃玉',
+      '金運',
+      '茶晶',
+      '金曜',
+      '古銅',
+      '黃',
+    ],
   },
   {
     id: 'green',
     label: '綠',
     hex: '#22c55e',
-    keywords: ['綠幽靈', '祖母綠', '葡萄石', '綠髮晶', '綠松石', '綠'],
+    keywords: [
+      '綠幽靈',
+      '祖母綠',
+      '葡萄石',
+      '綠髮晶',
+      '綠松石',
+      '綠草莓晶',
+      '星光綠草莓',
+      '綠草莓',
+      '綠',
+    ],
   },
   {
     id: 'blue',
     label: '藍',
     hex: '#3b82f6',
-    keywords: ['海藍寶', '藍晶', '托帕石', '藍銅', '藍磷灰', '青金石', '蘇打石', '藍'],
+    keywords: [
+      '海藍寶',
+      '魔鬼海藍',
+      '藍晶',
+      '托帕石',
+      '藍銅',
+      '藍磷灰',
+      '青金石',
+      '蘇打石',
+      '藍虎眼',
+      '拉長石',
+      '堇青',
+      '磷灰',
+      '藍',
+    ],
   },
   {
     id: 'purple',
     label: '紫',
     hex: '#a855f7',
-    keywords: ['紫水晶', '紫鋰輝', '舒俱徠', '螢石', '紫', '紫晶'],
+    keywords: ['紫水晶', '紫鋰輝', '舒俱徠', '螢石', '紫黃晶', '紫黃', '紫晶', '紫'],
   },
   {
     id: 'black',
     label: '黑',
     hex: '#1a1a1a',
-    keywords: ['黑曜石', '黑髮晶', '黑碧璽', '黑', '曜石'],
+    keywords: ['黑曜石', '黑髮晶', '黑碧璽', '冰曜石', '銀曜石', '金曜石', '曜石', '黑'],
   },
   {
     id: 'white',
     label: '白',
     hex: '#f5f5f4',
-    keywords: ['白水晶', '月光石', '白瑪瑙', '白', '透白', '乳白'],
+    keywords: [
+      '白水晶',
+      '月光石',
+      '白瑪瑙',
+      '白閃靈',
+      '閃靈',
+      '極光23',
+      '極光',
+      '透白',
+      '乳白',
+      '白',
+    ],
   },
 ]
 
@@ -74,4 +132,36 @@ export function productMatchesCrystalColor(
   filter: CrystalColorFilterOption
 ): boolean {
   return product.tags.includes(filter.label)
+}
+
+/**
+ * 依珠材名稱關鍵字推斷顏色（取最長關鍵字命中，避免「綠草莓晶」被「草莓晶」誤判成紅）
+ */
+export function inferBeadCrystalColorIds(beadName: string): string[] {
+  const name = beadName.trim()
+  if (!name) return []
+  let bestLen = 0
+  const scores = new Map<string, number>()
+  for (const color of CRYSTAL_COLOR_FILTERS) {
+    let len = 0
+    for (const kw of color.keywords) {
+      if (kw && name.includes(kw)) len = Math.max(len, kw.length)
+    }
+    if (len > 0) {
+      scores.set(color.id, len)
+      bestLen = Math.max(bestLen, len)
+    }
+  }
+  if (bestLen === 0) return []
+  return [...scores.entries()]
+    .filter(([, len]) => len === bestLen)
+    .map(([id]) => id)
+}
+
+export function beadNameMatchesCrystalColorId(
+  beadName: string,
+  colorId: string | null
+): boolean {
+  if (!colorId) return true
+  return inferBeadCrystalColorIds(beadName).includes(colorId)
 }

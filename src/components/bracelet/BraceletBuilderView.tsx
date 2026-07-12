@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Eraser, GripVertical, Trash2 } from 'lucide-react'
+import { ArrowLeft, Eraser, GripVertical, Search, Trash2 } from 'lucide-react'
 import { FIVE_ELEMENTS, type FiveElement } from '../../constants/fiveElements'
 import {
   BEAD_SIZE_DISPLAY_PX,
   BEAD_SIZE_LABELS,
   type BeadSizeCategory,
 } from '../../constants/beadSizes'
+import { beadNameMatchesCrystalColorId } from '../../constants/crystalColors'
 import { EFFICACY_TAGS } from '../../constants/tags'
 import { useCart } from '../../contexts/CartContext'
 import { fetchActiveBraceletBeads, type BraceletBead } from '../../lib/api/beads'
@@ -25,6 +26,7 @@ import { isProductSoldOut } from '../../lib/productStock'
 import { productDetailPath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
 import { BraceletSizePicker } from '../products/BraceletSizePicker'
+import { CrystalColorFilter } from '../products/CrystalColorFilter'
 import { ProductPriceDisplay } from '../products/ProductPriceDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
 import { BraceletBeadPreview } from './BraceletBeadPreview'
@@ -56,6 +58,9 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
   const [goalEfficacy, setGoalEfficacy] = useState<string[]>([])
   const [selected, setSelected] = useState<BraceletConfigBead[]>([])
   const [filterElement, setFilterElement] = useState<FiveElement | '全部'>('全部')
+  const [filterColorId, setFilterColorId] = useState<string | null>(null)
+  const [filterEfficacy, setFilterEfficacy] = useState<string | '全部'>('全部')
+  const [beadSearch, setBeadSearch] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
   const [sizeError, setSizeError] = useState<string | null>(null)
   const [requestOfficialReview, setRequestOfficialReview] = useState(false)
@@ -84,9 +89,15 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
   }, [])
 
   const filteredCatalog = useMemo(() => {
-    if (filterElement === '全部') return catalog
-    return catalog.filter((b) => b.elements.includes(filterElement))
-  }, [catalog, filterElement])
+    const q = beadSearch.trim().toLowerCase()
+    return catalog.filter((b) => {
+      if (filterElement !== '全部' && !b.elements.includes(filterElement)) return false
+      if (!beadNameMatchesCrystalColorId(b.name, filterColorId)) return false
+      if (filterEfficacy !== '全部' && !b.efficacy_tags.includes(filterEfficacy)) return false
+      if (q && !b.name.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [catalog, filterElement, filterColorId, filterEfficacy, beadSearch])
 
   const balance = useMemo(
     () =>
@@ -512,34 +523,90 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
           </section>
 
           <section className="mt-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-sm tracking-wider text-amber-glow/80">5. 選擇珠材加入</h2>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setFilterElement('全部')}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] ${
-                    filterElement === '全部'
-                      ? 'border-amber-glow/50 text-amber-glow'
-                      : 'border-white/15 text-white/45'
-                  }`}
-                >
-                  全部
-                </button>
-                {FIVE_ELEMENTS.map((el) => (
+            <h2 className="text-sm tracking-wider text-amber-glow/80">5. 選擇珠材加入</h2>
+
+            <label className="relative mt-3 block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+              <input
+                type="search"
+                value={beadSearch}
+                onChange={(e) => setBeadSearch(e.target.value)}
+                placeholder="搜尋珠材名稱…"
+                className="w-full rounded-lg border border-white/15 bg-black/30 py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/35"
+              />
+            </label>
+
+            <div className="mt-4 space-y-3">
+              <div>
+                <p className="mb-1.5 text-xs text-white/40">五行</p>
+                <div className="flex flex-wrap gap-1.5">
                   <button
-                    key={el}
                     type="button"
-                    onClick={() => setFilterElement(el)}
+                    onClick={() => setFilterElement('全部')}
                     className={`rounded-full border px-2.5 py-1 text-[11px] ${
-                      filterElement === el
+                      filterElement === '全部'
                         ? 'border-amber-glow/50 text-amber-glow'
                         : 'border-white/15 text-white/45'
                     }`}
                   >
-                    {el}
+                    全部
                   </button>
-                ))}
+                  {FIVE_ELEMENTS.map((el) => (
+                    <button
+                      key={el}
+                      type="button"
+                      onClick={() => setFilterElement(el)}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                        filterElement === el
+                          ? 'border-amber-glow/50 text-amber-glow'
+                          : 'border-white/15 text-white/45'
+                      }`}
+                    >
+                      {el}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1.5 text-xs text-white/40">顏色</p>
+                <div className="overflow-x-auto pb-1">
+                  <CrystalColorFilter
+                    activeColorId={filterColorId}
+                    onSelect={setFilterColorId}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1.5 text-xs text-white/40">功效</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setFilterEfficacy('全部')}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                      filterEfficacy === '全部'
+                        ? 'border-violet-400/50 text-violet-200'
+                        : 'border-white/15 text-white/45'
+                    }`}
+                  >
+                    全部
+                  </button>
+                  {EFFICACY_TAGS.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setFilterEfficacy(tag)}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                        filterEfficacy === tag
+                          ? 'border-violet-400/50 text-violet-200'
+                          : 'border-white/15 text-white/45'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -549,7 +616,9 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
               <p className="mt-4 text-sm text-red-300/80">{loadError}</p>
             ) : filteredCatalog.length === 0 ? (
               <p className="mt-4 text-sm text-white/40">
-                尚無可選珠材，請稍後再試或聯絡晶刻。
+                {catalog.length === 0
+                  ? '尚無可選珠材，請稍後再試或聯絡晶刻。'
+                  : '沒有符合篩選／搜尋的珠材，請調整條件。'}
               </p>
             ) : (
               <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
