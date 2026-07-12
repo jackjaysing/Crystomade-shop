@@ -30,6 +30,7 @@ import { BraceletSizePicker } from '../products/BraceletSizePicker'
 import { CrystalColorFilter } from '../products/CrystalColorFilter'
 import { ProductPriceDisplay } from '../products/ProductPriceDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
+import { BeadsFitAdjustNotice } from './BeadsFitAdjustNotice'
 import { BeadsRestockingNotice } from './BeadsRestockingNotice'
 import { BraceletBeadPreview } from './BraceletBeadPreview'
 
@@ -274,6 +275,8 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
 
           {beadsRestocking && <BeadsRestockingNotice className="mt-4" />}
 
+          <BeadsFitAdjustNotice className="mt-4" />
+
           {soldOut && (
             <p className="mt-4 text-sm text-white/40">此商品目前無法下單，僅供預覽配置。</p>
           )}
@@ -393,6 +396,9 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                       : `建議減少約 ${fit.suggestRemove} 顆（或改選較小咪數）`}
                   </p>
                 )}
+                <p className="mt-3 text-xs leading-relaxed text-white/45">
+                  最終串製時，晶刻仍可能依手圍適當補水晶或隔珠，以確保佩戴合手。
+                </p>
               </div>
               <div className="mt-4 rounded-lg border border-white/10 bg-black/25 p-4">
                 <p className="text-xs tracking-wider text-white/45">

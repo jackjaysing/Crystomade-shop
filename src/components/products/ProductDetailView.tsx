@@ -10,6 +10,7 @@ import { isBespokeSoulCardProduct } from '../../lib/grimoireFulfillment'
 import { isProductSoldOut } from '../../lib/productStock'
 import { productConfigurePath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
+import { BeadsFitAdjustNotice } from '../bracelet/BeadsFitAdjustNotice'
 import { BeadsRestockingNotice } from '../bracelet/BeadsRestockingNotice'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageGallery } from './ProductImageGallery'
@@ -200,6 +201,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                     </p>
                   </div>
 
+                  <BeadsFitAdjustNotice />
+
                   {beadsRestocking && <BeadsRestockingNotice />}
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -211,7 +214,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                         自行配珠
                       </span>
                       <span className="mt-2 text-sm leading-relaxed text-white/55">
-                        自己排珠序與目標 · 五行僅供參考 · 滿意後下單由晶刻串製
+                        自己排珠序與目標 · 串製時晶刻可依手圍補珠／隔珠 · 五行僅供參考
                       </span>
                     </Link>
                     <div className="flex flex-col rounded-lg border border-amber-glow/35 bg-amber-glow/10 px-4 py-4">
