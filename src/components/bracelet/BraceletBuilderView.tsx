@@ -32,6 +32,7 @@ import { ProductPriceDisplay } from '../products/ProductPriceDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
 import { BeadsFitAdjustNotice } from './BeadsFitAdjustNotice'
 import { BeadsRestockingNotice } from './BeadsRestockingNotice'
+import { BeadThumb } from './BeadThumb'
 import { BraceletBeadPreview } from './BraceletBeadPreview'
 
 interface BraceletBuilderViewProps {
@@ -493,21 +494,13 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                         <span className="w-6 shrink-0 text-center text-xs text-white/35">
                           {index + 1}
                         </span>
-                        {bead.image_url ? (
-                          <img
-                            src={bead.image_url}
-                            alt=""
-                            className="pointer-events-none rounded-full object-cover"
-                            style={{ width: Math.min(px, 44), height: Math.min(px, 44) }}
-                          />
-                        ) : (
-                          <div
-                            className="pointer-events-none flex items-center justify-center rounded-full bg-white/5 text-[10px] leading-tight text-amber-glow"
-                            style={{ width: Math.min(px, 44), height: Math.min(px, 44) }}
-                          >
-                            {formatBeadElements(bead.elements).slice(0, 2)}
-                          </div>
-                        )}
+                        <BeadThumb
+                          imageUrl={bead.image_url}
+                          name={bead.name}
+                          elements={bead.elements}
+                          sizePx={Math.min(px, 44)}
+                          className="pointer-events-none"
+                        />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm text-white">{bead.name}</p>
                           <p className="text-[11px] text-white/40">
@@ -643,21 +636,16 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                       key={bead.id}
                       className="rounded-lg border border-white/10 bg-black/25 p-3"
                     >
-                      {bead.image_url ? (
-                        <img
-                          src={bead.image_url}
-                          alt={bead.name}
-                          className="mx-auto rounded-full object-cover"
-                          style={{ width: px, height: px }}
-                        />
-                      ) : (
-                        <div
-                          className="mx-auto flex items-center justify-center rounded-full bg-white/5 text-xs text-amber-glow"
-                          style={{ width: px, height: px }}
-                        >
-                          {formatBeadElements(bead.elements)}
+                      {bead.image_url || bead.elements ? (
+                        <div className="mx-auto w-fit">
+                          <BeadThumb
+                            imageUrl={bead.image_url}
+                            name={bead.name}
+                            elements={bead.elements}
+                            sizePx={Math.max(36, px)}
+                          />
                         </div>
-                      )}
+                      ) : null}
                       <p className="mt-2 truncate text-center text-sm text-white">
                         {bead.name}
                       </p>

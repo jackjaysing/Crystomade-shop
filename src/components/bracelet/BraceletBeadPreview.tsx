@@ -10,6 +10,7 @@ import {
   formatBeadSizeLabel,
   type BraceletConfigBead,
 } from '../../lib/braceletConfig'
+import { BeadThumb } from './BeadThumb'
 
 interface BraceletBeadPreviewProps {
   beads: BraceletConfigBead[]
@@ -71,7 +72,9 @@ export function BraceletBeadPreview({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
   const canDrag = Boolean(onReorder) && beads.length > 1
-  const canSelect = Boolean(onRemoveAt || onDuplicateAt)
+  const canEdit = Boolean(onRemoveAt || onDuplicateAt)
+  /** 點選可辨識珠名（後台／前台皆可用） */
+  const canSelect = true
   const radius = Math.min(130, 52 + beads.length * 4)
 
   useEffect(() => {
@@ -88,7 +91,8 @@ export function BraceletBeadPreview({
     return beads.map((bead, index) => {
       const angle = (index / beads.length) * Math.PI * 2 - Math.PI / 2
       const size = resolveBeadDisplaySize(bead.size)
-      const px = BEAD_SIZE_RING_PX[size]
+      // 手機上過小會像黑點，圓盤至少 28px
+      const px = Math.max(28, BEAD_SIZE_RING_PX[size])
       return {
         bead,
         index,
@@ -100,6 +104,10 @@ export function BraceletBeadPreview({
   }, [beads, radius])
 
   const maxBeadPx = Math.max(...ring.map((r) => r.px), 28)
+  const selectedBead =
+    selectedIndex != null && selectedIndex >= 0 && selectedIndex < beads.length
+      ? beads[selectedIndex]
+      : null
 
   const onRingPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if ((!canDrag && !canSelect) || !ringRef.current) return
@@ -176,21 +184,13 @@ export function BraceletBeadPreview({
                 className="relative shrink-0"
                 title={title}
               >
-                {bead.image_url ? (
-                  <img
-                    src={bead.image_url}
-                    alt={bead.name}
-                    className="rounded-full border border-amber-glow/35 object-cover shadow-[0_0_10px_rgba(201,168,76,0.2)]"
-                    style={{ width: px, height: px }}
-                  />
-                ) : (
-                  <div
-                    className="flex items-center justify-center rounded-full border border-amber-glow/35 bg-black/40 text-[10px] leading-tight text-amber-glow"
-                    style={{ width: px, height: px }}
-                  >
-                    {bead.elements[0] ?? '✦'}
-                  </div>
-                )}
+                <BeadThumb
+                  imageUrl={bead.image_url}
+                  name={bead.name}
+                  elements={bead.elements}
+                  sizePx={Math.max(28, px)}
+                  className="shadow-[0_0_10px_rgba(201,168,76,0.2)]"
+                />
               </div>
             )
           })}
@@ -199,7 +199,9 @@ export function BraceletBeadPreview({
 
       <div className="flex items-center justify-between gap-2 px-1">
         <p className="text-xs text-amber-glow/80">
-          {canSelect ? '點選珠子後顯示＋／－；拖曳調順序' : `${beads.length} 珠`}
+          {canEdit
+            ? '點選珠子看名稱；可＋／－與拖曳調順序'
+            : '點選圓盤上的珠子可查看名稱'}
         </p>
         {onClear && (
           <button
@@ -241,27 +243,15 @@ export function BraceletBeadPreview({
               title={`${index + 1}. ${bead.name}（${formatBeadSizeLabel(bead.size)}）`}
             >
               <div className="relative" style={{ width: px, height: px }}>
-                {bead.image_url ? (
-                  <img
-                    src={bead.image_url}
-                    alt=""
-                    draggable={false}
-                    className={`pointer-events-none h-full w-full rounded-full border object-cover ${
-                      isSelected || isDragging
-                        ? 'border-amber-glow shadow-[0_0_16px_rgba(201,168,76,0.55)]'
-                        : 'border-amber-glow/40'
-                    }`}
-                  />
-                ) : (
-                  <div
-                    className={`pointer-events-none flex h-full w-full items-center justify-center rounded-full border bg-black/50 text-[10px] text-amber-glow ${
-                      isSelected || isDragging ? 'border-amber-glow' : 'border-amber-glow/40'
-                    }`}
-                  >
-                    {bead.elements[0] ?? '✦'}
-                  </div>
-                )}
-                {isSelected && canSelect && (
+                <BeadThumb
+                  imageUrl={bead.image_url}
+                  name={bead.name}
+                  elements={bead.elements}
+                  sizePx={px}
+                  emphasize={isSelected || isDragging}
+                  className="pointer-events-none h-full w-full"
+                />
+                {isSelected && canEdit && (
                   <>
                     {onDuplicateAt && (
                       <button
@@ -297,9 +287,23 @@ export function BraceletBeadPreview({
             </div>
           )
         })}
-        <p className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-sm tracking-wider text-amber-glow/70">
-          {beads.length} 珠
-        </p>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-[5] w-[58%] -translate-x-1/2 -translate-y-1/2 text-center">
+          {selectedBead && selectedIndex != null ? (
+            <div className="rounded-lg bg-black/75 px-2.5 py-2 shadow-lg backdrop-blur-sm">
+              <p className="text-[11px] text-amber-glow/80">第 {selectedIndex + 1} 顆</p>
+              <p className="mt-0.5 text-sm font-medium leading-snug text-white">
+                {selectedBead.name}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-snug text-white/55">
+                {formatBeadElements(selectedBead.elements)}
+                {' · '}
+                {formatBeadSizeLabel(selectedBead.size)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm tracking-wider text-amber-glow/70">{beads.length} 珠</p>
+          )}
+        </div>
       </div>
     </div>
   )
