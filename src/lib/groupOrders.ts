@@ -4,6 +4,7 @@ import {
   reconstructLineSubtotals,
   resolveOrderGroupPricing,
 } from './orderGroupPricing'
+import type { BraceletConfig } from './braceletConfig'
 import type { CvsBrand, Order, OrderPaymentStatus, OrderStatus } from './types'
 
 export type OrderGroupStatus = OrderStatus | 'partial'
@@ -17,6 +18,8 @@ export interface OrderLineItem {
   imageUrl?: string
   /** 手串手圍等規格 */
   selectedSize?: string | null
+  /** 客戶配置手串快照 */
+  braceletConfig?: BraceletConfig | null
   quantity: number
   /** 實際入帳金額（含點數折抵分攤） */
   lineTotal: number
@@ -94,6 +97,7 @@ function buildLineItems(
       order.products?.name ?? order.product_name ?? '（商品已刪除）'
     const imageUrl = order.products?.image_url ?? order.product_image_url ?? undefined
     const selectedSize = order.selected_size?.trim() || null
+    const braceletConfig = order.bracelet_config ?? null
     const existing = map.get(key)
     if (existing) {
       existing.quantity += 1
@@ -110,6 +114,7 @@ function buildLineItems(
       productName,
       imageUrl,
       selectedSize,
+      braceletConfig,
       quantity: 1,
       lineTotal: order.total_amount,
     })

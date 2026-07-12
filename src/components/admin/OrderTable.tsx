@@ -3,6 +3,7 @@ import {
   formatBraceletSizeLabel,
   formatOrderLineItemDetail,
 } from '../../constants/braceletSizes'
+import { formatBraceletConfigSummary } from '../../lib/braceletConfig'
 import { ChevronDown, Copy, Package, Search, Star, Trash2, X } from 'lucide-react'
 import { CopyLineNotifyButton } from './CopyLineNotifyButton'
 import { CopyLineVerifyButton } from './CopyLineVerifyButton'
@@ -23,6 +24,7 @@ import {
 import { adminProductThumbAlt } from '../../lib/imageAlt'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
+import { OrderBraceletBuildSheet } from './OrderBraceletBuildSheet'
 import { OrderSoulCardQrPanel } from './OrderSoulCardQrPanel'
 import {
   countOrderGroupsByFilter,
@@ -557,7 +559,12 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
         const isExpanded = expandedIds.has(group.id)
         const productSummary =
           group.lineItems.length === 1
-            ? formatOrderLineItemDetail(group.lineItems[0])
+            ? formatOrderLineItemDetail({
+                ...group.lineItems[0],
+                braceletConfigSummary: formatBraceletConfigSummary(
+                  group.lineItems[0].braceletConfig
+                ),
+              })
             : `${group.lineItems.length} 種商品，共 ${group.itemCount} 件`
 
         return (
@@ -658,30 +665,35 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                 <ul className="space-y-2">
                   {group.lineItems.map((item) => (
                     <li
-                      key={`${item.productId}-${item.selectedSize ?? ''}`}
-                      className="flex items-center gap-4 rounded-lg border border-white/5 bg-void/40 p-3"
+                      key={`${item.productId}-${item.selectedSize ?? ''}-${item.braceletConfig?.beads.map((b) => b.bead_id).join(',') ?? ''}`}
+                      className="rounded-lg border border-white/5 bg-void/40 p-3"
                     >
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={adminProductThumbAlt(item.productName)}
-                          className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="h-14 w-14 shrink-0 rounded-lg bg-white/5" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-white">{item.productName}</p>
-                        {item.selectedSize && (
-                          <p className="mt-1 text-[11px] text-amber-glow/80">
-                            {formatBraceletSizeLabel(item.selectedSize)}
-                          </p>
+                      <div className="flex items-center gap-4">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={adminProductThumbAlt(item.productName)}
+                            className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="h-14 w-14 shrink-0 rounded-lg bg-white/5" />
                         )}
-                        <p className="mt-0.5 text-xs text-white/40">數量 {item.quantity}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm text-white">{item.productName}</p>
+                          {item.selectedSize && (
+                            <p className="mt-1 text-[11px] text-amber-glow/80">
+                              {formatBraceletSizeLabel(item.selectedSize)}
+                            </p>
+                          )}
+                          <p className="mt-0.5 text-xs text-white/40">數量 {item.quantity}</p>
+                        </div>
+                        <p className="shrink-0 text-sm text-amber-glow">
+                          NT$ {formatOrderLineDisplayAmount(item)}
+                        </p>
                       </div>
-                      <p className="shrink-0 text-sm text-amber-glow">
-                        NT$ {formatOrderLineDisplayAmount(item)}
-                      </p>
+                      {item.braceletConfig && (
+                        <OrderBraceletBuildSheet config={item.braceletConfig} />
+                      )}
                     </li>
                   ))}
                 </ul>

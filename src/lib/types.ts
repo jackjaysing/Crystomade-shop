@@ -3,6 +3,7 @@
 import type { CrystalMagicStatus } from '../constants/grimoire'
 import type { FiveElement } from '../constants/fiveElements'
 import type { ProductSubcategory } from '../constants/productSubcategories'
+import type { BraceletConfig } from './braceletConfig'
 
 export type ProductStatus = 'available' | 'sold'
 export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
@@ -72,6 +73,8 @@ export interface Order {
   product_image_url?: string | null
   /** 手串淨手圍等規格快照（例如 15cm） */
   selected_size?: string | null
+  /** 客戶配置手串快照（五行平衡配置器） */
+  bracelet_config?: BraceletConfig | null
   total_amount: number
   status: OrderStatus
   /** 後台標記是否已付款 */
@@ -171,6 +174,8 @@ export interface CartItem {
   quantity: number
   /** 手串淨手圍（cm 數字字串，如 "15"）；非手串為 null */
   selectedSize: string | null
+  /** 客戶配置手串快照（配置器加入的列） */
+  braceletConfig?: BraceletConfig | null
   /** 加入當下可用庫存上限 */
   maxStock: number
 }

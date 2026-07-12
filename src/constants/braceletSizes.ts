@@ -21,14 +21,18 @@ export function productRequiresBraceletSize(category: ProductCategory): boolean 
   return category === '手串'
 }
 
-/** 購物車列唯一識別：同款不同手圍為不同列 */
+/** 購物車列唯一識別：同款不同手圍／不同配置為不同列 */
 export function buildCartItemKey(
   productId: string,
-  selectedSize: string | null | undefined
+  selectedSize: string | null | undefined,
+  configFingerprint?: string | null
 ): string {
   const size = selectedSize?.trim()
-  if (!size) return productId
-  return `${productId}_${size}`
+  const config = configFingerprint?.trim()
+  let key = productId
+  if (size) key = `${key}_${size}`
+  if (config) key = `${key}_cfg_${config}`
+  return key
 }
 
 /** 規格標籤文案，例如「規格：淨手圍 15cm」 */
@@ -45,9 +49,13 @@ export function formatOrderLineItemDetail(item: {
   productName: string
   quantity: number
   selectedSize?: string | null
+  braceletConfigSummary?: string | null
 }): string {
   const sizePart = item.selectedSize
     ? `（${formatBraceletSizeLabel(item.selectedSize)}）`
     : ''
-  return `${item.productName}${sizePart} x ${item.quantity}`
+  const configPart = item.braceletConfigSummary?.trim()
+    ? `（${item.braceletConfigSummary.trim()}）`
+    : ''
+  return `${item.productName}${sizePart}${configPart} x ${item.quantity}`
 }

@@ -158,6 +158,22 @@ export function CartDrawer() {
                           selectedSize={item.selectedSize}
                           disabled={isFullySnatched}
                         />
+                        {item.braceletConfig && (
+                          <p className="mt-1 text-[11px] text-violet-200/80">
+                            自行配珠 {item.braceletConfig.beads.length} 顆
+                            {item.braceletConfig.beads.length > 0
+                              ? ` · ${item.braceletConfig.beads
+                                  .slice(0, 3)
+                                  .map((b) => b.name)
+                                  .join('、')}${
+                                  item.braceletConfig.beads.length > 3 ? '…' : ''
+                                }`
+                              : ''}
+                            {item.braceletConfig.request_official_review
+                              ? ' · 需官方確認'
+                              : ''}
+                          </p>
+                        )}
                         {isFullySnatched ? (
                           <p className="mt-1 text-xs text-red-300/80">
                             該物品已被搶先收藏
@@ -183,7 +199,7 @@ export function CartDrawer() {
                               </p>
                             )}
                             <div className="mt-2 flex items-center justify-between">
-                              {!isRaffleGiftItem(item) && (
+                              {!isRaffleGiftItem(item) && !item.braceletConfig && (
                               <div className="flex items-center gap-2">
                                 <button
                                   type="button"
@@ -211,10 +227,13 @@ export function CartDrawer() {
                                 </button>
                               </div>
                               )}
+                              {item.braceletConfig && (
+                                <span className="text-xs text-white/40">配置手串 × 1</span>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => handleRemoveItem(item)}
-                                className={`text-white/30 transition hover:text-red-400 ${isRaffleGiftItem(item) ? 'ml-auto' : ''}`}
+                                className={`text-white/30 transition hover:text-red-400 ${isRaffleGiftItem(item) || item.braceletConfig ? 'ml-auto' : ''}`}
                                 aria-label="移除商品"
                               >
                                 <Trash2 className="h-4 w-4" />

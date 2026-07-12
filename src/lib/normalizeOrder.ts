@@ -1,4 +1,5 @@
 import type { Order, OrderFormData, ProductCategory } from './types'
+import { normalizeBraceletConfig } from './braceletConfig'
 
 function parseProductCategory(value: unknown): ProductCategory | undefined {
   if (value === '手串' || value === '配飾' || value === '擺件' || value === '礦石') {
@@ -51,6 +52,7 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
       row.product_image_url != null ? String(row.product_image_url) : null,
     selected_size:
       row.selected_size != null ? String(row.selected_size) : null,
+    bracelet_config: normalizeBraceletConfig(row.bracelet_config),
     total_amount:
       typeof row.total_amount === 'number'
         ? row.total_amount

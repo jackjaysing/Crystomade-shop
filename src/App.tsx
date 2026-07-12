@@ -8,6 +8,7 @@ import { SiteFooter } from './components/layout/SiteFooter'
 import { EnvSetupBanner } from './components/ui/EnvSetupBanner'
 import { AdminPage } from './pages/AdminPage'
 import { AccountPage } from './pages/AccountPage'
+import { BraceletBuilderPage } from './pages/BraceletBuilderPage'
 import { CheckoutPage } from './pages/CheckoutPage'
 import { PointShopPage } from './pages/PointShopPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
@@ -50,6 +51,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/products" replace />} />
               <Route path="/products" element={<ProductsPage />} />
+              <Route path="/products/:slug/configure" element={<BraceletBuilderPage />} />
               <Route path="/products/:slug" element={<ProductDetailPage />} />
               <Route path="/point-shop" element={<PointShopPage />} />
               <Route path="/academy" element={<AcademyPage />} />

@@ -9,7 +9,10 @@ export function isPaidProductOrder(order: Order): boolean {
 
 export function lineItemKeyFromOrder(order: Order): string {
   const sizeKey = order.selected_size?.trim() ?? ''
-  return `${order.product_id || order.product_name || order.id}::${sizeKey}`
+  const configKey = order.bracelet_config?.beads?.length
+    ? order.bracelet_config.beads.map((b) => `${b.bead_id}:${b.size}`).join(',')
+    : ''
+  return `${order.product_id || order.product_name || order.id}::${sizeKey}::${configKey}`
 }
 
 export function resolveCheckoutPointsDiscount(orders: Order[]): number {

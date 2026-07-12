@@ -362,6 +362,14 @@ export function CheckoutPage() {
                       selectedSize={item.selectedSize}
                       disabled={isFullySnatched}
                     />
+                    {item.braceletConfig && (
+                      <p className="mt-0.5 text-[11px] text-violet-200/80">
+                        自行配珠 {item.braceletConfig.beads.length} 顆
+                        {item.braceletConfig.request_official_review
+                          ? ' · 需官方確認'
+                          : ''}
+                      </p>
+                    )}
                     {isFullySnatched ? (
                       <p className="mt-0.5 text-xs text-red-300/80">
                         該物品已被搶先收藏

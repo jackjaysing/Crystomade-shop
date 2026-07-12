@@ -1,5 +1,6 @@
 import type ExcelJS from 'exceljs'
 import { BRACELET_SIZE_UNDECIDED } from '../constants/braceletSizes'
+import { formatBraceletConfigSummary } from './braceletConfig'
 import { formatOrderDisplayId } from './buildLineOrderNotification'
 import {
   formatOrderGroupStatus,
@@ -25,7 +26,13 @@ function formatExcelLineItem(item: OrderLineItem): string {
       sizeSuffix = ` (${withUnit})`
     }
   }
-  return `${item.productName}${sizeSuffix} x ${item.quantity} NT$ ${formatOrderLineDisplayAmount(item)}`
+  const configSummary = formatBraceletConfigSummary(item.braceletConfig)
+  const configSuffix = configSummary ? ` (${configSummary})` : ''
+  const beadSuffix =
+    item.braceletConfig?.beads.length
+      ? ` [${item.braceletConfig.beads.map((b) => b.name).join('→')}]`
+      : ''
+  return `${item.productName}${sizeSuffix}${configSuffix}${beadSuffix} x ${item.quantity} NT$ ${formatOrderLineDisplayAmount(item)}`
 }
 
 /** 合併儲存格欄位（同一訂單多行商品時） */

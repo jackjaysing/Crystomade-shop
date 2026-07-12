@@ -5,7 +5,9 @@ import { getProductCategoryLabel } from '../../constants/categories'
 import { productRequiresBraceletSize } from '../../constants/braceletSizes'
 import { useCart } from '../../contexts/CartContext'
 import { useProductViewTracker } from '../../hooks/useProductViewTracker'
+import { isBespokeSoulCardProduct } from '../../lib/grimoireFulfillment'
 import { isProductSoldOut } from '../../lib/productStock'
+import { productConfigurePath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageGallery } from './ProductImageGallery'
@@ -34,6 +36,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
   const isSold = isProductSoldOut(product)
   const needsSize = productRequiresBraceletSize(product.category)
+  const isConfigurable = isBespokeSoulCardProduct(product.name)
   const canAdd = !needsSize || Boolean(selectedSize)
 
   const tryAdd = (onSuccess: () => void) => {
@@ -170,7 +173,58 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 <p className="mt-4 text-sm text-emerald-400">{feedback}</p>
               )}
 
-              {!isSold && (
+              {!isSold && isConfigurable && (
+                <div className="mt-8 space-y-4">
+                  <div className="rounded-lg border border-amber-glow/25 bg-amber-glow/5 p-4">
+                    <p className="text-base tracking-wide text-amber-glow">請選擇配珠方式</p>
+                    <p className="mt-2 text-sm leading-relaxed text-white/65">
+                      自行配珠的五行與功效提示僅供參考，非個人命盤精準配置。若需更準確，可選官方配珠，或自行配珠後再請官方協助確認。
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Link
+                      to={productConfigurePath(product)}
+                      className="flex flex-col rounded-lg border border-violet-400/35 bg-violet-400/10 px-4 py-4 text-left transition hover:border-violet-400/55 hover:bg-violet-400/15"
+                    >
+                      <span className="text-base font-medium tracking-[0.12em] text-violet-100">
+                        自行配珠
+                      </span>
+                      <span className="mt-2 text-sm leading-relaxed text-white/55">
+                        自己排珠序與目標 · 五行僅供參考 · 滿意後下單由晶刻串製
+                      </span>
+                    </Link>
+                    <div className="flex flex-col rounded-lg border border-amber-glow/35 bg-amber-glow/10 px-4 py-4">
+                      <span className="text-base font-medium tracking-[0.12em] text-amber-glow">
+                        官方配珠
+                      </span>
+                      <span className="mt-2 text-sm leading-relaxed text-white/55">
+                        交由晶刻依需求／命盤觀念配置 · 較精準
+                      </span>
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleAddToCart}
+                          disabled={!canAdd}
+                          className="flex-1 rounded border border-amber-glow/40 py-2.5 text-sm tracking-wider text-amber-glow transition hover:bg-amber-glow/15 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          加入購物車
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBuyNow}
+                          disabled={!canAdd}
+                          className="flex-1 rounded bg-amber-glow/90 py-2.5 text-sm font-medium tracking-wider text-void transition hover:bg-amber-glow disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          立即購買
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!isSold && !isConfigurable && (
                 <div className="mt-8 flex gap-3">
                   <button
                     type="button"

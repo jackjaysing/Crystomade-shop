@@ -23,6 +23,11 @@ export function productDetailPath(product: Pick<Product, 'id' | 'name'>): string
   return `/products/${encodeURIComponent(productSlug(product))}`
 }
 
+/** 五行平衡手串客戶配置頁路徑 */
+export function productConfigurePath(product: Pick<Product, 'id' | 'name'>): string {
+  return `${productDetailPath(product)}/configure`
+}
+
 /** 從路由 slug 解析商品 UUID */
 export function parseProductIdFromSlug(slug: string): string {
   const decoded = decodeURIComponent(slug.trim())

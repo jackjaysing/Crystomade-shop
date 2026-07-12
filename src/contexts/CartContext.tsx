@@ -20,6 +20,11 @@ import {
   calcProductSubtotal,
   calcShippingFeeForCart,
 } from '../lib/cartShipping'
+import {
+  braceletConfigFingerprint,
+  normalizeBraceletConfig,
+  type BraceletConfig,
+} from '../lib/braceletConfig'
 import { getProductSalePrice } from '../lib/productPricing'
 import type { CartItem, PointProduct, Product } from '../lib/types'
 
@@ -28,6 +33,7 @@ const STORAGE_KEY = 'crystomade-cart'
 export interface AddToCartOptions {
   quantity?: number
   selectedSize?: string | null
+  braceletConfig?: BraceletConfig | null
 }
 
 interface CartContextValue {
@@ -66,10 +72,15 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
     raw.selectedSize != null && String(raw.selectedSize).trim()
       ? String(raw.selectedSize).trim()
       : null
+  const braceletConfig = normalizeBraceletConfig(raw.braceletConfig ?? null)
   const cartItemKey =
     typeof raw.cartItemKey === 'string' && raw.cartItemKey
       ? raw.cartItemKey
-      : buildCartItemKey(raw.productId, selectedSize)
+      : buildCartItemKey(
+          raw.productId,
+          selectedSize,
+          braceletConfig ? braceletConfigFingerprint(braceletConfig) : null
+        )
 
   const kind =
     raw.kind === 'point_redemption'
@@ -90,6 +101,7 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
     image_url: String(raw.image_url ?? ''),
     quantity: raw.quantity,
     selectedSize,
+    braceletConfig,
     maxStock: Math.max(Number(raw.maxStock) || 0, 0),
     memberCouponId:
       raw.memberCouponId != null ? String(raw.memberCouponId) : undefined,
@@ -115,16 +127,21 @@ function loadStoredItems(): CartItem[] {
 function productToCartItem(
   product: Product,
   quantity: number,
-  selectedSize: string | null
+  selectedSize: string | null,
+  braceletConfig: BraceletConfig | null = null
 ): CartItem {
+  const fingerprint = braceletConfig
+    ? braceletConfigFingerprint(braceletConfig)
+    : null
   return {
-    cartItemKey: buildCartItemKey(product.id, selectedSize),
+    cartItemKey: buildCartItemKey(product.id, selectedSize, fingerprint),
     productId: product.id,
     name: product.name,
     price: getProductSalePrice(product),
     image_url: product.image_url,
     quantity,
     selectedSize,
+    braceletConfig,
     maxStock: Math.max(product.stock, 0),
   }
 }
@@ -153,16 +170,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback((product: Product, options: AddToCartOptions = {}) => {
     const qty = Math.max(1, Math.floor(options.quantity ?? 1))
     const needsSize = productRequiresBraceletSize(product.category)
-    const selectedSize = options.selectedSize?.trim() || null
+    const braceletConfig = options.braceletConfig
+      ? normalizeBraceletConfig(options.braceletConfig)
+      : null
+    const selectedSize =
+      options.selectedSize?.trim() ||
+      braceletConfig?.wrist_size?.trim() ||
+      null
 
     if (needsSize && !selectedSize) return
 
-    const cartItemKey = buildCartItemKey(product.id, selectedSize)
+    // 配置手串：每筆配置固定 1 件，避免同配置加量混淆串製單
+    const addQty = braceletConfig ? 1 : qty
+    const cartItemKey = buildCartItemKey(
+      product.id,
+      selectedSize,
+      braceletConfig ? braceletConfigFingerprint(braceletConfig) : null
+    )
 
     setItems((prev) => {
       const existing = prev.find((item) => item.cartItemKey === cartItemKey)
       if (existing) {
-        const nextQty = Math.min(existing.quantity + qty, product.stock)
+        if (braceletConfig) return prev
+        const nextQty = Math.min(existing.quantity + addQty, product.stock)
         if (nextQty <= 0) return prev
         return prev.map((item) =>
           item.cartItemKey === cartItemKey
@@ -180,7 +210,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (product.stock <= 0) return prev
       return [
         ...prev,
-        productToCartItem(product, Math.min(qty, product.stock), selectedSize),
+        productToCartItem(
+          product,
+          Math.min(addQty, product.stock),
+          selectedSize,
+          braceletConfig
+        ),
       ]
     })
   }, [])
@@ -267,6 +302,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return prev.map((item) => {
         if (item.cartItemKey !== cartItemKey) return item
+        if (item.braceletConfig) {
+          return { ...item, quantity: 1 }
+        }
         return {
           ...item,
           quantity: Math.min(Math.max(1, quantity), item.maxStock),
@@ -282,6 +320,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       const current = prev.find((item) => item.cartItemKey === cartItemKey)
       if (!current || current.selectedSize == null) return prev
+
+      // 已配置手串：改手圍時一併更新配置內 wrist_size，且不與其他列合併
+      if (current.braceletConfig) {
+        const nextConfig: BraceletConfig = {
+          ...current.braceletConfig,
+          wrist_size: size,
+        }
+        const newKey = buildCartItemKey(
+          current.productId,
+          size,
+          braceletConfigFingerprint(nextConfig)
+        )
+        if (newKey === cartItemKey) {
+          return prev.map((item) =>
+            item.cartItemKey === cartItemKey
+              ? { ...item, selectedSize: size, braceletConfig: nextConfig }
+              : item
+          )
+        }
+        const rest = prev.filter((item) => item.cartItemKey !== cartItemKey)
+        if (rest.some((item) => item.cartItemKey === newKey)) return prev
+        return [
+          ...rest,
+          {
+            ...current,
+            cartItemKey: newKey,
+            selectedSize: size,
+            braceletConfig: nextConfig,
+          },
+        ]
+      }
 
       const newKey = buildCartItemKey(current.productId, size)
       if (newKey === cartItemKey) return prev

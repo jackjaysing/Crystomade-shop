@@ -16,6 +16,7 @@ import { PromotionsAdmin } from '../components/admin/PromotionsAdmin'
 import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { FortuneConsultationAdmin } from '../components/admin/FortuneConsultationAdmin'
 import { WishBoardAdmin } from '../components/admin/WishBoardAdmin'
+import { BraceletBeadAdmin } from '../components/admin/BraceletBeadAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
 import { usePageViewStats } from '../hooks/usePageViewStats'
@@ -36,6 +37,7 @@ import { Archive, Plus } from 'lucide-react'
 
 type AdminTab =
   | 'products'
+  | 'bracelet_beads'
   | 'point_shop'
   | 'promotions'
   | 'customers'
@@ -50,6 +52,7 @@ type AdminTab =
 
 const ALL_ADMIN_TABS: { id: AdminTab; label: string; superOnly?: boolean }[] = [
   { id: 'products', label: '商品管理' },
+  { id: 'bracelet_beads', label: '配珠材' },
   { id: 'point_shop', label: '點數商城' },
   { id: 'promotions', label: '優惠活動' },
   { id: 'customers', label: '客戶資料' },
@@ -342,6 +345,13 @@ export function AdminPage() {
               onClose={() => setShowCreateProduct(false)}
               onCreated={reloadProducts}
             />
+          </section>
+        )}
+
+        {activeTab === 'bracelet_beads' && (
+          <section>
+            <h2 className="mb-4 text-lg tracking-wide text-white/80">配珠材管理</h2>
+            <BraceletBeadAdmin />
           </section>
         )}
 

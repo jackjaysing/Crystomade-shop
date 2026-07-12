@@ -1,4 +1,5 @@
 import { formatOrderLineItemDetail } from '../constants/braceletSizes'
+import { formatBraceletConfigSummary } from './braceletConfig'
 import {
   formatOrderLineDisplayAmount,
   formatOrderPricingAdjustments,
@@ -22,14 +23,22 @@ export function formatNumberedItemSection(
   group?: Pick<OrderGroup, 'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd'>
 ): string[] {
   const header = `${index}. ${sectionLabel}`
-  const detailLines = lineItems.map((item, i) => {
+  const detailLines = lineItems.flatMap((item, i) => {
     const line = formatOrderLineItemDetail({
       productName: item.productName,
       quantity: item.quantity,
       selectedSize: item.selectedSize,
+      braceletConfigSummary: formatBraceletConfigSummary(item.braceletConfig),
     })
     const amount = formatOrderLineDisplayAmount(item)
-    return `   ${i + 1}) ${line} NT$ ${amount}`
+    const rows = [`   ${i + 1}) ${line} NT$ ${amount}`]
+    if (item.braceletConfig?.beads.length) {
+      const beadNames = item.braceletConfig.beads
+        .map((b, bi) => `${bi + 1}.${b.name}`)
+        .join(' → ')
+      rows.push(`      珠序：${beadNames}`)
+    }
+    return rows
   })
 
   const adjustmentLines = group
