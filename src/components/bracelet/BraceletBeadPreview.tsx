@@ -23,6 +23,10 @@ interface BraceletBeadPreviewProps {
 }
 
 const DRAG_THRESHOLD_PX = 8
+/** 圓盤固定邊長，避免寬高不同讓珠位看起來跑偏 */
+const RING_BOX_PX = 300
+/** 橫排固定高度（最大咪數 64px＋內距），避免加珠／捲軸出現時整頁跳動 */
+const STRIP_AREA_PX = 88
 
 function angleToIndex(clientX: number, clientY: number, rect: DOMRect, count: number): number {
   if (count <= 0) return 0
@@ -58,6 +62,11 @@ function isNearRing(
   return dist >= radius - maxBead && dist <= radius + maxBead
 }
 
+function ringBeadPx(size: BraceletConfigBead['size']): number {
+  // 手機上過小會像黑點，但也不宜強制放大到擠爆圓盤
+  return Math.max(26, BEAD_SIZE_RING_PX[resolveBeadDisplaySize(size)])
+}
+
 /** 2D 橫排／環狀珠串預覽；點選後顯示 +/-，可拖曳調序 */
 export function BraceletBeadPreview({
   beads,
@@ -78,7 +87,18 @@ export function BraceletBeadPreview({
   const canEdit = Boolean(onRemoveAt || onDuplicateAt)
   /** 點選可辨識珠名（後台／前台皆可用） */
   const canSelect = true
-  const radius = Math.min(130, 52 + beads.length * 4)
+
+  const maxBeadPx = useMemo(() => {
+    if (beads.length === 0) return 34
+    return Math.max(...beads.map((b) => ringBeadPx(b.size)), 26)
+  }, [beads])
+
+  /** 依珠徑動態收斂半徑，避免珠子超出正方形圓盤 */
+  const radius = useMemo(() => {
+    const fit = RING_BOX_PX / 2 - maxBeadPx / 2 - 10
+    const byCount = 48 + beads.length * 3.5
+    return Math.max(56, Math.min(fit, byCount, 118))
+  }, [beads.length, maxBeadPx])
 
   useEffect(() => {
     if (selectedIndex == null) return
@@ -93,9 +113,7 @@ export function BraceletBeadPreview({
     if (beads.length === 0) return []
     return beads.map((bead, index) => {
       const angle = (index / beads.length) * Math.PI * 2 - Math.PI / 2
-      const size = resolveBeadDisplaySize(bead.size)
-      // 手機上過小會像黑點，圓盤至少 28px
-      const px = Math.max(28, BEAD_SIZE_RING_PX[size])
+      const px = ringBeadPx(bead.size)
       return {
         bead,
         index,
@@ -106,7 +124,6 @@ export function BraceletBeadPreview({
     })
   }, [beads, radius])
 
-  const maxBeadPx = Math.max(...ring.map((r) => r.px), 28)
   const selectedBead =
     selectedIndex != null && selectedIndex >= 0 && selectedIndex < beads.length
       ? beads[selectedIndex]
@@ -165,10 +182,47 @@ export function BraceletBeadPreview({
     setDraggingIndex(null)
   }
 
+  const toolbar = (canEdit || onClear) && (
+    <div className="flex h-7 items-center justify-between gap-2 px-1">
+      <p className="text-xs text-amber-glow/80">
+        {canEdit
+          ? '點選珠子看名稱；可＋／－與拖曳調順序'
+          : '點選圓盤上的珠子可查看名稱'}
+      </p>
+      {onClear && (
+        <button
+          type="button"
+          onClick={() => {
+            onClear()
+            setSelectedIndex(null)
+          }}
+          className="inline-flex items-center gap-1 rounded border border-white/15 px-2.5 py-1 text-xs text-white/55 transition hover:border-rose-300/40 hover:text-rose-200"
+        >
+          <Eraser className="h-3.5 w-3.5" />
+          清除全部
+        </button>
+      )}
+    </div>
+  )
+
   if (beads.length === 0) {
     return (
-      <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-amber-glow/25 bg-black/20 px-4 text-center text-sm text-white/40">
-        點選下方珠材開始配置，此處會依咪數模擬真實樣貌
+      <div className="space-y-4">
+        {showStrip && (
+          <div
+            className="flex items-center justify-center rounded-xl border border-dashed border-amber-glow/25 bg-black/20 px-4 text-center text-sm text-white/40"
+            style={{ height: STRIP_AREA_PX }}
+          >
+            點選下方珠材開始配置
+          </div>
+        )}
+        {toolbar}
+        <div
+          className="relative mx-auto flex w-full max-w-sm items-center justify-center rounded-xl border border-dashed border-amber-glow/25 bg-black/20 px-4 text-center text-sm text-white/40"
+          style={{ height: RING_BOX_PX }}
+        >
+          此處會依咪數模擬真實樣貌
+        </div>
       </div>
     )
   }
@@ -176,8 +230,11 @@ export function BraceletBeadPreview({
   return (
     <div className="space-y-4">
       {showStrip && (
-        <div className="overflow-x-auto rounded-xl border border-amber-glow/20 bg-gradient-to-br from-[#1a1410] via-[#221a12] to-[#100d09] p-4">
-          <div className="flex min-w-max items-end gap-1.5">
+        <div
+          className="overflow-x-auto overflow-y-hidden rounded-xl border border-amber-glow/20 bg-gradient-to-br from-[#1a1410] via-[#221a12] to-[#100d09] px-4"
+          style={{ height: STRIP_AREA_PX }}
+        >
+          <div className="flex h-full min-w-max items-center gap-1.5">
             {beads.map((bead, index) => {
               const size = resolveBeadDisplaySize(bead.size)
               const px = BEAD_SIZE_DISPLAY_PX[size]
@@ -193,7 +250,7 @@ export function BraceletBeadPreview({
                     name={bead.name}
                     elements={bead.elements}
                     sizePx={Math.max(28, px)}
-                    className="shadow-[0_0_10px_rgba(201,168,76,0.2)]"
+                    className="block shadow-[0_0_10px_rgba(201,168,76,0.2)]"
                   />
                 </div>
               )
@@ -202,38 +259,20 @@ export function BraceletBeadPreview({
         </div>
       )}
 
-      {(canEdit || onClear) && (
-        <div className="flex items-center justify-between gap-2 px-1">
-          <p className="text-xs text-amber-glow/80">
-            {canEdit
-              ? '點選珠子看名稱；可＋／－與拖曳調順序'
-              : '點選圓盤上的珠子可查看名稱'}
-          </p>
-          {onClear && (
-            <button
-              type="button"
-              onClick={() => {
-                onClear()
-                setSelectedIndex(null)
-              }}
-              className="inline-flex items-center gap-1 rounded border border-white/15 px-2.5 py-1 text-xs text-white/55 transition hover:border-rose-300/40 hover:text-rose-200"
-            >
-              <Eraser className="h-3.5 w-3.5" />
-              清除全部
-            </button>
-          )}
-        </div>
-      )}
+      {toolbar}
 
       {!canEdit && !onClear && showStrip && (
-        <p className="px-1 text-xs text-amber-glow/80">點選圓盤上的珠子可查看名稱</p>
+        <p className="h-7 px-1 text-xs leading-7 text-amber-glow/80">
+          點選圓盤上的珠子可查看名稱
+        </p>
       )}
 
       <div
         ref={ringRef}
-        className={`relative mx-auto h-[300px] w-full max-w-sm touch-none ${
+        className={`relative mx-auto touch-none ${
           canSelect || canDrag ? 'cursor-pointer' : ''
         } ${canDrag ? 'active:cursor-grabbing' : ''}`}
+        style={{ width: '100%', maxWidth: RING_BOX_PX, height: RING_BOX_PX }}
         onPointerDown={onRingPointerDown}
         onPointerMove={onRingPointerMove}
         onPointerUp={onRingPointerUp}
@@ -248,19 +287,27 @@ export function BraceletBeadPreview({
             <div
               key={`ring-${bead.bead_id}-${bead.size}-${index}`}
               className={`absolute left-1/2 top-1/2 z-[1] select-none ${
-                isDragging || isSelected ? 'z-20 scale-110' : ''
+                isDragging || isSelected ? 'z-20' : ''
               }`}
-              style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}
+              style={{
+                width: px,
+                height: px,
+                transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+              }}
               title={`${index + 1}. ${bead.name}（${formatBeadSizeLabel(bead.size)}）`}
             >
-              <div className="relative" style={{ width: px, height: px }}>
+              <div
+                className={`relative h-full w-full transition-transform ${
+                  isDragging || isSelected ? 'scale-110' : ''
+                }`}
+              >
                 <BeadThumb
                   imageUrl={bead.image_url}
                   name={bead.name}
                   elements={bead.elements}
                   sizePx={px}
                   emphasize={isSelected || isDragging}
-                  className="pointer-events-none h-full w-full"
+                  className="pointer-events-none block h-full w-full"
                 />
                 {isSelected && canEdit && (
                   <>

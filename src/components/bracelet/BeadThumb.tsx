@@ -28,7 +28,7 @@ export function BeadThumb({
   if (!showImg) {
     return (
       <div
-        className={`flex items-center justify-center rounded-full border bg-[#2a231c] text-[10px] leading-tight text-amber-glow ${
+        className={`flex shrink-0 items-center justify-center rounded-full border bg-[#2a231c] text-[10px] leading-tight text-amber-glow ${
           emphasize ? 'border-amber-glow' : 'border-amber-glow/45'
         } ${className}`}
         style={{ width: sizePx, height: sizePx }}
@@ -48,7 +48,7 @@ export function BeadThumb({
       loading="eager"
       decoding="async"
       onError={() => setFailed(true)}
-      className={`rounded-full border object-cover ${
+      className={`block shrink-0 rounded-full border object-cover ${
         emphasize
           ? 'border-amber-glow shadow-[0_0_14px_rgba(201,168,76,0.5)]'
           : 'border-amber-glow/50'
