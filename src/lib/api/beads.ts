@@ -7,7 +7,16 @@ import {
   sanitizeBeadSizes,
   type BeadSizeCategory,
 } from '../../constants/beadSizes'
-import { isSupabaseConfigured, supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../supabase'
+import {
+  inferBeadCrystalColorLabels,
+  sanitizeCrystalColorLabels,
+} from '../../constants/crystalColors'
+import {
+  isSupabaseConfigured,
+  supabase,
+  PRODUCT_IMAGE_BUCKET,
+  STORAGE_IMAGE_CACHE_CONTROL,
+} from '../supabase'
 import type { FiveElement } from '../../constants/fiveElements'
 
 export interface BraceletBead {
@@ -15,6 +24,8 @@ export interface BraceletBead {
   name: string
   elements: FiveElement[]
   sizes: BeadSizeCategory[]
+  /** 顏色類別標籤：紅橙黃綠藍紫黑白 */
+  colors: string[]
   efficacy_tags: string[]
   image_url: string
   sort_order: number
@@ -28,6 +39,7 @@ export interface BraceletBeadFormData {
   name: string
   elements: FiveElement[]
   sizes: BeadSizeCategory[]
+  colors: string[]
   efficacy_tags: string[]
   is_active: boolean
   admin_notes?: string | null
@@ -39,7 +51,6 @@ function normalizeBead(row: Record<string, unknown>): BraceletBead {
   let elements = sanitizeFiveElements(
     Array.isArray(row.elements) ? row.elements.map(String) : []
   )
-  // 相容尚未跑 multi-elements migration 的舊列
   if (elements.length === 0 && row.element != null) {
     elements = sanitizeFiveElements([String(row.element)])
   }
@@ -49,11 +60,20 @@ function normalizeBead(row: Record<string, unknown>): BraceletBead {
     Array.isArray(row.sizes) ? sanitizeBeadSizes(row.sizes.map(String)) : []
   )
 
+  const name = String(row.name ?? '')
+  let colors = sanitizeCrystalColorLabels(
+    Array.isArray(row.colors) ? row.colors.map(String) : []
+  )
+  if (colors.length === 0 && name) {
+    colors = inferBeadCrystalColorLabels(name)
+  }
+
   return {
     id: String(row.id ?? ''),
-    name: String(row.name ?? ''),
+    name,
     elements,
     sizes,
+    colors,
     efficacy_tags: pickEfficacyTags(
       Array.isArray(row.efficacy_tags) ? row.efficacy_tags.map(String) : []
     ),
@@ -84,6 +104,11 @@ function throwBeadsMigrationHint(msg: string): never {
   if (/bracelet_beads|42P01/i.test(msg)) {
     throw new Error(
       '資料庫尚未啟用珠材表，請在 Supabase SQL Editor 執行 supabase/migration-bracelet-configurator.sql'
+    )
+  }
+  if (/column .*colors|colors/i.test(msg)) {
+    throw new Error(
+      '珠材顏色欄位未就緒：請在 Supabase SQL Editor 執行 supabase/migration-bracelet-bead-colors.sql'
     )
   }
   if (/column .*sizes|sizes/i.test(msg)) {
@@ -150,6 +175,10 @@ export async function createBraceletBead(form: BraceletBeadFormData): Promise<Br
   if (sizes.length === 0) throw new Error('請至少選擇一個咪數區間')
   if (!form.imageFile && !form.image_url?.trim()) throw new Error('請上傳珠材圖片')
 
+  const colors =
+    sanitizeCrystalColorLabels(form.colors).length > 0
+      ? sanitizeCrystalColorLabels(form.colors)
+      : inferBeadCrystalColorLabels(name)
   const imageUrl = form.imageFile
     ? await uploadBeadImage(form.imageFile)
     : String(form.image_url ?? '').trim()
@@ -161,6 +190,7 @@ export async function createBraceletBead(form: BraceletBeadFormData): Promise<Br
       name,
       elements,
       sizes,
+      colors,
       efficacy_tags: pickEfficacyTags(form.efficacy_tags),
       image_url: imageUrl,
       sort_order: sortOrder,
@@ -193,6 +223,9 @@ export async function updateBraceletBead(
     const sizes = sanitizeBeadSizes(patch.sizes)
     if (sizes.length === 0) throw new Error('請至少選擇一個咪數區間')
     updates.sizes = sizes
+  }
+  if (patch.colors != null) {
+    updates.colors = sanitizeCrystalColorLabels(patch.colors)
   }
   if (patch.efficacy_tags != null) updates.efficacy_tags = pickEfficacyTags(patch.efficacy_tags)
   if (patch.is_active != null) updates.is_active = patch.is_active

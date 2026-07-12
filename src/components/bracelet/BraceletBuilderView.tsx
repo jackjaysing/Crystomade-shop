@@ -7,7 +7,7 @@ import {
   BEAD_SIZE_LABELS,
   type BeadSizeCategory,
 } from '../../constants/beadSizes'
-import { beadNameMatchesCrystalColorId } from '../../constants/crystalColors'
+import { beadMatchesCrystalColorId } from '../../constants/crystalColors'
 import { EFFICACY_TAGS } from '../../constants/tags'
 import { useCart } from '../../contexts/CartContext'
 import { fetchActiveBraceletBeads, type BraceletBead } from '../../lib/api/beads'
@@ -92,7 +92,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
     const q = beadSearch.trim().toLowerCase()
     return catalog.filter((b) => {
       if (filterElement !== '全部' && !b.elements.includes(filterElement)) return false
-      if (!beadNameMatchesCrystalColorId(b.name, filterColorId)) return false
+      if (!beadMatchesCrystalColorId(b, filterColorId)) return false
       if (filterEfficacy !== '全部' && !b.efficacy_tags.includes(filterEfficacy)) return false
       if (q && !b.name.toLowerCase().includes(q)) return false
       return true

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEv
 import type { FiveElement } from '../../constants/fiveElements'
 import type { BeadSizeCategory } from '../../constants/beadSizes'
 import { formatBeadSizes } from '../../constants/beadSizes'
+import { formatCrystalColorLabels, inferBeadCrystalColorLabels } from '../../constants/crystalColors'
 import {
   createBraceletBead,
   deleteBraceletBead,
@@ -12,6 +13,7 @@ import {
 import { formatBeadElements } from '../../lib/braceletConfig'
 import { BROWSER_IMAGE_ACCEPT } from '../../lib/browserImage'
 import { AdminBeadSizesPicker } from './AdminBeadSizesPicker'
+import { AdminCrystalColorsPicker } from './AdminCrystalColorsPicker'
 import { AdminEfficacyTagsPicker } from './AdminEfficacyTagsPicker'
 import { AdminFiveElementsPicker } from './AdminFiveElementsPicker'
 import { CircularImageCropModal } from './CircularImageCropModal'
@@ -28,6 +30,7 @@ export function BraceletBeadAdmin() {
   const [name, setName] = useState('')
   const [elements, setElements] = useState<FiveElement[]>(['土'])
   const [sizes, setSizes] = useState<BeadSizeCategory[]>(['7-9'])
+  const [colors, setColors] = useState<string[]>([])
   const [efficacyTags, setEfficacyTags] = useState<string[]>([])
   const [isActive, setIsActive] = useState(true)
   const [adminNotes, setAdminNotes] = useState('')
@@ -64,6 +67,7 @@ export function BraceletBeadAdmin() {
     setName('')
     setElements(['土'])
     setSizes(['7-9'])
+    setColors([])
     setEfficacyTags([])
     setIsActive(true)
     setAdminNotes('')
@@ -103,6 +107,11 @@ export function BraceletBeadAdmin() {
     setName(bead.name)
     setElements(bead.elements.length > 0 ? [...bead.elements] : ['土'])
     setSizes(bead.sizes.length > 0 ? [...bead.sizes] : ['7-9'])
+    setColors(
+      bead.colors.length > 0
+        ? [...bead.colors]
+        : inferBeadCrystalColorLabels(bead.name)
+    )
     setEfficacyTags(bead.efficacy_tags)
     setIsActive(bead.is_active)
     setAdminNotes(bead.admin_notes ?? '')
@@ -122,6 +131,7 @@ export function BraceletBeadAdmin() {
           name,
           elements,
           sizes,
+          colors,
           efficacy_tags: efficacyTags,
           is_active: isActive,
           admin_notes: adminNotes,
@@ -133,6 +143,7 @@ export function BraceletBeadAdmin() {
           name,
           elements,
           sizes,
+          colors,
           efficacy_tags: efficacyTags,
           is_active: isActive,
           admin_notes: adminNotes,
@@ -191,7 +202,7 @@ export function BraceletBeadAdmin() {
           {editingId ? '編輯珠材' : '新增珠材'}
         </h2>
         <p className="mt-1 text-sm text-white/50">
-          客戶配置器會顯示已上架珠材；五行可多選（雙屬／綜合）。上傳圖片後可圓形裁切。
+          客戶配置器會顯示已上架珠材；五行／顏色／功效可複選。上傳圖片後可圓形裁切。
         </p>
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-4 space-y-4">
           <label className="block text-sm text-white/70">
@@ -199,11 +210,17 @@ export function BraceletBeadAdmin() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onBlur={() => {
+                if (colors.length === 0 && name.trim()) {
+                  setColors(inferBeadCrystalColorLabels(name.trim()))
+                }
+              }}
               required
               className="mt-1 w-full rounded border border-white/15 bg-black/30 px-3 py-2 text-white"
             />
           </label>
           <AdminFiveElementsPicker value={elements} onChange={setElements} />
+          <AdminCrystalColorsPicker value={colors} onChange={setColors} />
           <AdminBeadSizesPicker value={sizes} onChange={setSizes} />
           <div>
             <p className="text-sm text-white/70">功效類別</p>
@@ -310,6 +327,8 @@ export function BraceletBeadAdmin() {
                   <p className="font-medium text-white">{bead.name}</p>
                   <p className="text-xs text-white/45">
                     {formatBeadElements(bead.elements)}
+                    {' · '}
+                    {formatCrystalColorLabels(bead.colors)}
                     {' · '}
                     {formatBeadSizes(bead.sizes)}
                     {bead.efficacy_tags.length > 0

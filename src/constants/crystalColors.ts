@@ -126,6 +126,24 @@ export const CRYSTAL_RAINBOW_GRADIENT =
 /** 後台可勾選的水晶色標籤 */
 export const CRYSTAL_COLOR_TAGS = CRYSTAL_COLOR_FILTERS.map((c) => c.label)
 
+const COLOR_LABEL_SET = new Set<string>(CRYSTAL_COLOR_TAGS)
+
+/** 過濾並依固定色序排序 */
+export function sanitizeCrystalColorLabels(values: string[]): string[] {
+  const picked = new Set<string>()
+  for (const value of values) {
+    const trimmed = value.trim()
+    if (COLOR_LABEL_SET.has(trimmed)) picked.add(trimmed)
+  }
+  return CRYSTAL_COLOR_TAGS.filter((label) => picked.has(label))
+}
+
+export function formatCrystalColorLabels(colors: string[]): string {
+  const cleaned = sanitizeCrystalColorLabels(colors)
+  if (cleaned.length === 0) return '—'
+  return cleaned.join('、')
+}
+
 /** 商品是否符合指定水晶色篩選（僅比對後台勾選的 tags） */
 export function productMatchesCrystalColor(
   product: Product,
@@ -158,10 +176,23 @@ export function inferBeadCrystalColorIds(beadName: string): string[] {
     .map(([id]) => id)
 }
 
-export function beadNameMatchesCrystalColorId(
-  beadName: string,
+/** 名稱推斷 → 顏色標籤（紅／黃…） */
+export function inferBeadCrystalColorLabels(beadName: string): string[] {
+  const ids = new Set(inferBeadCrystalColorIds(beadName))
+  return CRYSTAL_COLOR_FILTERS.filter((c) => ids.has(c.id)).map((c) => c.label)
+}
+
+/**
+ * 珠材是否符合顏色篩選：優先用後台 colors；未填則退回名稱推斷
+ */
+export function beadMatchesCrystalColorId(
+  bead: { name: string; colors?: string[] | null },
   colorId: string | null
 ): boolean {
   if (!colorId) return true
-  return inferBeadCrystalColorIds(beadName).includes(colorId)
+  const filter = CRYSTAL_COLOR_FILTERS.find((c) => c.id === colorId)
+  if (!filter) return true
+  const stored = sanitizeCrystalColorLabels(bead.colors ?? [])
+  if (stored.length > 0) return stored.includes(filter.label)
+  return inferBeadCrystalColorIds(bead.name).includes(colorId)
 }
