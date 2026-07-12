@@ -11,7 +11,7 @@ export interface CircularCropTransform {
 export const CIRCULAR_CROP_VIEW_SIZE = 320
 export const CIRCULAR_CROP_OUTPUT_SIZE = 512
 export const CIRCULAR_CROP_ZOOM_MIN = 1
-export const CIRCULAR_CROP_ZOOM_MAX = 4
+export const CIRCULAR_CROP_ZOOM_MAX = 10
 
 /** 讓圖片最短邊剛好蓋住圓直徑的基礎縮放 */
 export function circularCropCoverScale(
