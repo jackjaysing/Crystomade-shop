@@ -18,6 +18,8 @@ interface BraceletBeadPreviewProps {
   onRemoveAt?: (index: number) => void
   onDuplicateAt?: (index: number) => void
   onClear?: () => void
+  /** 是否顯示上方橫排預覽；後台可關閉，改由依序串製區承接 */
+  showStrip?: boolean
 }
 
 const DRAG_THRESHOLD_PX = 8
@@ -63,6 +65,7 @@ export function BraceletBeadPreview({
   onRemoveAt,
   onDuplicateAt,
   onClear,
+  showStrip = true,
 }: BraceletBeadPreviewProps) {
   const ringRef = useRef<HTMLDivElement>(null)
   const dragFromRef = useRef<number | null>(null)
@@ -172,51 +175,59 @@ export function BraceletBeadPreview({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-xl border border-amber-glow/20 bg-gradient-to-br from-[#1a1410] via-[#221a12] to-[#100d09] p-4">
-        <div className="flex min-w-max items-end gap-1.5">
-          {beads.map((bead, index) => {
-            const size = resolveBeadDisplaySize(bead.size)
-            const px = BEAD_SIZE_DISPLAY_PX[size]
-            const title = `${index + 1}. ${bead.name}（${formatBeadElements(bead.elements)} · ${formatBeadSizeLabel(size)}）`
-            return (
-              <div
-                key={`strip-${bead.bead_id}-${bead.size}-${index}`}
-                className="relative shrink-0"
-                title={title}
-              >
-                <BeadThumb
-                  imageUrl={bead.image_url}
-                  name={bead.name}
-                  elements={bead.elements}
-                  sizePx={Math.max(28, px)}
-                  className="shadow-[0_0_10px_rgba(201,168,76,0.2)]"
-                />
-              </div>
-            )
-          })}
+      {showStrip && (
+        <div className="overflow-x-auto rounded-xl border border-amber-glow/20 bg-gradient-to-br from-[#1a1410] via-[#221a12] to-[#100d09] p-4">
+          <div className="flex min-w-max items-end gap-1.5">
+            {beads.map((bead, index) => {
+              const size = resolveBeadDisplaySize(bead.size)
+              const px = BEAD_SIZE_DISPLAY_PX[size]
+              const title = `${index + 1}. ${bead.name}（${formatBeadElements(bead.elements)} · ${formatBeadSizeLabel(size)}）`
+              return (
+                <div
+                  key={`strip-${bead.bead_id}-${bead.size}-${index}`}
+                  className="relative shrink-0"
+                  title={title}
+                >
+                  <BeadThumb
+                    imageUrl={bead.image_url}
+                    name={bead.name}
+                    elements={bead.elements}
+                    sizePx={Math.max(28, px)}
+                    className="shadow-[0_0_10px_rgba(201,168,76,0.2)]"
+                  />
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex items-center justify-between gap-2 px-1">
-        <p className="text-xs text-amber-glow/80">
-          {canEdit
-            ? '點選珠子看名稱；可＋／－與拖曳調順序'
-            : '點選圓盤上的珠子可查看名稱'}
-        </p>
-        {onClear && (
-          <button
-            type="button"
-            onClick={() => {
-              onClear()
-              setSelectedIndex(null)
-            }}
-            className="inline-flex items-center gap-1 rounded border border-white/15 px-2.5 py-1 text-xs text-white/55 transition hover:border-rose-300/40 hover:text-rose-200"
-          >
-            <Eraser className="h-3.5 w-3.5" />
-            清除全部
-          </button>
-        )}
-      </div>
+      {(canEdit || onClear) && (
+        <div className="flex items-center justify-between gap-2 px-1">
+          <p className="text-xs text-amber-glow/80">
+            {canEdit
+              ? '點選珠子看名稱；可＋／－與拖曳調順序'
+              : '點選圓盤上的珠子可查看名稱'}
+          </p>
+          {onClear && (
+            <button
+              type="button"
+              onClick={() => {
+                onClear()
+                setSelectedIndex(null)
+              }}
+              className="inline-flex items-center gap-1 rounded border border-white/15 px-2.5 py-1 text-xs text-white/55 transition hover:border-rose-300/40 hover:text-rose-200"
+            >
+              <Eraser className="h-3.5 w-3.5" />
+              清除全部
+            </button>
+          )}
+        </div>
+      )}
+
+      {!canEdit && !onClear && showStrip && (
+        <p className="px-1 text-xs text-amber-glow/80">點選圓盤上的珠子可查看名稱</p>
+      )}
 
       <div
         ref={ringRef}

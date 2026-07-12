@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import { BEAD_SIZE_DISPLAY_PX } from '../../constants/beadSizes'
+import { useMemo, useState } from 'react'
 import { formatBraceletSizeLabel } from '../../constants/braceletSizes'
 import {
   formatBraceletConfigSummary,
@@ -15,39 +14,27 @@ interface OrderBraceletBuildSheetProps {
   config: BraceletConfig
 }
 
-interface BeadTally {
-  key: string
-  name: string
-  size: BraceletConfigBead['size']
-  image_url: string
-  elements: BraceletConfigBead['elements']
-  count: number
+function beadKey(bead: Pick<BraceletConfigBead, 'bead_id' | 'size'>) {
+  return `${bead.bead_id}|${bead.size}`
 }
 
-function tallyBeads(beads: BraceletConfigBead[]): BeadTally[] {
-  const map = new Map<string, BeadTally>()
-  for (const bead of beads) {
-    const key = `${bead.bead_id}|${bead.size}`
-    const existing = map.get(key)
-    if (existing) {
-      existing.count += 1
-      continue
-    }
-    map.set(key, {
-      key,
-      name: bead.name,
-      size: bead.size,
-      image_url: bead.image_url,
-      elements: bead.elements,
-      count: 1,
-    })
-  }
-  return [...map.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hant'))
-}
-
-/** 後台訂單：客戶配置手串串製清單（含預覽＋珠材統計） */
+/** 後台訂單：圓盤預覽＋依序串製（點選顯示種類與總數） */
 export function OrderBraceletBuildSheet({ config }: OrderBraceletBuildSheetProps) {
-  const tallies = useMemo(() => tallyBeads(config.beads), [config.beads])
+  const countByKey = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const bead of config.beads) {
+      const key = beadKey(bead)
+      map.set(key, (map.get(key) ?? 0) + 1)
+    }
+    return map
+  }, [config.beads])
+
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(0)
+  const selected =
+    selectedIndex != null && selectedIndex >= 0 && selectedIndex < config.beads.length
+      ? config.beads[selectedIndex]
+      : null
+  const selectedTotal = selected ? (countByKey.get(beadKey(selected)) ?? 0) : 0
 
   return (
     <div className="mt-2 rounded-lg border border-violet-400/25 bg-violet-400/5 p-3">
@@ -78,69 +65,76 @@ export function OrderBraceletBuildSheet({ config }: OrderBraceletBuildSheetProps
         </p>
       )}
 
-      <div className="mt-3 rounded border border-white/10 bg-black/25 p-3">
-        <p className="text-xs tracking-wider text-white/45">珠材統計（共 {config.beads.length} 顆）</p>
-        <ul className="mt-2 space-y-2">
-          {tallies.map((row) => (
-            <li key={row.key} className="flex items-center gap-2.5 text-sm text-white/85">
-              <BeadThumb
-                imageUrl={row.image_url}
-                name={row.name}
-                elements={row.elements}
-                sizePx={32}
-              />
-              <span className="min-w-0 flex-1 truncate">
-                {row.name}
-                <span className="text-white/40"> · {formatBeadSizeLabel(row.size)}</span>
-              </span>
-              <span className="shrink-0 rounded-full border border-amber-glow/35 bg-amber-glow/10 px-2.5 py-0.5 text-sm font-medium text-amber-glow">
-                ×{row.count}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
       <div className="mt-3">
-        <p className="mb-2 text-xs tracking-wider text-white/40">
-          預覽（點選珠子可看名稱）
-        </p>
-        <BraceletBeadPreview beads={config.beads} />
+        <p className="mb-2 text-xs tracking-wider text-white/40">圓盤預覽</p>
+        <BraceletBeadPreview beads={config.beads} showStrip={false} />
       </div>
 
-      <p className="mt-3 text-xs text-white/40">
-        請依下列順序選級串製（等級由你評估，不顯示給客戶）
-      </p>
-      <ol className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
-        {config.beads.map((bead, index) => {
-          const px = Math.max(32, Math.min(BEAD_SIZE_DISPLAY_PX[bead.size] ?? 40, 40))
-          return (
-            <li
-              key={`${bead.bead_id}-${index}`}
-              className="flex items-center gap-2.5 rounded border border-white/10 bg-black/20 p-2 text-sm text-white/80"
-            >
-              <span className="w-5 shrink-0 text-center text-white/35">{index + 1}</span>
-              <BeadThumb
-                imageUrl={bead.image_url}
-                name={bead.name}
-                elements={bead.elements}
-                sizePx={px}
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-white">{bead.name}</span>
-                <span className="text-xs text-white/40">
-                  {formatBeadElements(bead.elements)}
-                  {' · '}
-                  {formatBeadSizeLabel(bead.size)}
-                  {bead.efficacy_tags.length > 0
-                    ? ` · ${bead.efficacy_tags.join('、')}`
-                    : ''}
-                </span>
-              </span>
-            </li>
-          )
-        })}
-      </ol>
+      <div className="mt-3 rounded border border-white/10 bg-black/25 p-3">
+        <p className="text-xs tracking-wider text-white/45">
+          依序串製（共 {config.beads.length} 顆 · 點選查看種類與數量 · 等級由你評估）
+        </p>
+        <div className="mt-2 -mx-1 overflow-x-auto px-1 pb-1">
+          <ol className="flex min-w-max items-end gap-1.5">
+            {config.beads.map((bead, index) => {
+              const isSelected = selectedIndex === index
+              const total = countByKey.get(beadKey(bead)) ?? 0
+              return (
+                <li key={`${bead.bead_id}-${index}`}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedIndex((prev) => (prev === index ? null : index))
+                    }
+                    className={`flex w-11 flex-col items-center gap-1 rounded-md p-1 transition ${
+                      isSelected
+                        ? 'bg-amber-glow/15 ring-1 ring-amber-glow/50'
+                        : 'hover:bg-white/5'
+                    }`}
+                    title={`${index + 1}. ${bead.name}（共 ${total} 顆）`}
+                  >
+                    <span className="text-[10px] leading-none text-white/40">{index + 1}</span>
+                    <BeadThumb
+                      imageUrl={bead.image_url}
+                      name={bead.name}
+                      elements={bead.elements}
+                      sizePx={32}
+                      emphasize={isSelected}
+                    />
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+        {selected && selectedIndex != null ? (
+          <div className="mt-2 flex items-start gap-2.5 rounded border border-amber-glow/20 bg-black/40 px-2.5 py-2">
+            <BeadThumb
+              imageUrl={selected.image_url}
+              name={selected.name}
+              elements={selected.elements}
+              sizePx={36}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] text-amber-glow/80">第 {selectedIndex + 1} 顆</p>
+              <p className="mt-0.5 text-sm font-medium text-white">{selected.name}</p>
+              <p className="mt-0.5 text-xs leading-snug text-white/50">
+                {formatBeadElements(selected.elements)}
+                {' · '}
+                {formatBeadSizeLabel(selected.size)}
+                {selected.efficacy_tags.length > 0
+                  ? ` · ${selected.efficacy_tags.join('、')}`
+                  : ''}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-amber-glow/35 bg-amber-glow/10 px-2.5 py-0.5 text-sm font-medium text-amber-glow">
+              共 ×{selectedTotal}
+            </span>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-white/35">點選上方珠子查看種類與本串總數量</p>
+        )}
+      </div>
     </div>
   )
 }
