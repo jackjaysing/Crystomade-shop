@@ -397,7 +397,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                   </p>
                 )}
                 <p className="mt-3 text-xs leading-relaxed text-white/45">
-                  最終串製時，晶刻仍可能依手圍適當補水晶或隔珠，以確保佩戴合手。
+                  最終串製時，晶刻會依手圍適當增減水晶或補隔珠，以確保佩戴合手。
                 </p>
               </div>
               <div className="mt-4 rounded-lg border border-white/10 bg-black/25 p-4">

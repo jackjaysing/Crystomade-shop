@@ -10,8 +10,6 @@ import { isBespokeSoulCardProduct } from '../../lib/grimoireFulfillment'
 import { isProductSoldOut } from '../../lib/productStock'
 import { productConfigurePath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
-import { BeadsFitAdjustNotice } from '../bracelet/BeadsFitAdjustNotice'
-import { BeadsRestockingNotice } from '../bracelet/BeadsRestockingNotice'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageGallery } from './ProductImageGallery'
 import { ProductOrderPaymentNotice } from './ProductOrderPaymentNotice'
@@ -193,43 +191,51 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               )}
 
               {!isSold && isConfigurable && (
-                <div className="mt-8 space-y-4">
-                  <div className="rounded-lg border border-amber-glow/25 bg-amber-glow/5 p-4">
-                    <p className="text-base tracking-wide text-amber-glow">請選擇配珠方式</p>
-                    <p className="mt-2 text-sm leading-relaxed text-white/65">
-                      自行配珠的五行與功效提示僅供參考，非個人命盤精準配置。若需更準確，可選官方配珠，或自行配珠後再請官方協助確認。
+                <div className="mt-8 space-y-5">
+                  <div>
+                    <p className="text-lg tracking-wide text-amber-glow">
+                      請選擇一種配珠方式
+                    </p>
+                    <p className="mt-1.5 text-base text-white/60">
+                      點選下方卡片即可繼續
                     </p>
                   </div>
-
-                  <BeadsFitAdjustNotice />
-
-                  {beadsRestocking && <BeadsRestockingNotice />}
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Link
                       to={productConfigurePath(product)}
-                      className="flex flex-col rounded-lg border border-violet-400/35 bg-violet-400/10 px-4 py-4 text-left transition hover:border-violet-400/55 hover:bg-violet-400/15"
+                      className="group flex flex-col rounded-xl border border-amber-glow/40 bg-gradient-to-b from-amber-glow/15 to-black/20 px-4 py-5 text-left transition hover:border-amber-glow/65 hover:from-amber-glow/20"
                     >
-                      <span className="text-base font-medium tracking-[0.12em] text-violet-100">
+                      <span className="text-xs tracking-[0.2em] text-amber-glow/80">
+                        方式一
+                      </span>
+                      <span className="mt-1 text-xl font-medium tracking-[0.12em] text-amber-glow">
                         自行配珠
                       </span>
-                      <span className="mt-2 text-sm leading-relaxed text-white/55">
-                        自己排珠序與目標 · 串製時晶刻可依手圍補珠／隔珠 · 五行僅供參考
+                      <span className="mt-2 flex-1 text-base leading-relaxed text-white/70">
+                        自己選珠、排順序與目標，下單後由晶刻串製。
+                      </span>
+                      <span className="mt-5 inline-flex items-center justify-center rounded-lg bg-amber-glow/90 py-3.5 text-base font-medium tracking-wider text-void transition group-hover:bg-amber-glow">
+                        開始自行配珠
                       </span>
                     </Link>
-                    <div className="flex flex-col rounded-lg border border-amber-glow/35 bg-amber-glow/10 px-4 py-4">
-                      <span className="text-base font-medium tracking-[0.12em] text-amber-glow">
+
+                    <div className="flex flex-col rounded-xl border border-white/20 bg-black/30 px-4 py-5">
+                      <span className="text-xs tracking-[0.2em] text-white/55">
+                        方式二
+                      </span>
+                      <span className="mt-1 text-xl font-medium tracking-[0.12em] text-white">
                         官方配珠
                       </span>
-                      <span className="mt-2 text-sm leading-relaxed text-white/55">
-                        交由晶刻依需求／命盤觀念配置 · 較精準
+                      <span className="mt-2 flex-1 text-base leading-relaxed text-white/70">
+                        交由晶刻依五行及需求配置，較精準。
                       </span>
-                      <div className="mt-4 flex gap-2">
+                      <div className="mt-5 flex gap-2">
                         <button
                           type="button"
                           onClick={handleAddToCart}
                           disabled={!canAdd}
-                          className="flex-1 rounded border border-amber-glow/40 py-2.5 text-sm tracking-wider text-amber-glow transition hover:bg-amber-glow/15 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex-1 rounded-lg border border-white/25 py-3.5 text-base tracking-wider text-white/85 transition hover:border-amber-glow/45 hover:text-amber-glow disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           加入購物車
                         </button>
@@ -237,12 +243,30 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                           type="button"
                           onClick={handleBuyNow}
                           disabled={!canAdd}
-                          className="flex-1 rounded bg-amber-glow/90 py-2.5 text-sm font-medium tracking-wider text-void transition hover:bg-amber-glow disabled:cursor-not-allowed disabled:opacity-50"
+                          className="flex-1 rounded-lg bg-amber-glow/90 py-3.5 text-base font-medium tracking-wider text-void transition hover:bg-amber-glow disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           立即購買
                         </button>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="space-y-2 text-base leading-relaxed text-white/60">
+                    <p>
+                      五行與功效提示僅供參考。串製時晶刻會依手圍適當增減水晶或補隔珠。
+                    </p>
+                    {beadsRestocking && (
+                      <p>
+                        部分珠子補貨中；如有其他需求可至
+                        <Link
+                          to="/wish-board"
+                          className="mx-1 text-amber-glow underline underline-offset-2 hover:text-amber-200"
+                        >
+                          許願區
+                        </Link>
+                        許願，或等待官方上架。
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
