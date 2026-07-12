@@ -240,7 +240,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
 
   return (
     <div className="min-h-screen pt-24 pb-16">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto max-w-5xl min-w-0 overflow-x-clip px-4 sm:px-6">
         <Link
           to={productDetailPath(product)}
           className="inline-flex items-center gap-2 text-sm text-white/50 transition hover:text-amber-glow"
@@ -360,12 +360,12 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
             </div>
           </section>
 
-          <section className="mt-8 grid gap-6 lg:grid-cols-2">
-            <div>
+          <section className="mt-8 grid min-w-0 gap-6 lg:grid-cols-2">
+            <div className="min-w-0 max-w-full">
               <h2 className="text-sm tracking-wider text-amber-glow/80">
                 4. 預覽與平衡提示（僅供參考）
               </h2>
-              <div className="mt-3">
+              <div className="mt-3 min-w-0 max-w-full">
                 <BraceletBeadPreview
                   beads={selected}
                   onReorder={(next) => setSelected(next)}
@@ -446,7 +446,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0 max-w-full">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm tracking-wider text-amber-glow/80">已選珠序（串製順序）</h2>
                 {selected.length > 0 && (

@@ -207,10 +207,10 @@ export function BraceletBeadPreview({
 
   if (beads.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="w-full min-w-0 max-w-full space-y-4">
         {showStrip && (
           <div
-            className="flex items-center justify-center rounded-xl border border-dashed border-amber-glow/25 bg-black/20 px-4 text-center text-sm text-white/40"
+            className="flex w-full items-center justify-center rounded-xl border border-dashed border-amber-glow/25 bg-black/20 px-4 text-center text-sm text-white/40"
             style={{ height: STRIP_AREA_PX }}
           >
             點選下方珠材開始配置
@@ -218,7 +218,7 @@ export function BraceletBeadPreview({
         )}
         {toolbar}
         <div
-          className="relative mx-auto flex w-full max-w-sm items-center justify-center rounded-xl border border-dashed border-amber-glow/25 bg-black/20 px-4 text-center text-sm text-white/40"
+          className="relative mx-auto flex w-full max-w-[300px] items-center justify-center rounded-xl border border-dashed border-amber-glow/25 bg-black/20 px-4 text-center text-sm text-white/40"
           style={{ height: RING_BOX_PX }}
         >
           此處會依咪數模擬真實樣貌
@@ -228,13 +228,13 @@ export function BraceletBeadPreview({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-clip">
       {showStrip && (
         <div
-          className="overflow-x-auto overflow-y-hidden rounded-xl border border-amber-glow/20 bg-gradient-to-br from-[#1a1410] via-[#221a12] to-[#100d09] px-4"
+          className="w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border border-amber-glow/20 bg-gradient-to-br from-[#1a1410] via-[#221a12] to-[#100d09] px-4 [-webkit-overflow-scrolling:touch]"
           style={{ height: STRIP_AREA_PX }}
         >
-          <div className="flex h-full min-w-max items-center gap-1.5">
+          <div className="flex h-full w-max items-center gap-1.5">
             {beads.map((bead, index) => {
               const size = resolveBeadDisplaySize(bead.size)
               const px = BEAD_SIZE_DISPLAY_PX[size]
@@ -267,17 +267,18 @@ export function BraceletBeadPreview({
         </p>
       )}
 
-      <div
-        ref={ringRef}
-        className={`relative mx-auto touch-none ${
-          canSelect || canDrag ? 'cursor-pointer' : ''
-        } ${canDrag ? 'active:cursor-grabbing' : ''}`}
-        style={{ width: '100%', maxWidth: RING_BOX_PX, height: RING_BOX_PX }}
-        onPointerDown={onRingPointerDown}
-        onPointerMove={onRingPointerMove}
-        onPointerUp={onRingPointerUp}
-        onPointerCancel={onRingPointerUp}
-      >
+      <div className="mx-auto w-full max-w-[300px] overflow-x-clip">
+        <div
+          ref={ringRef}
+          className={`relative touch-none ${
+            canSelect || canDrag ? 'cursor-pointer' : ''
+          } ${canDrag ? 'active:cursor-grabbing' : ''}`}
+          style={{ width: '100%', height: RING_BOX_PX }}
+          onPointerDown={onRingPointerDown}
+          onPointerMove={onRingPointerMove}
+          onPointerUp={onRingPointerUp}
+          onPointerCancel={onRingPointerUp}
+        >
         <div className="pointer-events-none absolute inset-0 rounded-full border border-amber-glow/15" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-glow/10" />
         {ring.map(({ bead, index, x, y, px }) => {
@@ -361,6 +362,7 @@ export function BraceletBeadPreview({
           ) : (
             <p className="text-sm tracking-wider text-amber-glow/70">{beads.length} 珠</p>
           )}
+        </div>
         </div>
       </div>
     </div>
