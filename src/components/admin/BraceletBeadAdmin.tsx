@@ -300,7 +300,19 @@ export function BraceletBeadAdmin() {
       </GlassPanel>
 
       <GlassPanel className="p-5 sm:p-6">
-        <h2 className="font-display text-xl text-amber-glow">珠材列表</h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="font-display text-xl text-amber-glow">珠材列表</h2>
+          <div className="flex flex-wrap gap-3 text-xs text-white/50">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" aria-hidden />
+              上架中（客戶可見）
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" aria-hidden />
+              已下架
+            </span>
+          </div>
+        </div>
         {loading ? (
           <p className="mt-3 text-sm text-white/45">載入中…</p>
         ) : beads.length === 0 ? (
@@ -310,21 +322,48 @@ export function BraceletBeadAdmin() {
             {beads.map((bead) => (
               <li
                 key={bead.id}
-                className="flex flex-wrap items-center gap-3 rounded border border-white/10 bg-black/20 p-3"
+                className={`flex flex-wrap items-center gap-3 rounded border p-3 transition ${
+                  bead.is_active
+                    ? 'border-emerald-400/35 bg-emerald-950/25'
+                    : 'border-rose-400/30 bg-rose-950/20 opacity-80'
+                }`}
               >
                 {bead.image_url ? (
                   <img
                     src={bead.image_url}
                     alt={bead.name}
-                    className="h-12 w-12 rounded-full object-cover"
+                    className={`h-12 w-12 rounded-full object-cover ${
+                      bead.is_active ? '' : 'grayscale'
+                    }`}
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-amber-glow">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-full text-amber-glow ${
+                      bead.is_active ? 'bg-white/5' : 'bg-white/5 grayscale'
+                    }`}
+                  >
                     ✦
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-white">{bead.name}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p
+                      className={`font-medium ${
+                        bead.is_active ? 'text-white' : 'text-white/55'
+                      }`}
+                    >
+                      {bead.name}
+                    </p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] tracking-wide ${
+                        bead.is_active
+                          ? 'bg-emerald-400/15 text-emerald-300'
+                          : 'bg-rose-400/15 text-rose-300'
+                      }`}
+                    >
+                      {bead.is_active ? '上架中' : '已下架'}
+                    </span>
+                  </div>
                   <p className="text-xs text-white/45">
                     {formatBeadElements(bead.elements)}
                     {' · '}
@@ -334,7 +373,6 @@ export function BraceletBeadAdmin() {
                     {bead.efficacy_tags.length > 0
                       ? ` · ${bead.efficacy_tags.join('、')}`
                       : ''}
-                    {bead.is_active ? '' : ' · 已下架'}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -348,7 +386,11 @@ export function BraceletBeadAdmin() {
                   <button
                     type="button"
                     onClick={() => void handleToggle(bead)}
-                    className="rounded border border-white/15 px-2.5 py-1 text-xs text-white/70"
+                    className={`rounded border px-2.5 py-1 text-xs ${
+                      bead.is_active
+                        ? 'border-rose-400/40 text-rose-300 hover:bg-rose-400/10'
+                        : 'border-emerald-400/40 text-emerald-300 hover:bg-emerald-400/10'
+                    }`}
                   >
                     {bead.is_active ? '下架' : '上架'}
                   </button>
