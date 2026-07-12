@@ -10,6 +10,10 @@ import {
   updateBraceletBead,
   type BraceletBead,
 } from '../../lib/api/beads'
+import {
+  fetchBraceletShopSettings,
+  updateBeadsRestocking,
+} from '../../lib/api/braceletShopSettings'
 import { formatBeadElements } from '../../lib/braceletConfig'
 import { BROWSER_IMAGE_ACCEPT } from '../../lib/browserImage'
 import { AdminBeadSizesPicker } from './AdminBeadSizesPicker'
@@ -26,6 +30,8 @@ export function BraceletBeadAdmin() {
   const [beads, setBeads] = useState<BraceletBead[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [beadsRestocking, setBeadsRestocking] = useState(false)
+  const [restockingSaving, setRestockingSaving] = useState(false)
 
   const [name, setName] = useState('')
   const [elements, setElements] = useState<FiveElement[]>(['土'])
@@ -45,7 +51,12 @@ export function BraceletBeadAdmin() {
   const reload = useCallback(async () => {
     setLoading(true)
     try {
-      setBeads(await fetchAllBraceletBeads())
+      const [rows, settings] = await Promise.all([
+        fetchAllBraceletBeads(),
+        fetchBraceletShopSettings(),
+      ])
+      setBeads(rows)
+      setBeadsRestocking(settings.beads_restocking)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '載入失敗')
     } finally {
@@ -57,6 +68,26 @@ export function BraceletBeadAdmin() {
     void reload()
   }, [reload])
 
+  const handleRestockingToggle = async (enabled: boolean) => {
+    setRestockingSaving(true)
+    setMessage('')
+    const previous = beadsRestocking
+    setBeadsRestocking(enabled)
+    try {
+      const next = await updateBeadsRestocking(enabled)
+      setBeadsRestocking(next.beads_restocking)
+      setMessage(
+        next.beads_restocking
+          ? '已開啟「補貨中」提示（前台自行配珠可見）'
+          : '已關閉「補貨中」提示'
+      )
+    } catch (err) {
+      setBeadsRestocking(previous)
+      setMessage(err instanceof Error ? err.message : '更新補貨狀態失敗')
+    } finally {
+      setRestockingSaving(false)
+    }
+  }
   const revokePreview = () => {
     if (preview) URL.revokeObjectURL(preview)
   }
@@ -196,6 +227,25 @@ export function BraceletBeadAdmin() {
           onConfirm={handleCropConfirm}
         />
       )}
+
+      <GlassPanel className="p-5 sm:p-6">
+        <h2 className="font-display text-xl text-amber-glow">配置器提示</h2>
+        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 accent-amber-glow"
+            checked={beadsRestocking}
+            disabled={restockingSaving || loading}
+            onChange={(e) => void handleRestockingToggle(e.target.checked)}
+          />
+          <span>
+            <span className="block text-sm text-white">補貨中</span>
+            <span className="mt-1 block text-xs leading-relaxed text-white/45">
+              勾選後，前台「自行配珠」會顯示：部分珠子補貨中，可至許願區許願或等待官方上架。
+            </span>
+          </span>
+        </label>
+      </GlassPanel>
 
       <GlassPanel className="p-5 sm:p-6">
         <h2 className="font-display text-xl text-amber-glow">

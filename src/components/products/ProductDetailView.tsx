@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getProductCategoryLabel } from '../../constants/categories'
 import { productRequiresBraceletSize } from '../../constants/braceletSizes'
 import { useCart } from '../../contexts/CartContext'
 import { useProductViewTracker } from '../../hooks/useProductViewTracker'
+import { fetchBraceletShopSettings } from '../../lib/api/braceletShopSettings'
 import { isBespokeSoulCardProduct } from '../../lib/grimoireFulfillment'
 import { isProductSoldOut } from '../../lib/productStock'
 import { productConfigurePath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
+import { BeadsRestockingNotice } from '../bracelet/BeadsRestockingNotice'
 import { HotProductFrame } from './HotProductFrame'
 import { ProductImageGallery } from './ProductImageGallery'
 import { ProductOrderPaymentNotice } from './ProductOrderPaymentNotice'
@@ -31,6 +33,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [sizeError, setSizeError] = useState<string | null>(null)
+  const [beadsRestocking, setBeadsRestocking] = useState(false)
 
   useProductViewTracker(product.id)
 
@@ -38,6 +41,21 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const needsSize = productRequiresBraceletSize(product.category)
   const isConfigurable = isBespokeSoulCardProduct(product.name)
   const canAdd = !needsSize || Boolean(selectedSize)
+
+  useEffect(() => {
+    if (!isConfigurable) return
+    let cancelled = false
+    void fetchBraceletShopSettings()
+      .then((settings) => {
+        if (!cancelled) setBeadsRestocking(settings.beads_restocking)
+      })
+      .catch(() => {
+        if (!cancelled) setBeadsRestocking(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isConfigurable])
 
   const tryAdd = (onSuccess: () => void) => {
     if (needsSize && !selectedSize) {
@@ -181,6 +199,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                       自行配珠的五行與功效提示僅供參考，非個人命盤精準配置。若需更準確，可選官方配珠，或自行配珠後再請官方協助確認。
                     </p>
                   </div>
+
+                  {beadsRestocking && <BeadsRestockingNotice />}
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Link

@@ -11,6 +11,7 @@ import { beadMatchesCrystalColorId } from '../../constants/crystalColors'
 import { EFFICACY_TAGS } from '../../constants/tags'
 import { useCart } from '../../contexts/CartContext'
 import { fetchActiveBraceletBeads, type BraceletBead } from '../../lib/api/beads'
+import { fetchBraceletShopSettings } from '../../lib/api/braceletShopSettings'
 import {
   assessBraceletFit,
   computeBraceletBalance,
@@ -29,6 +30,7 @@ import { BraceletSizePicker } from '../products/BraceletSizePicker'
 import { CrystalColorFilter } from '../products/CrystalColorFilter'
 import { ProductPriceDisplay } from '../products/ProductPriceDisplay'
 import { GlassPanel } from '../ui/GlassPanel'
+import { BeadsRestockingNotice } from './BeadsRestockingNotice'
 import { BraceletBeadPreview } from './BraceletBeadPreview'
 
 interface BraceletBuilderViewProps {
@@ -65,6 +67,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
   const [sizeError, setSizeError] = useState<string | null>(null)
   const [requestOfficialReview, setRequestOfficialReview] = useState(false)
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null)
+  const [beadsRestocking, setBeadsRestocking] = useState(false)
   const dragFromRef = useRef<number | null>(null)
 
   const soldOut = isProductSoldOut(product)
@@ -73,9 +76,11 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    void fetchActiveBraceletBeads()
-      .then((rows) => {
-        if (!cancelled) setCatalog(rows)
+    void Promise.all([fetchActiveBraceletBeads(), fetchBraceletShopSettings()])
+      .then(([rows, settings]) => {
+        if (cancelled) return
+        setCatalog(rows)
+        setBeadsRestocking(settings.beads_restocking)
       })
       .catch((err) => {
         if (!cancelled) setLoadError(formatErrorMessage(err))
@@ -266,6 +271,8 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
               改選官方配珠
             </Link>
           </div>
+
+          {beadsRestocking && <BeadsRestockingNotice className="mt-4" />}
 
           {soldOut && (
             <p className="mt-4 text-sm text-white/40">此商品目前無法下單，僅供預覽配置。</p>
