@@ -11,7 +11,7 @@ interface ProductPriceDisplayProps {
   variant?: 'card' | 'detail'
 }
 
-/** 前台商品價格（原價／特價） */
+/** 前台商品價格（折扣時僅顯示金額，不顯示特價文案） */
 export function ProductPriceDisplay({
   product,
   variant = 'card',
@@ -48,7 +48,7 @@ export function ProductPriceDisplay({
               : 'text-sm font-medium text-amber-glow'
           }
         >
-          特價 NT$ {salePrice.toLocaleString()}
+          NT$ {salePrice.toLocaleString()}
         </p>
         {discountLabel && variant === 'detail' && (
           <span className="rounded-full border border-amber-glow/40 bg-amber-glow/10 px-2 py-0.5 text-[10px] tracking-wider text-amber-glow/90">
@@ -63,7 +63,7 @@ export function ProductPriceDisplay({
             : 'text-xs text-white/40 line-through'
         }
       >
-        原價 NT$ {product.price.toLocaleString()}
+        NT$ {product.price.toLocaleString()}
       </p>
     </div>
   )

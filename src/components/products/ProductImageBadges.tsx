@@ -13,7 +13,7 @@ interface ProductImageBadgesProps {
   surface?: BadgeSurface
 }
 
-/** 商品圖角標：熱門右上、特價左下 */
+/** 商品圖角標：熱門右上、活動左下 */
 export function ProductImageBadges({
   product,
   className = '',

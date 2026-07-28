@@ -10,7 +10,7 @@ interface SaleProductBadgeProps {
   variant?: SaleProductBadgeVariant
 }
 
-/** 前台／後台：折扣商品特價角標（尺寸對齊熱門角標） */
+/** 前台／後台：折扣商品活動角標（尺寸對齊熱門角標） */
 export function SaleProductBadge({
   product,
   className = '',
@@ -46,7 +46,7 @@ export function SaleProductBadge({
           isOverlay ? 'text-xs' : 'text-[10px]'
         }`}
       >
-        特價
+        活動
       </span>
     </span>
   )
