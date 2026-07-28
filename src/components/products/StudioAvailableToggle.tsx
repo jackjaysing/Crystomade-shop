@@ -5,7 +5,7 @@ interface StudioAvailableToggleProps {
   onChange: (active: boolean) => void
 }
 
-/** 一鍵切換：僅顯示門市同步商品 */
+/** 一鍵切換：僅顯示工作室同步商品 */
 export function StudioAvailableToggle({ active, onChange }: StudioAvailableToggleProps) {
   return (
     <button
@@ -17,10 +17,10 @@ export function StudioAvailableToggle({ active, onChange }: StudioAvailableToggl
           ? 'border-emerald-300/60 bg-emerald-400/10 text-emerald-200'
           : 'border-white/15 text-white/55 hover:border-white/30 hover:text-white/80'
       }`}
-      title={active ? '顯示全部商品' : '僅顯示門市同步商品'}
+      title={active ? '顯示全部商品' : '僅顯示工作室同步商品'}
     >
       <Store className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
-      <span className="whitespace-nowrap">門市同步</span>
+      <span className="whitespace-nowrap">工作室同步</span>
     </button>
   )
 }

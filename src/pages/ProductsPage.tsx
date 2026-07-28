@@ -710,7 +710,7 @@ export function ProductsPage() {
                 ? '已隱藏完售商品，目前沒有其他符合條件的商品'
 
                 : showStudioAvailableOnly
-                  ? '目前沒有符合條件的門市同步商品'
+                  ? '目前沒有符合條件的工作室同步商品'
                 : '目前沒有符合條件的商品'}
 
           </p>
