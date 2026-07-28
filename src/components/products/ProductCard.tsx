@@ -1,5 +1,6 @@
 import { TriangleAlert } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { CRYSTAL_COLOR_FILTERS } from '../../constants/crystalColors'
 import { useSaveProductsListSession } from '../../contexts/ProductsListSessionContext'
 import { getProductCategoryBadgeLines } from '../../constants/categories'
 import { isProductSoldOut } from '../../lib/productStock'
@@ -21,6 +22,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const isSold = isProductSoldOut(product)
   const isHot = product.is_hot
   const categoryLines = getProductCategoryBadgeLines(product)
+  const colorTagSet = new Set(CRYSTAL_COLOR_FILTERS.map((c) => c.label))
+  const displayTags = product.tags.filter((tag) => !colorTagSet.has(tag)).slice(0, 3)
 
   const card = (
     <Link
@@ -81,7 +84,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </p>
         )}
         <div className="mt-2 flex flex-wrap gap-1">
-          {product.tags.slice(0, 3).map((tag) => (
+          {displayTags.map((tag) => (
             <span
               key={tag}
               className="rounded border border-white/10 px-2 py-0.5 text-[10px] tracking-wider text-white/40"
