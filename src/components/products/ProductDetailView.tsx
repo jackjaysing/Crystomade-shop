@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, TriangleAlert } from 'lucide-react'
 import { getProductCategoryLabel } from '../../constants/categories'
 import { productRequiresBraceletSize } from '../../constants/braceletSizes'
 import { useCart } from '../../contexts/CartContext'
@@ -152,6 +152,12 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 <p className="mt-2 text-sm text-emerald-300/90">
                   實體工作室同步販售中
                 </p>
+              )}
+              {product.is_private_custom && (
+                <div className="mt-2 flex items-start gap-2 rounded border border-rose-300/40 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
+                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.25} />
+                  <p>已預定，非預訂者勿下單</p>
+                </div>
               )}
 
               <div className="mt-4 flex flex-wrap gap-2">

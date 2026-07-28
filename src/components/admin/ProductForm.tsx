@@ -40,6 +40,7 @@ const initialForm: ProductFormData = {
   is_hot: false,
   is_quick_add: false,
   is_studio_available: false,
+  is_private_custom: false,
   generates_soul_card: true,
   tags: [],
   five_elements: [],
@@ -267,6 +268,18 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
             className="rounded border-white/20 bg-void"
           />
           同步於實體工作室販售中
+        </label>
+
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+          <input
+            type="checkbox"
+            checked={form.is_private_custom}
+            onChange={(e) =>
+              setForm({ ...form, is_private_custom: e.target.checked })
+            }
+            className="rounded border-white/20 bg-void"
+          />
+          ! 已預定，非預訂者勿下單
         </label>
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">

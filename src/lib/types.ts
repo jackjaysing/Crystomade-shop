@@ -52,6 +52,8 @@ export interface Product {
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */
   is_studio_available: boolean
+  /** 是否為私人訂製（非訂製者勿下單） */
+  is_private_custom: boolean
   /** 付款後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 排序：數字越小越前面（熱門商品仍置頂） */
@@ -352,6 +354,8 @@ export interface ProductFormData {
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */
   is_studio_available: boolean
+  /** 是否為私人訂製（非訂製者勿下單） */
+  is_private_custom: boolean
   /** 付款後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 封面圖 */
@@ -460,6 +464,8 @@ export interface ProductEditData {
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */
   is_studio_available: boolean
+  /** 是否為私人訂製（非訂製者勿下單） */
+  is_private_custom: boolean
   /** 付款後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 新封面；null 表示沿用原圖 */

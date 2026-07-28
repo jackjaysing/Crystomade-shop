@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSaveProductsListSession } from '../../contexts/ProductsListSessionContext'
 import { getProductCategoryBadgeLines } from '../../constants/categories'
@@ -92,6 +93,12 @@ export function ProductCard({ product }: ProductCardProps) {
         {product.is_studio_available && (
           <p className="mt-3 text-xs text-emerald-300/85">
             實體工作室同步販售中
+          </p>
+        )}
+        {product.is_private_custom && (
+          <p className="mt-1 flex items-center gap-1 text-xs text-rose-300/95">
+            <TriangleAlert className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+            <span>已預定，非預訂者勿下單</span>
           </p>
         )}
       </div>

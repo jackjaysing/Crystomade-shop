@@ -29,8 +29,8 @@ function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
 const PRODUCTS_CACHE_MS = 60_000
 let storefrontProductsCache: { data: Product[]; at: number } | null = null
 
-function isMissingStudioAvailabilityColumn(message: string): boolean {
-  return /is_studio_available|42703|column/i.test(message)
+function isMissingOptionalProductColumn(message: string): boolean {
+  return /is_studio_available|is_private_custom|42703|column/i.test(message)
 }
 
 export function invalidateStorefrontProductsCache(): void {
@@ -248,6 +248,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
     is_hot: form.is_hot,
     is_quick_add: form.is_quick_add,
     is_studio_available: form.is_studio_available,
+    is_private_custom: form.is_private_custom,
     generates_soul_card: form.generates_soul_card,
     sort_order,
   }
@@ -260,8 +261,12 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
 
   if (error) {
     const msg = formatErrorMessage(error)
-    if (isMissingStudioAvailabilityColumn(msg)) {
-      const { is_studio_available: _omit, ...fallbackPayload } = payload
+    if (isMissingOptionalProductColumn(msg)) {
+      const {
+        is_studio_available: _omitStudio,
+        is_private_custom: _omitPrivate,
+        ...fallbackPayload
+      } = payload
       const retry = await supabase
         .from('products')
         .insert(fallbackPayload)
@@ -330,6 +335,7 @@ export async function updateProduct(
     is_hot: form.is_hot,
     is_quick_add: form.is_quick_add,
     is_studio_available: form.is_studio_available,
+    is_private_custom: form.is_private_custom,
     generates_soul_card: form.generates_soul_card,
   }
 
@@ -342,8 +348,12 @@ export async function updateProduct(
 
   if (error) {
     const msg = formatErrorMessage(error)
-    if (isMissingStudioAvailabilityColumn(msg)) {
-      const { is_studio_available: _omit, ...fallbackPayload } = payload
+    if (isMissingOptionalProductColumn(msg)) {
+      const {
+        is_studio_available: _omitStudio,
+        is_private_custom: _omitPrivate,
+        ...fallbackPayload
+      } = payload
       const retry = await supabase
         .from('products')
         .update(fallbackPayload)

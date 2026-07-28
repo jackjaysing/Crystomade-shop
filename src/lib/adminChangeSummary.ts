@@ -187,6 +187,13 @@ export function buildProductUpdateSummary(before: Product, after: Product): stri
 
   pushTextChange(
     changes,
+    '私人訂製',
+    formatAdminBool(before.is_private_custom),
+    formatAdminBool(after.is_private_custom)
+  )
+
+  pushTextChange(
+    changes,
     '魔法身分證',
     formatAdminBool(before.generates_soul_card),
     formatAdminBool(after.generates_soul_card)

@@ -60,6 +60,7 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     is_hot: Boolean(row.is_hot),
     is_quick_add: Boolean(row.is_quick_add),
     is_studio_available: Boolean(row.is_studio_available),
+    is_private_custom: Boolean(row.is_private_custom),
     generates_soul_card: row.generates_soul_card === false ? false : true,
     sort_order: Number(row.sort_order ?? 0),
   }
