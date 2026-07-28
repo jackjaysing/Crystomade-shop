@@ -180,6 +180,13 @@ export function buildProductUpdateSummary(before: Product, after: Product): stri
 
   pushTextChange(
     changes,
+    '實體工作室同步販售',
+    formatAdminBool(before.is_studio_available),
+    formatAdminBool(after.is_studio_available)
+  )
+
+  pushTextChange(
+    changes,
     '魔法身分證',
     formatAdminBool(before.generates_soul_card),
     formatAdminBool(after.generates_soul_card)

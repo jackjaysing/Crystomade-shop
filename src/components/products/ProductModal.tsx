@@ -137,6 +137,11 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           <div className="mt-2">
             <ProductPriceDisplay product={product} variant="detail" />
           </div>
+          {product.is_studio_available && (
+            <p className="mt-2 text-sm text-emerald-300/90">
+              實體工作室同步販售中
+            </p>
+          )}
 
           <div className="mt-4 flex flex-wrap gap-2">
             {product.tags.map((tag) => (

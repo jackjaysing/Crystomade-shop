@@ -20,6 +20,7 @@ interface UseProductsListHomeResetOptions {
   setActiveCrystalColorId: (value: string | null) => void
   setSearchQuery: (value: string) => void
   setSortMode: (value: ProductSortMode) => void
+  setShowStudioAvailableOnly: (value: boolean) => void
 }
 
 /** 典藏頁回到頂部並重置篩選（logo／典藏再點一次） */
@@ -33,6 +34,7 @@ export function useProductsListHomeReset({
   setActiveCrystalColorId,
   setSearchQuery,
   setSortMode,
+  setShowStudioAvailableOnly,
 }: UseProductsListHomeResetOptions) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -49,6 +51,7 @@ export function useProductsListHomeReset({
     setActiveCrystalColorId(null)
     setSearchQuery('')
     setSortMode('default')
+    setShowStudioAvailableOnly(false)
     sessionContext?.resetAllCarousels()
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [
@@ -61,6 +64,7 @@ export function useProductsListHomeReset({
     setActiveCrystalColorId,
     setActiveFilterId,
     setSearchQuery,
+    setShowStudioAvailableOnly,
     setSortMode,
   ])
 

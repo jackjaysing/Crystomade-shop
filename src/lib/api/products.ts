@@ -29,6 +29,10 @@ function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
 const PRODUCTS_CACHE_MS = 60_000
 let storefrontProductsCache: { data: Product[]; at: number } | null = null
 
+function isMissingStudioAvailabilityColumn(message: string): boolean {
+  return /is_studio_available|42703|column/i.test(message)
+}
+
 export function invalidateStorefrontProductsCache(): void {
   storefrontProductsCache = null
 }
@@ -226,32 +230,49 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
 
   const sort_order = await getSortOrderForNewProduct(form.is_hot)
 
-  const { data, error } = await supabase
+  const payload = {
+    name: form.name,
+    category: form.category,
+    bracelet_style:
+      form.category === '手串' ? form.bracelet_style ?? '通用' : null,
+    subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
+    price: form.price,
+    discount_zhe: form.discount_zhe,
+    tags: sanitizeProductTags(form.tags),
+    five_elements: sanitizeFiveElements(form.five_elements),
+    image_url,
+    gallery_urls,
+    description: form.description,
+    stock: form.stock,
+    status: 'available' as const,
+    is_hot: form.is_hot,
+    is_quick_add: form.is_quick_add,
+    is_studio_available: form.is_studio_available,
+    generates_soul_card: form.generates_soul_card,
+    sort_order,
+  }
+
+  let { data, error } = await supabase
     .from('products')
-    .insert({
-      name: form.name,
-      category: form.category,
-      bracelet_style:
-        form.category === '手串' ? form.bracelet_style ?? '通用' : null,
-      subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
-      price: form.price,
-      discount_zhe: form.discount_zhe,
-      tags: sanitizeProductTags(form.tags),
-      five_elements: sanitizeFiveElements(form.five_elements),
-      image_url,
-      gallery_urls,
-      description: form.description,
-      stock: form.stock,
-      status: 'available',
-      is_hot: form.is_hot,
-      is_quick_add: form.is_quick_add,
-      generates_soul_card: form.generates_soul_card,
-      sort_order,
-    })
+    .insert(payload)
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (isMissingStudioAvailabilityColumn(msg)) {
+      const { is_studio_available: _omit, ...fallbackPayload } = payload
+      const retry = await supabase
+        .from('products')
+        .insert(fallbackPayload)
+        .select()
+        .single()
+      data = retry.data
+      error = retry.error
+    }
+  }
+
+  if (error) throw new Error(formatErrorMessage(error))
   const product = normalizeProduct(data as Record<string, unknown>)
   void recordAdminActivity({
     action: 'create',
@@ -291,30 +312,48 @@ export async function updateProduct(
   const stock = Math.max(0, form.stock)
   const status = stock <= 0 ? 'sold' : 'available'
 
-  const { data, error } = await supabase
+  const payload = {
+    name: form.name.trim(),
+    category: form.category,
+    bracelet_style:
+      form.category === '手串' ? form.bracelet_style ?? '通用' : null,
+    subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
+    price: form.price,
+    discount_zhe: form.discount_zhe,
+    tags: sanitizeProductTags(form.tags),
+    five_elements: sanitizeFiveElements(form.five_elements),
+    image_url,
+    gallery_urls,
+    description: form.description,
+    stock,
+    status,
+    is_hot: form.is_hot,
+    is_quick_add: form.is_quick_add,
+    is_studio_available: form.is_studio_available,
+    generates_soul_card: form.generates_soul_card,
+  }
+
+  let { data, error } = await supabase
     .from('products')
-    .update({
-      name: form.name.trim(),
-      category: form.category,
-      bracelet_style:
-        form.category === '手串' ? form.bracelet_style ?? '通用' : null,
-      subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
-      price: form.price,
-      discount_zhe: form.discount_zhe,
-      tags: sanitizeProductTags(form.tags),
-      five_elements: sanitizeFiveElements(form.five_elements),
-      image_url,
-      gallery_urls,
-      description: form.description,
-      stock,
-      status,
-      is_hot: form.is_hot,
-      is_quick_add: form.is_quick_add,
-      generates_soul_card: form.generates_soul_card,
-    })
+    .update(payload)
     .eq('id', productId)
     .select()
     .single()
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (isMissingStudioAvailabilityColumn(msg)) {
+      const { is_studio_available: _omit, ...fallbackPayload } = payload
+      const retry = await supabase
+        .from('products')
+        .update(fallbackPayload)
+        .eq('id', productId)
+        .select()
+        .single()
+      data = retry.data
+      error = retry.error
+    }
+  }
 
   if (error) throw new Error(formatErrorMessage(error))
   const product = normalizeProduct(data as Record<string, unknown>)

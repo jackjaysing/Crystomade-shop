@@ -19,6 +19,7 @@ export interface ProductsListSessionState {
   searchQuery: string
   sortMode: ProductSortMode
   showSoldOut: boolean
+  showStudioAvailableOnly: boolean
   savedAt: number
 }
 
@@ -65,6 +66,7 @@ export function loadProductsListSession(): ProductsListSessionState | null {
       searchQuery: typeof parsed.searchQuery === 'string' ? parsed.searchQuery : '',
       sortMode: parsed.sortMode ?? 'default',
       showSoldOut: parsed.showSoldOut !== false,
+      showStudioAvailableOnly: parsed.showStudioAvailableOnly === true,
       savedAt: parsed.savedAt,
     }
   } catch {

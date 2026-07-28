@@ -89,6 +89,11 @@ export function ProductCard({ product }: ProductCardProps) {
             </span>
           ))}
         </div>
+        {product.is_studio_available && (
+          <p className="mt-3 text-xs text-emerald-300/85">
+            實體工作室同步販售中
+          </p>
+        )}
       </div>
     </Link>
   )

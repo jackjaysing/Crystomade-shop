@@ -44,6 +44,7 @@ import { CrystalColorFilter } from '../components/products/CrystalColorFilter'
 import { ProductSearchBar } from '../components/products/ProductSearchBar'
 
 import { SoldOutToggle } from '../components/products/SoldOutToggle'
+import { StudioAvailableToggle } from '../components/products/StudioAvailableToggle'
 
 import { ProductSortFilter } from '../components/products/ProductSortFilter'
 
@@ -138,6 +139,9 @@ export function ProductsPage() {
   const [showSoldOut, setShowSoldOut] = useState(
     () => initialSession?.showSoldOut ?? loadShowSoldOutProducts()
   )
+  const [showStudioAvailableOnly, setShowStudioAvailableOnly] = useState(
+    () => initialSession?.showStudioAvailableOnly ?? false
+  )
 
   const productSectionRef = useRef<HTMLElement>(null)
 
@@ -209,6 +213,10 @@ export function ProductsPage() {
 
     }
 
+    if (showStudioAvailableOnly) {
+      list = list.filter((p) => p.is_studio_available)
+    }
+
 
 
     if (searchQuery.trim()) {
@@ -258,6 +266,7 @@ export function ProductsPage() {
     products,
 
     showSoldOut,
+    showStudioAvailableOnly,
 
     searchQuery,
 
@@ -371,6 +380,7 @@ export function ProductsPage() {
     setActiveCrystalColorId,
     setSearchQuery,
     setSortMode,
+    setShowStudioAvailableOnly,
   })
 
   const getListSnapshot = useCallback(
@@ -386,6 +396,7 @@ export function ProductsPage() {
       searchQuery,
       sortMode,
       showSoldOut,
+      showStudioAvailableOnly,
     }),
     [
       activeCategory,
@@ -398,6 +409,7 @@ export function ProductsPage() {
       searchQuery,
       sortMode,
       showSoldOut,
+      showStudioAvailableOnly,
     ]
   )
 
@@ -464,6 +476,10 @@ export function ProductsPage() {
 
             onChange={handleSoldOutVisibilityChange}
 
+          />
+          <StudioAvailableToggle
+            active={showStudioAvailableOnly}
+            onChange={setShowStudioAvailableOnly}
           />
 
         </div>
@@ -693,6 +709,8 @@ export function ProductsPage() {
 
                 ? '已隱藏完售商品，目前沒有其他符合條件的商品'
 
+                : showStudioAvailableOnly
+                  ? '目前沒有符合條件的門市同步商品'
                 : '目前沒有符合條件的商品'}
 
           </p>

@@ -146,6 +146,7 @@ export function ProductListAdmin({
           {isProductSoldOut(p)
             ? '已售罄'
             : `上架中 · 庫存 ${p.stock} 件`}{' '}
+          · {p.is_studio_available ? '實體工作室同步販售中' : '僅線上販售'}{' '}
           · {new Date(p.created_at).toLocaleDateString('zh-TW')}
         </p>
         {(!viewStatsError || !shareStatsError) && (

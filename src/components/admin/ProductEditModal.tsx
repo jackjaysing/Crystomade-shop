@@ -50,6 +50,7 @@ function toEditForm(product: Product): ProductEditData {
     stock: product.stock,
     is_hot: product.is_hot,
     is_quick_add: product.is_quick_add,
+    is_studio_available: product.is_studio_available,
     generates_soul_card: product.generates_soul_card,
     coverFile: null,
     galleryItems: product.gallery_urls.map((url) => ({
@@ -217,6 +218,7 @@ export function ProductEditModal({
         product.image_url
       )
       onSaved()
+      onClose()
       return
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '更新失敗')
@@ -238,6 +240,7 @@ export function ProductEditModal({
     try {
       await deleteProduct(product.id)
       onSaved()
+      onClose()
       return
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '刪除失敗')
@@ -336,6 +339,18 @@ export function ProductEditModal({
               className="rounded border-white/20 bg-void"
             />
             推薦加購（顯示於購物車快捷推薦區）
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={form.is_studio_available}
+              onChange={(e) =>
+                setForm({ ...form, is_studio_available: e.target.checked })
+              }
+              className="rounded border-white/20 bg-void"
+            />
+            同步於實體工作室販售中
           </label>
 
           <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">

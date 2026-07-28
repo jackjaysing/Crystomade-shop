@@ -50,6 +50,8 @@ export interface Product {
   is_hot: boolean
   /** 購物車快捷加購推薦 */
   is_quick_add: boolean
+  /** 是否同步於實體工作室販售中 */
+  is_studio_available: boolean
   /** 付款後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 排序：數字越小越前面（熱門商品仍置頂） */
@@ -348,6 +350,8 @@ export interface ProductFormData {
   is_hot: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
+  /** 是否同步於實體工作室販售中 */
+  is_studio_available: boolean
   /** 付款後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 封面圖 */
@@ -454,6 +458,8 @@ export interface ProductEditData {
   is_hot: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
+  /** 是否同步於實體工作室販售中 */
+  is_studio_available: boolean
   /** 付款後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 新封面；null 表示沿用原圖 */
