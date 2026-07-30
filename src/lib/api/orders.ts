@@ -1,4 +1,5 @@
 import { recordAdminActivity } from './adminActivityLog'
+import { fetchProductCostsByIds } from './productCosts'
 import { formatErrorMessage } from '../formatError'
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
@@ -211,10 +212,69 @@ const ORDER_SELECT = `
   products ( name, image_url, category )
 `
 
+/** 含工作室歸屬（尚未跑 migration 時自動降級為 ORDER_SELECT） */
+const ORDER_SELECT_WITH_STUDIO = `
+  *,
+  products ( name, image_url, category, studio_location )
+`
+
+let productStudioColumnAvailable = true
+
+function isMissingProductStudioColumn(message: string): boolean {
+  return /studio_location/i.test(message)
+}
+
+type OrderQueryResult = { data: unknown[] | null; error: unknown }
+
+/** 執行訂單查詢；工作室欄位不存在時改用基本 select 重試一次 */
+async function selectOrders(
+  query: (select: string) => PromiseLike<OrderQueryResult>
+): Promise<OrderQueryResult> {
+  const first = await query(
+    productStudioColumnAvailable ? ORDER_SELECT_WITH_STUDIO : ORDER_SELECT
+  )
+  if (
+    first.error &&
+    productStudioColumnAvailable &&
+    isMissingProductStudioColumn(formatErrorMessage(first.error))
+  ) {
+    productStudioColumnAvailable = false
+    return query(ORDER_SELECT)
+  }
+  return first
+}
+
 function mapOrderRows(data: unknown[] | null): Order[] {
   return (data ?? []).map((row) =>
     normalizeOrder(row as Record<string, unknown>)
   )
+}
+
+/** 後台：把私密成本合併進訂單關聯商品 */
+async function attachProductCosts(orders: Order[]): Promise<Order[]> {
+  const productIds = orders
+    .map((order) => order.product_id)
+    .filter((id): id is string => Boolean(id))
+  if (productIds.length === 0) return orders
+
+  const costs = await fetchProductCostsByIds(productIds)
+  if (costs.size === 0) return orders
+
+  return orders.map((order) => {
+    if (!order.product_id) return order
+    const cost = costs.get(order.product_id)
+    if (cost == null) return order
+    return {
+      ...order,
+      products: order.products
+        ? { ...order.products, cost }
+        : {
+            name: order.product_name ?? '',
+            image_url: order.product_image_url ?? '',
+            cost,
+          },
+    }
+  })
 }
 
 function isMissingOrderSoftDeleteColumn(message: string): boolean {
@@ -223,34 +283,40 @@ function isMissingOrderSoftDeleteColumn(message: string): boolean {
 
 /** 後台：取得未刪除訂單（最新優先） */
 export async function fetchOrders(): Promise<Order[]> {
-  const { data, error } = await supabase
-    .from('orders')
-    .select(ORDER_SELECT)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
+  const { data, error } = await selectOrders((select) =>
+    supabase
+      .from('orders')
+      .select(select)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+  )
 
   if (error) {
     const msg = formatErrorMessage(error)
     if (isMissingOrderSoftDeleteColumn(msg)) {
-      const fallback = await supabase
-        .from('orders')
-        .select(ORDER_SELECT)
-        .order('created_at', { ascending: false })
+      const fallback = await selectOrders((select) =>
+        supabase
+          .from('orders')
+          .select(select)
+          .order('created_at', { ascending: false })
+      )
       if (fallback.error) throw new Error(formatErrorMessage(fallback.error))
-      return mapOrderRows(fallback.data)
+      return attachProductCosts(mapOrderRows(fallback.data))
     }
     throw new Error(msg)
   }
-  return mapOrderRows(data)
+  return attachProductCosts(mapOrderRows(data))
 }
 
 /** 後台：取得已軟刪除訂單 */
 export async function fetchDeletedOrders(): Promise<Order[]> {
-  const { data, error } = await supabase
-    .from('orders')
-    .select(ORDER_SELECT)
-    .not('deleted_at', 'is', null)
-    .order('deleted_at', { ascending: false })
+  const { data, error } = await selectOrders((select) =>
+    supabase
+      .from('orders')
+      .select(select)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+  )
 
   if (error) {
     const msg = formatErrorMessage(error)
@@ -259,7 +325,7 @@ export async function fetchDeletedOrders(): Promise<Order[]> {
     }
     throw new Error(msg)
   }
-  return mapOrderRows(data)
+  return attachProductCosts(mapOrderRows(data))
 }
 
 /** 後台：一鍵出貨 */

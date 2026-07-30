@@ -3,6 +3,7 @@ import {
   getProductCategoryLabel,
   PRODUCT_CATEGORIES,
 } from '../../constants/categories'
+import { getStudioLocationLabel } from '../../constants/studioLocations'
 import { isProductSoldOut } from '../../lib/productStock'
 import {
   markProductSold,
@@ -149,6 +150,19 @@ export function ProductListAdmin({
           · {p.is_studio_available ? '實體工作室同步販售中' : '僅線上販售'}{' '}
           · {p.is_private_custom ? '! 已預定' : '一般販售'}{' '}
           · {new Date(p.created_at).toLocaleDateString('zh-TW')}
+        </p>
+        <p className="text-xs text-white/40">
+          成本 {p.cost > 0 ? `NT$ ${p.cost.toLocaleString()}` : '未填'} · 單件淨利潤{' '}
+          <span
+            className={
+              getProductSalePrice(p) - p.cost >= 0
+                ? 'text-emerald-300/80'
+                : 'text-red-300/80'
+            }
+          >
+            NT$ {(getProductSalePrice(p) - p.cost).toLocaleString()}
+          </span>{' '}
+          · {getStudioLocationLabel(p.studio_location)}
         </p>
         {(!viewStatsError || !shareStatsError) && (
           <p className="mt-1 text-xs text-white/35">

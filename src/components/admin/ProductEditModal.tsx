@@ -20,6 +20,7 @@ import { AdminFiveElementsPicker } from './AdminFiveElementsPicker'
 import { AdminProductSubcategoryPicker } from './AdminProductSubcategoryPicker'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
+import { AdminProductStudioPicker } from './AdminProductStudioPicker'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
 import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
@@ -44,6 +45,8 @@ function toEditForm(product: Product): ProductEditData {
     subcategory: product.subcategory,
     price: product.price,
     discount_zhe: product.discount_zhe,
+    cost: product.cost,
+    studio_location: product.studio_location,
     tags: [...product.tags],
     five_elements: [...product.five_elements],
     description: product.description,
@@ -303,10 +306,12 @@ export function ProductEditModal({
           <AdminProductPricingFields
             price={form.price}
             discountZhe={form.discount_zhe}
+            cost={form.cost}
             onPriceChange={(price) => setForm({ ...form, price })}
             onDiscountChange={(discount_zhe) =>
               setForm({ ...form, discount_zhe })
             }
+            onCostChange={(cost) => setForm({ ...form, cost })}
           />
           <IntegerField
             min={0}
@@ -353,6 +358,14 @@ export function ProductEditModal({
             />
             同步於實體工作室販售中
           </label>
+
+          <AdminProductStudioPicker
+            name="edit"
+            value={form.studio_location}
+            onChange={(studio_location) =>
+              setForm({ ...form, studio_location })
+            }
+          />
 
           <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
             <input

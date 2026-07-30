@@ -1,3 +1,4 @@
+import { parseStudioLocation } from '../constants/studioLocations'
 import type { Order, OrderFormData, ProductCategory } from './types'
 import { normalizeBraceletConfig } from './braceletConfig'
 
@@ -16,9 +17,16 @@ function resolveOrderProduct(
     parseProductCategory(
       (joined as { category?: unknown } | null)?.category ?? row.product_category
     ) ?? undefined
+  const cost = 0
+  const studioLocation = parseStudioLocation(joined?.studio_location)
 
   if (joined?.name) {
-    return { ...joined, category: joined.category ?? category }
+    return {
+      ...joined,
+      category: joined.category ?? category,
+      cost,
+      studio_location: studioLocation,
+    }
   }
 
   const snapshotName = row.product_name != null ? String(row.product_name) : ''
@@ -29,6 +37,8 @@ function resolveOrderProduct(
     image_url:
       row.product_image_url != null ? String(row.product_image_url) : '',
     category,
+    cost,
+    studio_location: studioLocation,
   }
 }
 

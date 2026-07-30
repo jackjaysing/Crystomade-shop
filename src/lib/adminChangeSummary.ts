@@ -148,6 +148,21 @@ export function buildProductUpdateSummary(before: Product, after: Product): stri
     formatAdminMoney
   )
 
+  pushNumberChange(
+    changes,
+    '成本',
+    Math.round(before.cost),
+    Math.round(after.cost),
+    formatAdminMoney
+  )
+
+  pushTextChange(
+    changes,
+    '所屬工作室',
+    before.studio_location ?? '未指定',
+    after.studio_location ?? '未指定'
+  )
+
   pushNumberChange(changes, '庫存', before.stock, after.stock, (value) => `${value} 件`)
 
   pushTextChange(

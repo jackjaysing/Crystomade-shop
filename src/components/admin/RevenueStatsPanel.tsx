@@ -1,5 +1,15 @@
 import { useMemo } from 'react'
-import { Banknote, CalendarDays, CircleDollarSign, RefreshCw, Wallet } from 'lucide-react'
+import {
+  Banknote,
+  CalendarDays,
+  CircleDollarSign,
+  HandCoins,
+  PiggyBank,
+  RefreshCw,
+  Store,
+  Wallet,
+} from 'lucide-react'
+import { STUDIO_PROFIT_SHARE_RATE } from '../../constants/studioLocations'
 import {
   computeRevenueStats,
   formatRevenueAmount,
@@ -55,6 +65,7 @@ export function RevenueStatsPanel({
 }: RevenueStatsPanelProps) {
   const stats = useMemo(() => computeRevenueStats(orders), [orders])
 
+  const sharePercentLabel = Math.round(STUDIO_PROFIT_SHARE_RATE * 100)
   const monthMax = Math.max(...stats.monthlySeries.map((p) => p.revenue), 1)
   const monthTotal = stats.monthRevenue + stats.monthPendingRevenue
   const paidShare =
@@ -200,6 +211,110 @@ export function RevenueStatsPanel({
           )}
         </div>
       </GlassPanel>
+
+      <h3 className="mb-4 mt-8 text-lg tracking-wide text-white/80">
+        淨利潤與工作室分潤
+      </h3>
+      <p className="mb-4 text-xs text-white/40">
+        淨利潤 ＝ 已結帳商品實收（扣折抵、不含運費）－ 商品成本 · 未填成本的商品以 0
+        計算 · 工作室分潤 ＝ 該工作室商品淨利潤 × {sharePercentLabel}%
+      </p>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="累計淨利潤"
+          value={loading && orders.length === 0 ? '—' : formatRevenueAmount(stats.totalNetProfit)}
+          hint={`累計成本 ${formatRevenueAmount(stats.totalCost)}`}
+          icon={PiggyBank}
+          accent="emerald"
+        />
+        <StatCard
+          label="本月淨利潤"
+          value={loading && orders.length === 0 ? '—' : formatRevenueAmount(stats.monthNetProfit)}
+          hint={`本月成本 ${formatRevenueAmount(stats.monthCost)}`}
+          icon={PiggyBank}
+        />
+        <StatCard
+          label="本月工作室分潤"
+          value={
+            loading && orders.length === 0
+              ? '—'
+              : formatRevenueAmount(stats.monthStudioShareTotal)
+          }
+          hint={`本月淨利潤 ${sharePercentLabel}%`}
+          icon={HandCoins}
+          accent="orange"
+        />
+        <StatCard
+          label="累計工作室分潤"
+          value={
+            loading && orders.length === 0
+              ? '—'
+              : formatRevenueAmount(stats.totalStudioShareTotal)
+          }
+          hint="逐月計算後加總"
+          icon={HandCoins}
+          accent="white"
+        />
+      </div>
+
+      {!stats.hasCostData && (
+        <p className="mt-3 text-xs text-orange-300/80">
+          尚未有商品填寫成本，淨利潤等於商品實收。請到商品管理填入成本。
+        </p>
+      )}
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        {stats.studioShares.map((share) => (
+          <GlassPanel key={share.studio} className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 text-sm font-medium text-white/70">
+                  <Store className="h-4 w-4 text-amber-glow/70" strokeWidth={1.5} />
+                  {share.label}
+                </p>
+                <p className="mt-1 text-xs text-white/40">
+                  本月淨利潤 {formatRevenueAmount(share.monthNetProfit)}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs text-white/45">本月分潤</p>
+                <p className="font-display text-2xl text-amber-glow">
+                  {formatRevenueAmount(share.monthShareAmount)}
+                </p>
+              </div>
+            </div>
+
+            <ul className="mt-5 space-y-2 border-t border-white/10 pt-4 text-xs">
+              {share.monthlySeries
+                .slice()
+                .reverse()
+                .map((point) => (
+                  <li
+                    key={point.monthKey}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <span className="w-16 shrink-0 text-white/50">{point.label}</span>
+                    <span className="min-w-0 flex-1 text-right text-white/45">
+                      淨利 {formatRevenueAmount(point.netProfit)}
+                    </span>
+                    <span className="w-24 shrink-0 text-right text-amber-glow/80">
+                      {formatRevenueAmount(point.shareAmount)}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+
+            <p className="mt-4 border-t border-white/10 pt-3 text-xs text-white/45">
+              累計分潤{' '}
+              <span className="text-white/70">
+                {formatRevenueAmount(share.totalShareAmount)}
+              </span>
+              （累計淨利潤 {formatRevenueAmount(share.totalNetProfit)}）
+            </p>
+          </GlassPanel>
+        ))}
+      </div>
     </section>
   )
 }

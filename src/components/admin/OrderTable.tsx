@@ -32,9 +32,16 @@ import {
   formatOrderPaymentStatus,
   groupOrders,
   ORDER_GROUP_FILTERS,
+  type OrderGroup,
   type OrderGroupFilter,
   type OrderGroupStatus,
 } from '../../lib/groupOrders'
+import { computeOrderGroupProfit } from '../../lib/orderProfit'
+import {
+  STUDIO_PROFIT_SHARE_RATE,
+  calcStudioShareAmount,
+  getStudioLocationLabel,
+} from '../../constants/studioLocations'
 import {
   applyOrderGroupListFilters,
   countOrderGroupsInMonth,
@@ -43,7 +50,7 @@ import {
   listOrderGroupMonthKeys,
   ORDER_MONTH_ALL,
 } from '../../lib/orderGroupFilters'
-import type { Order, OrderPaymentStatus } from '../../lib/types'
+import type { Order, OrderPaymentStatus, StudioLocation } from '../../lib/types'
 import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { Toast } from '../ui/Toast'
@@ -113,6 +120,57 @@ function OrderNumberBlock({ orderNumber }: { orderNumber: string | null }) {
       ) : (
         <p className="mt-1 text-sm text-white/40">尚未產生（請執行 order_number migration）</p>
       )}
+    </div>
+  )
+}
+
+function formatAdminNtd(amount: number): string {
+  return `NT$ ${Math.round(amount).toLocaleString('zh-TW')}`
+}
+
+/** 單筆結帳的成本／淨利潤／工作室分潤（僅後台顯示） */
+function OrderGroupProfitPanel({ group }: { group: OrderGroup }) {
+  const profit = computeOrderGroupProfit(group)
+  const studioNetProfit = new Map<StudioLocation, number>()
+
+  for (const line of profit.lines) {
+    if (!line.studio) continue
+    studioNetProfit.set(
+      line.studio,
+      (studioNetProfit.get(line.studio) ?? 0) + line.netProfit
+    )
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2.5">
+      <p className="text-xs font-medium tracking-wide text-amber-glow/70">
+        損益（僅後台顯示）
+      </p>
+      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+        <span className="text-white/60">商品實收 {formatAdminNtd(profit.revenue)}</span>
+        <span className="text-white/60">成本 {formatAdminNtd(profit.cost)}</span>
+        <span className={profit.netProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}>
+          淨利潤 {formatAdminNtd(profit.netProfit)}
+          <span className="ml-1.5 text-xs text-white/40">
+            （毛利率 {profit.marginPercent}%）
+          </span>
+        </span>
+      </div>
+      {!profit.hasCost && (
+        <p className="mt-1 text-[11px] text-orange-300/70">
+          商品尚未填成本，淨利潤等於商品實收
+        </p>
+      )}
+      {[...studioNetProfit].map(([studio, netProfit]) => (
+        <p key={studio} className="mt-1 text-[11px] text-white/45">
+          {getStudioLocationLabel(studio)} 分潤{' '}
+          <span className="text-amber-glow/80">
+            {formatAdminNtd(calcStudioShareAmount(netProfit))}
+          </span>
+          （淨利潤 {formatAdminNtd(netProfit)} × {Math.round(STUDIO_PROFIT_SHARE_RATE * 100)}
+          %）
+        </p>
+      ))}
     </div>
   )
 }
@@ -697,6 +755,8 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                     </li>
                   ))}
                 </ul>
+
+                <OrderGroupProfitPanel group={group} />
 
                 {orderGroupHasPricingBreakdown(group) && (
                   <ul className="mt-3 space-y-1.5 border-t border-white/5 pt-3">

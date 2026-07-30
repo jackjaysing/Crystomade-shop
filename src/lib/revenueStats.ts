@@ -1,7 +1,12 @@
 import { PRODUCT_CATEGORIES } from '../constants/categories'
+import {
+  STUDIO_LOCATIONS,
+  calcStudioShareAmount,
+} from '../constants/studioLocations'
 import { groupOrders, type OrderGroup } from './groupOrders'
 import { formatOrderGroupMonthLabel, getOrderGroupMonthKey } from './orderGroupFilters'
-import type { Order, ProductCategory } from './types'
+import { computeOrderGroupProfit } from './orderProfit'
+import type { Order, ProductCategory, StudioLocation } from './types'
 
 export const REVENUE_CATEGORY_COLORS: Record<ProductCategory, string> = {
   手串: '#e8c872',
@@ -24,6 +29,25 @@ export interface RevenueMonthPoint {
   orderCount: number
 }
 
+/** 工作室分潤：單一月份 */
+export interface StudioShareMonthPoint {
+  monthKey: string
+  label: string
+  netProfit: number
+  shareAmount: number
+}
+
+/** 工作室分潤：單一工作室彙總 */
+export interface StudioProfitShare {
+  studio: StudioLocation
+  label: string
+  monthNetProfit: number
+  monthShareAmount: number
+  totalNetProfit: number
+  totalShareAmount: number
+  monthlySeries: StudioShareMonthPoint[]
+}
+
 export interface RevenueStats {
   totalRevenue: number
   monthRevenue: number
@@ -36,6 +60,20 @@ export interface RevenueStats {
   monthPendingCount: number
   monthlySeries: RevenueMonthPoint[]
   categorySlices: RevenueCategorySlice[]
+  /** 已結帳商品成本合計 */
+  totalCost: number
+  /** 已結帳淨利潤合計（商品實收扣成本，不含運費） */
+  totalNetProfit: number
+  monthCost: number
+  monthNetProfit: number
+  /** 是否已有商品填寫成本 */
+  hasCostData: boolean
+  /** 各實體工作室分潤 */
+  studioShares: StudioProfitShare[]
+  /** 本月各工作室分潤合計 */
+  monthStudioShareTotal: number
+  /** 累計各工作室分潤合計 */
+  totalStudioShareTotal: number
 }
 
 function resolveOrderCategory(order: Order): ProductCategory | null {
@@ -124,8 +162,13 @@ export function computeRevenueStats(orders: Order[]): RevenueStats {
   let monthPendingRevenue = 0
   let monthPaidCount = 0
   let monthPendingCount = 0
+  let totalCost = 0
+  let totalNetProfit = 0
+  let monthCost = 0
+  let monthNetProfit = 0
 
   const monthRevenueMap = new Map<string, { revenue: number; orderCount: number }>()
+  const studioMonthProfit = new Map<StudioLocation, Map<string, number>>()
 
   for (const group of groups) {
     const createdAt = new Date(group.created_at)
@@ -149,6 +192,21 @@ export function computeRevenueStats(orders: Order[]): RevenueStats {
       bucket.revenue += amount
       bucket.orderCount += 1
       monthRevenueMap.set(monthKey, bucket)
+
+      const profit = computeOrderGroupProfit(group)
+      totalCost += profit.cost
+      totalNetProfit += profit.netProfit
+      if (monthKey === currentMonthKey) {
+        monthCost += profit.cost
+        monthNetProfit += profit.netProfit
+      }
+
+      for (const line of profit.lines) {
+        if (!line.studio) continue
+        const byMonth = studioMonthProfit.get(line.studio) ?? new Map<string, number>()
+        byMonth.set(monthKey, (byMonth.get(monthKey) ?? 0) + line.netProfit)
+        studioMonthProfit.set(line.studio, byMonth)
+      }
     }
 
     if (countsAsPendingRevenue(group)) {
@@ -162,17 +220,46 @@ export function computeRevenueStats(orders: Order[]): RevenueStats {
     }
   }
 
-  const monthlySeries: RevenueMonthPoint[] = buildRecentMonthKeys(now, MONTHLY_CHART_MONTHS).map(
-    (monthKey) => {
-      const bucket = monthRevenueMap.get(monthKey)
-      return {
-        monthKey,
-        label: formatOrderGroupMonthLabel(monthKey),
-        revenue: bucket?.revenue ?? 0,
-        orderCount: bucket?.orderCount ?? 0,
-      }
+  const recentMonthKeys = buildRecentMonthKeys(now, MONTHLY_CHART_MONTHS)
+
+  const monthlySeries: RevenueMonthPoint[] = recentMonthKeys.map((monthKey) => {
+    const bucket = monthRevenueMap.get(monthKey)
+    return {
+      monthKey,
+      label: formatOrderGroupMonthLabel(monthKey),
+      revenue: bucket?.revenue ?? 0,
+      orderCount: bucket?.orderCount ?? 0,
     }
-  )
+  })
+
+  const studioShares: StudioProfitShare[] = STUDIO_LOCATIONS.map((option) => {
+    const byMonth = studioMonthProfit.get(option.id) ?? new Map<string, number>()
+    const monthNetProfit = byMonth.get(currentMonthKey) ?? 0
+    let totalNet = 0
+    let totalShare = 0
+    for (const [, netProfit] of byMonth) {
+      totalNet += netProfit
+      totalShare += calcStudioShareAmount(netProfit)
+    }
+
+    return {
+      studio: option.id,
+      label: option.label,
+      monthNetProfit,
+      monthShareAmount: calcStudioShareAmount(monthNetProfit),
+      totalNetProfit: totalNet,
+      totalShareAmount: totalShare,
+      monthlySeries: recentMonthKeys.map((monthKey) => {
+        const netProfit = byMonth.get(monthKey) ?? 0
+        return {
+          monthKey,
+          label: formatOrderGroupMonthLabel(monthKey),
+          netProfit,
+          shareAmount: calcStudioShareAmount(netProfit),
+        }
+      }),
+    }
+  })
 
   return {
     totalRevenue,
@@ -186,6 +273,20 @@ export function computeRevenueStats(orders: Order[]): RevenueStats {
     monthPendingCount,
     monthlySeries,
     categorySlices: buildCategorySlices(orders),
+    totalCost,
+    totalNetProfit,
+    monthCost,
+    monthNetProfit,
+    hasCostData: totalCost > 0,
+    studioShares,
+    monthStudioShareTotal: studioShares.reduce(
+      (sum, share) => sum + share.monthShareAmount,
+      0
+    ),
+    totalStudioShareTotal: studioShares.reduce(
+      (sum, share) => sum + share.totalShareAmount,
+      0
+    ),
   }
 }
 

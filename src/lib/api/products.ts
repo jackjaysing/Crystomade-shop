@@ -1,4 +1,10 @@
 import {
+  mergeProductCosts,
+  fetchProductCostsByIds,
+  fetchProductCostsMap,
+  upsertProductCost,
+} from './productCosts'
+import {
   buildProductUpdateSummary,
   formatAdminMoney,
 } from '../adminChangeSummary'
@@ -30,7 +36,9 @@ const PRODUCTS_CACHE_MS = 60_000
 let storefrontProductsCache: { data: Product[]; at: number } | null = null
 
 function isMissingOptionalProductColumn(message: string): boolean {
-  return /is_studio_available|is_private_custom|42703|column/i.test(message)
+  return /is_studio_available|is_private_custom|studio_location|42703|column/i.test(
+    message
+  )
 }
 
 export function invalidateStorefrontProductsCache(): void {
@@ -70,6 +78,8 @@ async function getSortOrderForNewProduct(isHot: boolean): Promise<number> {
 /** 取得上架中商品（排除已軟刪除；排序由 sortProducts 處理） */
 export async function fetchProducts(options?: {
   bypassCache?: boolean
+  /** 後台專用：透過私密 RPC 合併成本；前台勿開啟 */
+  includeCosts?: boolean
 }): Promise<Product[]> {
   if (!isSupabaseConfigured) {
     throw new Error('請先在 .env 設定 Supabase 可發布金鑰（VITE_SUPABASE_ANON_KEY）')
@@ -78,6 +88,7 @@ export async function fetchProducts(options?: {
   const now = Date.now()
   if (
     !options?.bypassCache &&
+    !options?.includeCosts &&
     storefrontProductsCache &&
     now - storefrontProductsCache.at < PRODUCTS_CACHE_MS
   ) {
@@ -101,15 +112,27 @@ export async function fetchProducts(options?: {
     .order('created_at', { ascending: false })
 
       if (fallbackError) throw new Error(formatErrorMessage(fallbackError))
-      const result = mapActiveProducts((fallback ?? []) as Record<string, unknown>[])
-      storefrontProductsCache = { data: result, at: Date.now() }
+      let result = mapActiveProducts((fallback ?? []) as Record<string, unknown>[])
+      if (options?.includeCosts) {
+        const costs = await fetchProductCostsMap()
+        result = mergeProductCosts(result, costs)
+      }
+      if (!options?.includeCosts) {
+        storefrontProductsCache = { data: result, at: Date.now() }
+      }
       return result
     }
     throw new Error(msg)
   }
 
-  const result = mapActiveProducts((data ?? []) as Record<string, unknown>[])
-  storefrontProductsCache = { data: result, at: Date.now() }
+  let result = mapActiveProducts((data ?? []) as Record<string, unknown>[])
+  if (options?.includeCosts) {
+    const costs = await fetchProductCostsMap()
+    result = mergeProductCosts(result, costs)
+  }
+  if (!options?.includeCosts) {
+    storefrontProductsCache = { data: result, at: Date.now() }
+  }
   return result
 }
 
@@ -238,6 +261,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
     subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
     price: form.price,
     discount_zhe: form.discount_zhe,
+    studio_location: form.studio_location,
     tags: sanitizeProductTags(form.tags),
     five_elements: sanitizeFiveElements(form.five_elements),
     image_url,
@@ -265,6 +289,7 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
       const {
         is_studio_available: _omitStudio,
         is_private_custom: _omitPrivate,
+        studio_location: _omitStudioLocation,
         ...fallbackPayload
       } = payload
       const retry = await supabase
@@ -279,6 +304,8 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
 
   if (error) throw new Error(formatErrorMessage(error))
   const product = normalizeProduct(data as Record<string, unknown>)
+  const savedCost = await upsertProductCost(product.id, form.cost)
+  product.cost = savedCost
   void recordAdminActivity({
     action: 'create',
     entityType: 'product',
@@ -307,6 +334,8 @@ export async function updateProduct(
   }
 
   const beforeProduct = normalizeProduct(beforeRow as Record<string, unknown>)
+  const beforeCosts = await fetchProductCostsByIds([productId])
+  beforeProduct.cost = beforeCosts.get(productId) ?? 0
 
   const image_url = form.coverFile
     ? await uploadProductImage(form.coverFile)
@@ -325,6 +354,7 @@ export async function updateProduct(
     subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
     price: form.price,
     discount_zhe: form.discount_zhe,
+    studio_location: form.studio_location,
     tags: sanitizeProductTags(form.tags),
     five_elements: sanitizeFiveElements(form.five_elements),
     image_url,
@@ -352,6 +382,7 @@ export async function updateProduct(
       const {
         is_studio_available: _omitStudio,
         is_private_custom: _omitPrivate,
+        studio_location: _omitStudioLocation,
         ...fallbackPayload
       } = payload
       const retry = await supabase
@@ -367,6 +398,8 @@ export async function updateProduct(
 
   if (error) throw new Error(formatErrorMessage(error))
   const product = normalizeProduct(data as Record<string, unknown>)
+  const savedCost = await upsertProductCost(product.id, form.cost)
+  product.cost = savedCost
   await recordAdminActivity({
     action: 'update',
     entityType: 'product',

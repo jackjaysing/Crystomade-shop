@@ -5,7 +5,13 @@ import {
   resolveOrderGroupPricing,
 } from './orderGroupPricing'
 import type { BraceletConfig } from './braceletConfig'
-import type { CvsBrand, Order, OrderPaymentStatus, OrderStatus } from './types'
+import type {
+  CvsBrand,
+  Order,
+  OrderPaymentStatus,
+  OrderStatus,
+  StudioLocation,
+} from './types'
 
 export type OrderGroupStatus = OrderStatus | 'partial'
 
@@ -25,6 +31,10 @@ export interface OrderLineItem {
   lineTotal: number
   /** 折抵前商品小計（整數，供後台／LINE 顯示） */
   lineSubtotal?: number
+  /** 單件成本（後台淨利潤用；商品未填成本為 0） */
+  unitCost: number
+  /** 商品所屬實體工作室（後台分潤用） */
+  studioLocation: StudioLocation | null
 }
 
 /** 後台合併顯示的訂單群組（同一結帳） */
@@ -117,6 +127,8 @@ function buildLineItems(
       braceletConfig,
       quantity: 1,
       lineTotal: order.total_amount,
+      unitCost: Math.max(0, Number(order.products?.cost ?? 0) || 0),
+      studioLocation: order.products?.studio_location ?? null,
     })
 
     if (isPaidProductOrder(order)) {

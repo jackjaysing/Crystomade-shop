@@ -7,19 +7,26 @@ import {
 interface AdminProductPricingFieldsProps {
   price: number
   discountZhe: number | null
+  cost: number
   onPriceChange: (price: number) => void
   onDiscountChange: (discountZhe: number | null) => void
+  onCostChange: (cost: number) => void
 }
 
-/** 後台：原價 + 折扣（折）+ 特價預覽 */
+/** 後台：原價 + 折扣（折）+ 成本 + 特價／淨利潤預覽 */
 export function AdminProductPricingFields({
   price,
   discountZhe,
+  cost,
   onPriceChange,
   onDiscountChange,
+  onCostChange,
 }: AdminProductPricingFieldsProps) {
   const salePrice = calcSalePrice(price, discountZhe)
   const onSale = price > 0 && salePrice < price
+  const netProfit = salePrice - cost
+  const marginPercent =
+    salePrice > 0 ? Math.round((netProfit / salePrice) * 1000) / 10 : 0
 
   return (
     <div className="space-y-3 rounded-lg border border-white/10 bg-white/[0.02] p-4">
@@ -47,6 +54,19 @@ export function AdminProductPricingFields({
           8 折表示售價為原價的 80%，可填 8 或 8.5
         </p>
       </div>
+      <div>
+        <input
+          type="number"
+          min={0}
+          placeholder="成本 (NT$)，留空＝0"
+          value={cost || ''}
+          onChange={(e) => onCostChange(Math.max(0, Number(e.target.value)))}
+          className="input-field"
+        />
+        <p className="mt-1 text-[11px] text-white/35">
+          僅後台可見，存在私密資料表，前台商品 API 不會回傳
+        </p>
+      </div>
       {price > 0 && (
         <p className="text-sm text-white/70">
           {onSale ? (
@@ -67,6 +87,17 @@ export function AdminProductPricingFields({
           ) : (
             <>售價 NT$ {price.toLocaleString()}</>
           )}
+        </p>
+      )}
+      {price > 0 && cost > 0 && (
+        <p className="text-sm text-white/70">
+          單件淨利潤{' '}
+          <span className={netProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}>
+            NT$ {netProfit.toLocaleString()}
+          </span>
+          <span className="ml-2 text-xs text-white/45">
+            （毛利率 {marginPercent}%）
+          </span>
         </p>
       )}
     </div>

@@ -15,6 +15,7 @@ import { AdminFiveElementsPicker } from './AdminFiveElementsPicker'
 import { AdminProductSubcategoryPicker } from './AdminProductSubcategoryPicker'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
+import { AdminProductStudioPicker } from './AdminProductStudioPicker'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
 import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
@@ -36,6 +37,8 @@ const initialForm: ProductFormData = {
   subcategory: null,
   price: 0,
   discount_zhe: null,
+  cost: 0,
+  studio_location: null,
   stock: 1,
   is_hot: false,
   is_quick_add: false,
@@ -221,10 +224,12 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
         <AdminProductPricingFields
           price={form.price}
           discountZhe={form.discount_zhe}
+          cost={form.cost}
           onPriceChange={(price) => setForm({ ...form, price })}
           onDiscountChange={(discount_zhe) =>
             setForm({ ...form, discount_zhe })
           }
+          onCostChange={(cost) => setForm({ ...form, cost })}
         />
         <IntegerField
           min={1}
@@ -269,6 +274,12 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
           />
           同步於實體工作室販售中
         </label>
+
+        <AdminProductStudioPicker
+          name="create"
+          value={form.studio_location}
+          onChange={(studio_location) => setForm({ ...form, studio_location })}
+        />
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
           <input
