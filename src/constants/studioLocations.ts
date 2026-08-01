@@ -7,13 +7,14 @@ export interface StudioLocationOption {
   shortLabel: string
 }
 
-/** 實體工作室 */
+/** 分潤歸屬人選（分潤統計） */
 export const STUDIO_LOCATIONS: StudioLocationOption[] = [
-  { id: '士林工作室', label: '士林工作室', shortLabel: '士林' },
-  { id: '板橋工作室', label: '板橋工作室', shortLabel: '板橋' },
+  { id: '羽薇', label: '羽薇', shortLabel: '羽薇' },
+  { id: 'Ken', label: 'Ken', shortLabel: 'Ken' },
+  { id: 'Johnman', label: 'Johnman', shortLabel: 'Johnman' },
 ]
 
-/** 實體工作室售出商品的分潤比例（淨利潤 3 成） */
+/** 分潤比例（淨利潤 3 成） */
 export const STUDIO_PROFIT_SHARE_RATE = 0.3
 
 const VALID_STUDIOS = new Set<string>(STUDIO_LOCATIONS.map((s) => s.id))
@@ -27,7 +28,7 @@ export function parseStudioLocation(value: unknown): StudioLocation | null {
 export function getStudioLocationLabel(
   studio: StudioLocation | null | undefined
 ): string {
-  if (!studio) return '未指定工作室'
+  if (!studio) return '未指定'
   return STUDIO_LOCATIONS.find((s) => s.id === studio)?.label ?? studio
 }
 

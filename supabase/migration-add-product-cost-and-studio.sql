@@ -1,16 +1,16 @@
 -- ============================================================
--- 商品成本（私密）與所屬實體工作室
--- - studio_location：仍在 products（分類用）
+-- 商品成本（私密）與分潤歸屬
+-- - studio_location：仍在 products（分潤歸屬人選）
 -- - cost：獨立表 product_costs，RLS 禁止公開讀取
 --   僅能透過後台 SECURITY DEFINER RPC 讀寫
 -- Supabase Dashboard → SQL Editor 執行
 -- ============================================================
 
--- ── 所屬工作室（公開商品欄位）────────────────────────────────
+-- ── 分潤歸屬（公開商品欄位）──────────────────────────────────
 ALTER TABLE products
   ADD COLUMN IF NOT EXISTS studio_location TEXT;
 
-COMMENT ON COLUMN products.studio_location IS '所屬實體工作室（士林工作室／板橋工作室），null 表示未指定';
+COMMENT ON COLUMN products.studio_location IS '分潤歸屬（羽薇／Ken／Johnman），null 表示未指定';
 
 DO $$
 BEGIN
@@ -19,7 +19,7 @@ BEGIN
   ) THEN
     ALTER TABLE products
       ADD CONSTRAINT products_studio_location_check
-      CHECK (studio_location IS NULL OR studio_location IN ('士林工作室', '板橋工作室'));
+      CHECK (studio_location IS NULL OR studio_location IN ('羽薇', 'Ken', 'Johnman'));
   END IF;
 END $$;
 

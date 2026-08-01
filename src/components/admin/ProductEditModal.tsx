@@ -219,7 +219,8 @@ export function ProductEditModal({
       await updateProduct(
         product.id,
         { ...form, stock },
-        product.image_url
+        product.image_url,
+        { updateCost: isSuperAdmin }
       )
       onSaved()
       onClose()
@@ -307,6 +308,7 @@ export function ProductEditModal({
             price={form.price}
             discountZhe={form.discount_zhe}
             cost={form.cost}
+            showCost={isSuperAdmin}
             onPriceChange={(price) => setForm({ ...form, price })}
             onDiscountChange={(discount_zhe) =>
               setForm({ ...form, discount_zhe })

@@ -74,6 +74,10 @@ export interface RevenueStats {
   monthStudioShareTotal: number
   /** 累計各工作室分潤合計 */
   totalStudioShareTotal: number
+  /** 累計淨利潤扣除全部分潤後 */
+  totalNetProfitAfterShare: number
+  /** 本月淨利潤扣除全部分潤後 */
+  monthNetProfitAfterShare: number
 }
 
 function resolveOrderCategory(order: Order): ProductCategory | null {
@@ -261,6 +265,15 @@ export function computeRevenueStats(orders: Order[]): RevenueStats {
     }
   })
 
+  const monthStudioShareTotal = studioShares.reduce(
+    (sum, share) => sum + share.monthShareAmount,
+    0
+  )
+  const totalStudioShareTotal = studioShares.reduce(
+    (sum, share) => sum + share.totalShareAmount,
+    0
+  )
+
   return {
     totalRevenue,
     monthRevenue,
@@ -279,14 +292,10 @@ export function computeRevenueStats(orders: Order[]): RevenueStats {
     monthNetProfit,
     hasCostData: totalCost > 0,
     studioShares,
-    monthStudioShareTotal: studioShares.reduce(
-      (sum, share) => sum + share.monthShareAmount,
-      0
-    ),
-    totalStudioShareTotal: studioShares.reduce(
-      (sum, share) => sum + share.totalShareAmount,
-      0
-    ),
+    monthStudioShareTotal,
+    totalStudioShareTotal,
+    totalNetProfitAfterShare: totalNetProfit - totalStudioShareTotal,
+    monthNetProfitAfterShare: monthNetProfit - monthStudioShareTotal,
   }
 }
 

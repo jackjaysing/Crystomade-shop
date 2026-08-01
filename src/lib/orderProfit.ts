@@ -1,3 +1,4 @@
+import { calcStudioShareAmount } from '../constants/studioLocations'
 import type { OrderGroup } from './groupOrders'
 import type { StudioLocation } from './types'
 
@@ -16,6 +17,10 @@ export interface OrderGroupProfit {
   revenue: number
   cost: number
   netProfit: number
+  /** 此單全部分潤合計 */
+  shareTotal: number
+  /** 淨利潤扣除全部分潤後 */
+  netProfitAfterShare: number
   /** 是否有任一品項填了成本 */
   hasCost: boolean
   /** 毛利率（%） */
@@ -48,11 +53,17 @@ export function computeOrderGroupProfit(group: OrderGroup): OrderGroupProfit {
   const revenue = lines.reduce((sum, line) => sum + line.revenue, 0)
   const cost = lines.reduce((sum, line) => sum + line.cost, 0)
   const netProfit = revenue - cost
+  const shareTotal = lines.reduce((sum, line) => {
+    if (!line.studio) return sum
+    return sum + calcStudioShareAmount(line.netProfit)
+  }, 0)
 
   return {
     revenue,
     cost,
     netProfit,
+    shareTotal,
+    netProfitAfterShare: netProfit - shareTotal,
     hasCost: cost > 0,
     marginPercent: revenue > 0 ? Math.round((netProfit / revenue) * 1000) / 10 : 0,
     lines,

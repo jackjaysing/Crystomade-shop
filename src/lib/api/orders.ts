@@ -9,7 +9,7 @@ import {
   isPointRedemptionItem,
   isRaffleGiftItem,
 } from '../cartItemKinds'
-import type { CartItem, Order, OrderFormData } from '../types'
+import type { CartItem, Order, OrderFormData, StudioLocation } from '../types'
 
 async function orderGroupSummary(orderIds: string[], verb: string): Promise<string> {
   if (orderIds.length === 0) return verb
@@ -282,7 +282,9 @@ function isMissingOrderSoftDeleteColumn(message: string): boolean {
 }
 
 /** 後台：取得未刪除訂單（最新優先） */
-export async function fetchOrders(): Promise<Order[]> {
+export async function fetchOrders(options?: {
+  includeCosts?: boolean
+}): Promise<Order[]> {
   const { data, error } = await selectOrders((select) =>
     supabase
       .from('orders')
@@ -301,15 +303,19 @@ export async function fetchOrders(): Promise<Order[]> {
           .order('created_at', { ascending: false })
       )
       if (fallback.error) throw new Error(formatErrorMessage(fallback.error))
-      return attachProductCosts(mapOrderRows(fallback.data))
+      const orders = mapOrderRows(fallback.data)
+      return options?.includeCosts ? attachProductCosts(orders) : orders
     }
     throw new Error(msg)
   }
-  return attachProductCosts(mapOrderRows(data))
+  const orders = mapOrderRows(data)
+  return options?.includeCosts ? attachProductCosts(orders) : orders
 }
 
 /** 後台：取得已軟刪除訂單 */
-export async function fetchDeletedOrders(): Promise<Order[]> {
+export async function fetchDeletedOrders(options?: {
+  includeCosts?: boolean
+}): Promise<Order[]> {
   const { data, error } = await selectOrders((select) =>
     supabase
       .from('orders')
@@ -325,7 +331,8 @@ export async function fetchDeletedOrders(): Promise<Order[]> {
     }
     throw new Error(msg)
   }
-  return attachProductCosts(mapOrderRows(data))
+  const orders = mapOrderRows(data)
+  return options?.includeCosts ? attachProductCosts(orders) : orders
 }
 
 /** 後台：一鍵出貨 */
@@ -448,6 +455,36 @@ export async function updateOrderGroupTrackingNumber(
     action: 'update',
     entityType: 'order',
     summary: value ? `${summary} ${value}` : `${summary}（已清除）`,
+  })
+}
+
+/** 後台：更新訂單品項分潤歸屬（同一合併細項可一次更新多列） */
+export async function updateOrderLineStudioLocation(
+  orderIds: string[],
+  studioLocation: StudioLocation | null
+): Promise<void> {
+  if (orderIds.length === 0) return
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ studio_location: studioLocation })
+    .in('id', orderIds)
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/studio_location|42703|column/i.test(msg)) {
+      throw new Error(
+        '資料庫尚未啟用訂單分潤歸屬欄位，請在 Supabase SQL Editor 執行 supabase/migration-add-order-studio-location.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  const label = studioLocation ?? '未指定'
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'order',
+    summary: await orderGroupSummary(orderIds, `更新分潤歸屬為「${label}」：`),
   })
 }
 

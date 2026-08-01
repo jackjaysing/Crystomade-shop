@@ -43,6 +43,15 @@ function StatCard({ label, value, hint, icon: Icon, accent = 'amber' }: StatCard
           ? 'text-orange-300'
           : 'text-white'
 
+  const iconClass =
+    accent === 'amber'
+      ? 'text-amber-glow/35'
+      : accent === 'emerald'
+        ? 'text-emerald-300/35'
+        : accent === 'orange'
+          ? 'text-orange-300/35'
+          : 'text-white/25'
+
   return (
     <GlassPanel className="p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
@@ -51,7 +60,7 @@ function StatCard({ label, value, hint, icon: Icon, accent = 'amber' }: StatCard
           <p className={`mt-2 font-display text-2xl sm:text-3xl ${valueClass}`}>{value}</p>
           <p className="mt-1 text-xs text-white/35">{hint}</p>
         </div>
-        <Icon className="h-7 w-7 shrink-0 text-white/12" strokeWidth={1.25} />
+        <Icon className={`h-7 w-7 shrink-0 ${iconClass}`} strokeWidth={1.25} />
       </div>
     </GlassPanel>
   )
@@ -213,49 +222,79 @@ export function RevenueStatsPanel({
       </GlassPanel>
 
       <h3 className="mb-4 mt-8 text-lg tracking-wide text-white/80">
-        淨利潤與工作室分潤
+        淨利潤與分潤
       </h3>
       <p className="mb-4 text-xs text-white/40">
         淨利潤 ＝ 已結帳商品實收（扣折抵、不含運費）－ 商品成本 · 未填成本的商品以 0
-        計算 · 工作室分潤 ＝ 該工作室商品淨利潤 × {sharePercentLabel}%
+        計算 · 分潤 ＝ 該分潤歸屬商品淨利潤 × {sharePercentLabel}% · 扣分潤後淨利
+        ＝ 淨利潤 － 全部分潤
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="累計淨利潤"
-          value={loading && orders.length === 0 ? '—' : formatRevenueAmount(stats.totalNetProfit)}
-          hint={`累計成本 ${formatRevenueAmount(stats.totalCost)}`}
-          icon={PiggyBank}
-          accent="emerald"
-        />
-        <StatCard
-          label="本月淨利潤"
-          value={loading && orders.length === 0 ? '—' : formatRevenueAmount(stats.monthNetProfit)}
-          hint={`本月成本 ${formatRevenueAmount(stats.monthCost)}`}
-          icon={PiggyBank}
-        />
-        <StatCard
-          label="本月工作室分潤"
-          value={
-            loading && orders.length === 0
-              ? '—'
-              : formatRevenueAmount(stats.monthStudioShareTotal)
-          }
-          hint={`本月淨利潤 ${sharePercentLabel}%`}
-          icon={HandCoins}
-          accent="orange"
-        />
-        <StatCard
-          label="累計工作室分潤"
-          value={
-            loading && orders.length === 0
-              ? '—'
-              : formatRevenueAmount(stats.totalStudioShareTotal)
-          }
-          hint="逐月計算後加總"
-          icon={HandCoins}
-          accent="white"
-        />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="flex flex-col gap-4">
+          <StatCard
+            label="本月淨利潤"
+            value={loading && orders.length === 0 ? '—' : formatRevenueAmount(stats.monthNetProfit)}
+            hint={`本月成本 ${formatRevenueAmount(stats.monthCost)}`}
+            icon={PiggyBank}
+            accent="amber"
+          />
+          <StatCard
+            label="累計淨利潤"
+            value={loading && orders.length === 0 ? '—' : formatRevenueAmount(stats.totalNetProfit)}
+            hint={`累計成本 ${formatRevenueAmount(stats.totalCost)}`}
+            icon={PiggyBank}
+            accent="emerald"
+          />
+        </div>
+        <div className="flex flex-col gap-4">
+          <StatCard
+            label="本月分潤"
+            value={
+              loading && orders.length === 0
+                ? '—'
+                : formatRevenueAmount(stats.monthStudioShareTotal)
+            }
+            hint={`有歸屬商品淨利潤 × ${sharePercentLabel}%`}
+            icon={HandCoins}
+            accent="amber"
+          />
+          <StatCard
+            label="累計分潤"
+            value={
+              loading && orders.length === 0
+                ? '—'
+                : formatRevenueAmount(stats.totalStudioShareTotal)
+            }
+            hint="逐月計算後加總"
+            icon={HandCoins}
+            accent="emerald"
+          />
+        </div>
+        <div className="flex flex-col gap-4 sm:col-span-2 xl:col-span-1">
+          <StatCard
+            label="本月扣分潤後淨利"
+            value={
+              loading && orders.length === 0
+                ? '—'
+                : formatRevenueAmount(stats.monthNetProfitAfterShare)
+            }
+            hint="本月淨利潤 － 本月分潤"
+            icon={Wallet}
+            accent="amber"
+          />
+          <StatCard
+            label="累計扣分潤後淨利"
+            value={
+              loading && orders.length === 0
+                ? '—'
+                : formatRevenueAmount(stats.totalNetProfitAfterShare)
+            }
+            hint="累計淨利潤 － 累計分潤"
+            icon={Wallet}
+            accent="emerald"
+          />
+        </div>
       </div>
 
       {!stats.hasCostData && (
@@ -264,7 +303,7 @@ export function RevenueStatsPanel({
         </p>
       )}
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
         {stats.studioShares.map((share) => (
           <GlassPanel key={share.studio} className="p-5">
             <div className="flex items-start justify-between gap-3">

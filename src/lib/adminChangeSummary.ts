@@ -158,7 +158,7 @@ export function buildProductUpdateSummary(before: Product, after: Product): stri
 
   pushTextChange(
     changes,
-    '所屬工作室',
+    '分潤歸屬',
     before.studio_location ?? '未指定',
     after.studio_location ?? '未指定'
   )

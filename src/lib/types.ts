@@ -20,8 +20,8 @@ export type ProductCategory = '手串' | '配飾' | '擺件' | '礦石'
 /** 手串款式（僅品類為手串時使用） */
 export type BraceletStyle = '通用' | '男款' | '女款' | '兒童款'
 
-/** 實體工作室 */
-export type StudioLocation = '士林工作室' | '板橋工作室'
+/** 分潤歸屬（分潤對象） */
+export type StudioLocation = '羽薇' | 'Ken' | 'Johnman'
 
 /** 商品 */
 export interface Product {
@@ -38,7 +38,7 @@ export interface Product {
   discount_zhe: number | null
   /** 單件成本（NT$），供淨利潤計算 */
   cost: number
-  /** 所屬實體工作室；null 表示未指定 */
+  /** 分潤歸屬；null 表示未指定 */
   studio_location: StudioLocation | null
   tags: string[]
   /** 五行屬性（金木水火土，可多選） */
@@ -96,6 +96,11 @@ export interface Order {
   order_number?: string | null
   /** 物流寄件單號（後台填寫） */
   tracking_number?: string | null
+  /**
+   * 此訂單品項分潤歸屬（後台可覆寫）
+   * null 表示沿用商品預設 studio_location
+   */
+  studio_location?: StudioLocation | null
   /** 軟刪除時間 */
   deleted_at?: string | null
   /** 刪除當下狀態快照（恢復用） */
@@ -115,7 +120,7 @@ export interface Order {
     category?: ProductCategory
     /** 商品成本（後台淨利潤計算） */
     cost?: number
-    /** 商品所屬實體工作室（後台分潤統計） */
+    /** 分潤歸屬（後台分潤統計） */
     studio_location?: StudioLocation | null
   }) | null
 }
@@ -356,7 +361,7 @@ export interface ProductFormData {
   discount_zhe: number | null
   /** 單件成本（NT$） */
   cost: number
-  /** 所屬實體工作室；null 表示未指定 */
+  /** 分潤歸屬；null 表示未指定 */
   studio_location: StudioLocation | null
   tags: string[]
   five_elements: FiveElement[]
@@ -471,7 +476,7 @@ export interface ProductEditData {
   discount_zhe: number | null
   /** 單件成本（NT$） */
   cost: number
-  /** 所屬實體工作室；null 表示未指定 */
+  /** 分潤歸屬；null 表示未指定 */
   studio_location: StudioLocation | null
   tags: string[]
   five_elements: FiveElement[]

@@ -240,10 +240,15 @@ async function resolveGalleryItems(
 }
 
 /** 後台：新增商品並上架 */
-export async function createProduct(form: ProductFormData): Promise<Product> {
+export async function createProduct(
+  form: ProductFormData,
+  options?: { updateCost?: boolean }
+): Promise<Product> {
   if (!form.coverFile) {
     throw new Error('請上傳封面照片')
   }
+
+  const updateCost = options?.updateCost === true
 
   const image_url = await uploadProductImage(form.coverFile)
   const gallery_urls =
@@ -304,8 +309,9 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
 
   if (error) throw new Error(formatErrorMessage(error))
   const product = normalizeProduct(data as Record<string, unknown>)
-  const savedCost = await upsertProductCost(product.id, form.cost)
-  product.cost = savedCost
+  if (updateCost) {
+    product.cost = await upsertProductCost(product.id, form.cost)
+  }
   void recordAdminActivity({
     action: 'create',
     entityType: 'product',
@@ -321,8 +327,11 @@ export async function createProduct(form: ProductFormData): Promise<Product> {
 export async function updateProduct(
   productId: string,
   form: ProductEditData,
-  currentImageUrl: string
+  currentImageUrl: string,
+  options?: { updateCost?: boolean }
 ): Promise<Product> {
+  const updateCost = options?.updateCost === true
+
   const { data: beforeRow, error: beforeError } = await supabase
     .from('products')
     .select('*')
@@ -334,8 +343,10 @@ export async function updateProduct(
   }
 
   const beforeProduct = normalizeProduct(beforeRow as Record<string, unknown>)
-  const beforeCosts = await fetchProductCostsByIds([productId])
-  beforeProduct.cost = beforeCosts.get(productId) ?? 0
+  if (updateCost) {
+    const beforeCosts = await fetchProductCostsByIds([productId])
+    beforeProduct.cost = beforeCosts.get(productId) ?? 0
+  }
 
   const image_url = form.coverFile
     ? await uploadProductImage(form.coverFile)
@@ -398,8 +409,9 @@ export async function updateProduct(
 
   if (error) throw new Error(formatErrorMessage(error))
   const product = normalizeProduct(data as Record<string, unknown>)
-  const savedCost = await upsertProductCost(product.id, form.cost)
-  product.cost = savedCost
+  if (updateCost) {
+    product.cost = await upsertProductCost(product.id, form.cost)
+  }
   await recordAdminActivity({
     action: 'update',
     entityType: 'product',

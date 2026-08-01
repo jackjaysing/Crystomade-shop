@@ -25,6 +25,7 @@ import { adminProductThumbAlt } from '../../lib/imageAlt'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
 import { OrderBraceletBuildSheet } from './OrderBraceletBuildSheet'
+import { OrderLineStudioPicker } from './OrderLineStudioPicker'
 import { OrderSoulCardQrPanel } from './OrderSoulCardQrPanel'
 import {
   countOrderGroupsByFilter,
@@ -171,6 +172,18 @@ function OrderGroupProfitPanel({ group }: { group: OrderGroup }) {
           %）
         </p>
       ))}
+      <p
+        className={`mt-1.5 text-sm ${
+          profit.netProfitAfterShare >= 0 ? 'text-emerald-300' : 'text-red-300'
+        }`}
+      >
+        扣分潤後淨利 {formatAdminNtd(profit.netProfitAfterShare)}
+        {profit.shareTotal > 0 && (
+          <span className="ml-1.5 text-xs text-white/40">
+            （分潤合計 {formatAdminNtd(profit.shareTotal)}）
+          </span>
+        )}
+      </p>
     </div>
   )
 }
@@ -752,11 +765,18 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                       {item.braceletConfig && (
                         <OrderBraceletBuildSheet config={item.braceletConfig} />
                       )}
+                      <OrderLineStudioPicker
+                        orderIds={item.orderIds}
+                        value={item.orderStudioLocation}
+                        productDefault={item.productStudioLocation}
+                        onSaved={() => void onUpdated({ silent: true })}
+                        onToast={setToastMessage}
+                      />
                     </li>
                   ))}
                 </ul>
 
-                <OrderGroupProfitPanel group={group} />
+                {isSuperAdmin && <OrderGroupProfitPanel group={group} />}
 
                 {orderGroupHasPricingBreakdown(group) && (
                   <ul className="mt-3 space-y-1.5 border-t border-white/5 pt-3">

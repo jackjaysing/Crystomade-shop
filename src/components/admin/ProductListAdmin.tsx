@@ -15,6 +15,7 @@ import { getProductSalePrice, hasProductDiscount } from '../../lib/productPricin
 import { canSwapProductWithNeighbor, sortProducts } from '../../lib/sortProducts'
 import { adminProductThumbAlt } from '../../lib/imageAlt'
 import type { Product, ProductCategory } from '../../lib/types'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { HotProductBadge } from '../products/HotProductBadge'
 
@@ -45,6 +46,7 @@ export function ProductListAdmin({
   onUpdated,
   onEditProduct,
 }: ProductListAdminProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [hotUpdatingId, setHotUpdatingId] = useState<string | null>(null)
   const [movingId, setMovingId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<AdminCategoryFilter>('all')
@@ -152,18 +154,22 @@ export function ProductListAdmin({
           · {new Date(p.created_at).toLocaleDateString('zh-TW')}
         </p>
         <p className="text-xs text-white/40">
-          成本 {p.cost > 0 ? `NT$ ${p.cost.toLocaleString()}` : '未填'} · 單件淨利潤{' '}
-          <span
-            className={
-              getProductSalePrice(p) - p.cost >= 0
-                ? 'text-emerald-300/80'
-                : 'text-red-300/80'
-            }
-          >
-            NT$ {(getProductSalePrice(p) - p.cost).toLocaleString()}
-          </span>{' '}
-          · {getStudioLocationLabel(p.studio_location)}
+          分潤歸屬 {getStudioLocationLabel(p.studio_location)}
         </p>
+        {isSuperAdmin && (
+          <p className="text-xs text-white/40">
+            成本 {p.cost > 0 ? `NT$ ${p.cost.toLocaleString()}` : '未填'} · 單件淨利潤{' '}
+            <span
+              className={
+                getProductSalePrice(p) - p.cost >= 0
+                  ? 'text-emerald-300/80'
+                  : 'text-red-300/80'
+              }
+            >
+              NT$ {(getProductSalePrice(p) - p.cost).toLocaleString()}
+            </span>
+          </p>
+        )}
         {(!viewStatsError || !shareStatsError) && (
           <p className="mt-1 text-xs text-white/35">
             {!viewStatsError && (

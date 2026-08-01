@@ -8,6 +8,8 @@ interface AdminProductPricingFieldsProps {
   price: number
   discountZhe: number | null
   cost: number
+  /** 僅高級管理員可見成本與淨利潤 */
+  showCost?: boolean
   onPriceChange: (price: number) => void
   onDiscountChange: (discountZhe: number | null) => void
   onCostChange: (cost: number) => void
@@ -18,6 +20,7 @@ export function AdminProductPricingFields({
   price,
   discountZhe,
   cost,
+  showCost = false,
   onPriceChange,
   onDiscountChange,
   onCostChange,
@@ -54,19 +57,21 @@ export function AdminProductPricingFields({
           8 折表示售價為原價的 80%，可填 8 或 8.5
         </p>
       </div>
-      <div>
-        <input
-          type="number"
-          min={0}
-          placeholder="成本 (NT$)，留空＝0"
-          value={cost || ''}
-          onChange={(e) => onCostChange(Math.max(0, Number(e.target.value)))}
-          className="input-field"
-        />
-        <p className="mt-1 text-[11px] text-white/35">
-          僅後台可見，存在私密資料表，前台商品 API 不會回傳
-        </p>
-      </div>
+      {showCost && (
+        <div>
+          <input
+            type="number"
+            min={0}
+            placeholder="成本 (NT$)，留空＝0"
+            value={cost || ''}
+            onChange={(e) => onCostChange(Math.max(0, Number(e.target.value)))}
+            className="input-field"
+          />
+          <p className="mt-1 text-[11px] text-white/35">
+            僅高級管理員可見，存在私密資料表
+          </p>
+        </div>
+      )}
       {price > 0 && (
         <p className="text-sm text-white/70">
           {onSale ? (
@@ -89,7 +94,7 @@ export function AdminProductPricingFields({
           )}
         </p>
       )}
-      {price > 0 && cost > 0 && (
+      {showCost && price > 0 && cost > 0 && (
         <p className="text-sm text-white/70">
           單件淨利潤{' '}
           <span className={netProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}>

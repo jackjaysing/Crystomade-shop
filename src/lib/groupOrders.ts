@@ -31,10 +31,20 @@ export interface OrderLineItem {
   lineTotal: number
   /** 折抵前商品小計（整數，供後台／LINE 顯示） */
   lineSubtotal?: number
+  /** 對應的訂單列 ID（後台更新分潤歸屬用） */
+  orderIds: string[]
   /** 單件成本（後台淨利潤用；商品未填成本為 0） */
   unitCost: number
-  /** 商品所屬實體工作室（後台分潤用） */
+  /** 有效分潤歸屬（訂單覆寫優先，否則商品預設；供損益／分潤統計） */
   studioLocation: StudioLocation | null
+  /** 訂單列上儲存的分潤歸屬；null 表示沿用商品預設（供後台選擇器） */
+  orderStudioLocation: StudioLocation | null
+  /** 商品預設分潤歸屬（僅供後台提示） */
+  productStudioLocation: StudioLocation | null
+}
+
+function resolveOrderStudioLocation(order: Order): StudioLocation | null {
+  return order.studio_location ?? order.products?.studio_location ?? null
 }
 
 /** 後台合併顯示的訂單群組（同一結帳） */
@@ -108,10 +118,20 @@ function buildLineItems(
     const imageUrl = order.products?.image_url ?? order.product_image_url ?? undefined
     const selectedSize = order.selected_size?.trim() || null
     const braceletConfig = order.bracelet_config ?? null
+    const productStudioLocation = order.products?.studio_location ?? null
+    const orderStudioLocation = order.studio_location ?? null
+    const studioLocation = resolveOrderStudioLocation(order)
     const existing = map.get(key)
     if (existing) {
       existing.quantity += 1
       existing.lineTotal += order.total_amount
+      existing.orderIds.push(order.id)
+      if (existing.orderStudioLocation !== orderStudioLocation) {
+        existing.orderStudioLocation = null
+      }
+      if (existing.studioLocation !== studioLocation) {
+        existing.studioLocation = null
+      }
       const pricingEntry = pricingEntries.find((entry) => entry.key === key)
       if (pricingEntry) {
         pricingEntry.lineTotalAfterDiscount += order.total_amount
@@ -127,8 +147,11 @@ function buildLineItems(
       braceletConfig,
       quantity: 1,
       lineTotal: order.total_amount,
+      orderIds: [order.id],
       unitCost: Math.max(0, Number(order.products?.cost ?? 0) || 0),
-      studioLocation: order.products?.studio_location ?? null,
+      studioLocation,
+      orderStudioLocation,
+      productStudioLocation,
     })
 
     if (isPaidProductOrder(order)) {

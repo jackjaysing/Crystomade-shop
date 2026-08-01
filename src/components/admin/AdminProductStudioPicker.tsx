@@ -8,7 +8,7 @@ interface AdminProductStudioPickerProps {
   onChange: (studio: StudioLocation | null) => void
 }
 
-/** 後台：商品所屬實體工作室單選（供分潤統計） */
+/** 後台：商品分潤歸屬單選（供分潤統計） */
 export function AdminProductStudioPicker({
   name,
   value,
@@ -24,7 +24,7 @@ export function AdminProductStudioPicker({
 
   return (
     <div>
-      <p className="mb-2 text-xs text-white/50">所屬實體工作室</p>
+      <p className="mb-2 text-xs text-white/50">分潤歸屬</p>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <label
@@ -47,7 +47,7 @@ export function AdminProductStudioPicker({
         ))}
       </div>
       <p className="mt-1.5 text-[11px] text-white/35">
-        指定後，此商品的已結帳訂單淨利潤會計入該工作室分潤
+        指定後，此商品的已結帳訂單淨利潤會計入該人分潤
       </p>
     </div>
   )

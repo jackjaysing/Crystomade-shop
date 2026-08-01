@@ -76,12 +76,17 @@ export function AdminPage() {
   const [showCreateProduct, setShowCreateProduct] = useState(false)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const editReopenLockRef = useRef(false)
-  const { products, reload: reloadProducts } = useProducts()
+  const { products, reload: reloadProducts } = useProducts({
+    includeCosts: isSuperAdmin,
+  })
   const editingProduct = useMemo(
     () => products.find((p) => p.id === editingProductId) ?? null,
     [products, editingProductId]
   )
-  const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(authed)
+  const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(
+    authed,
+    { includeCosts: isSuperAdmin }
+  )
   const {
     alerts,
     orderBadge,

@@ -19,6 +19,7 @@ import { AdminProductStudioPicker } from './AdminProductStudioPicker'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
 import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
+import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { IntegerField } from '../ui/IntegerField'
 import { parseIntegerInput } from '../../lib/parseIntegerInput'
@@ -54,6 +55,7 @@ const initialForm: ProductFormData = {
 
 /** 後台：上架新商品表單（彈窗 · 封面 + 多張詳情圖） */
 export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
+  const { isSuperAdmin } = useAdminSession()
   const [form, setForm] = useState<ProductFormData>(initialForm)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
@@ -165,7 +167,10 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
     setSubmitting(true)
     setMessage('')
     try {
-      await createProduct({ ...form, stock })
+      await createProduct(
+        { ...form, stock },
+        { updateCost: isSuperAdmin }
+      )
       resetForm()
       onCreated()
       onClose()
@@ -225,6 +230,7 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
           price={form.price}
           discountZhe={form.discount_zhe}
           cost={form.cost}
+          showCost={isSuperAdmin}
           onPriceChange={(price) => setForm({ ...form, price })}
           onDiscountChange={(discount_zhe) =>
             setForm({ ...form, discount_zhe })

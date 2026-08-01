@@ -78,6 +78,7 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
     order_number: row.order_number != null ? String(row.order_number) : null,
     tracking_number:
       row.tracking_number != null ? String(row.tracking_number) : null,
+    studio_location: parseStudioLocation(row.studio_location),
     deleted_at: row.deleted_at != null ? String(row.deleted_at) : null,
     deleted_from_status:
       row.deleted_from_status === 'pending' ||
