@@ -1,6 +1,8 @@
 import type { Product, ProductVariant } from './types'
 
-type PricedProduct = Pick<Product, 'price' | 'discount_zhe' | 'variants'>
+type PricedProduct = Pick<Product, 'price' | 'discount_zhe'> & {
+  variants?: Product['variants']
+}
 
 /** 解析後台輸入的折扣（折）；空值或無效則無折扣 */
 export function parseDiscountZhe(value: unknown): number | null {
@@ -22,7 +24,7 @@ export function calcSalePrice(
 }
 
 export function productHasVariants(
-  product: Pick<Product, 'variants'> | null | undefined
+  product: { variants?: Product['variants'] | null } | null | undefined
 ): boolean {
   return (product?.variants?.length ?? 0) > 0
 }
@@ -42,10 +44,11 @@ export function getProductPriceRange(product: PricedProduct): {
   maxOriginal: number
 } {
   if (productHasVariants(product)) {
-    const salePrices = product.variants.map((v) =>
+    const variants = product.variants ?? []
+    const salePrices = variants.map((v) =>
       getVariantSalePrice(v, product.discount_zhe)
     )
-    const originals = product.variants.map((v) => v.price)
+    const originals = variants.map((v) => v.price)
     return {
       min: Math.min(...salePrices),
       max: Math.max(...salePrices),

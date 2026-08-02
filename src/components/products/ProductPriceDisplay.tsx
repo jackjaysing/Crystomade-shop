@@ -10,7 +10,9 @@ import {
 import type { Product, ProductVariant } from '../../lib/types'
 
 interface ProductPriceDisplayProps {
-  product: Pick<Product, 'price' | 'discount_zhe' | 'variants'>
+  product: Pick<Product, 'price' | 'discount_zhe'> & {
+    variants?: Product['variants']
+  }
   /** 已選規格時詳情頁顯示該規格價 */
   selectedVariant?: Pick<ProductVariant, 'price'> | null
   /** 卡片較小、詳情較大 */
