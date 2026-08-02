@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { GrimoireTaskType } from '../../constants/grimoire'
-import { magicStatusTier } from '../../constants/grimoire'
+import { useCallback, useEffect, useState } from 'react'
 import { resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 import type { CrystalSoulCard } from '../../lib/types'
 import { markSealAnimationPlayed, shouldPlaySealAnimation } from '../../lib/grimoireUnlock'
@@ -8,12 +6,9 @@ import { EnergyContractPanel } from './EnergyContractPanel'
 import { MagicContractCardPreview } from './MagicContractCardPreview'
 import { GiftContractSharePanel } from './GiftContractSharePanel'
 import { MagicBookContent } from './MagicBookContent'
-import { MagicGrimoireTaskPanel } from './MagicGrimoireTaskPanel'
 import { MagicBookShell } from './MagicBookShell'
-import { RankUpOverlay } from './RankUpOverlay'
 import { SealUnlockOverlay } from './SealUnlockOverlay'
 import type { MagicBookMode } from './MagicBookContent'
-import type { CrystalMagicStatus } from '../../constants/grimoire'
 
 type BookPhase = 'seal' | 'contract' | 'book'
 
@@ -24,8 +19,7 @@ interface CrystalMagicBookProps {
   busy?: boolean
   onToggleShare?: (isPublic: boolean) => Promise<void>
   onSignContract?: () => Promise<void>
-  onEnableGiftClaim?: () => Promise<void>
-  onCompleteTask?: (task: GrimoireTaskType) => Promise<void>
+  onTransferByPhone?: (phone: string, confirmCode: string) => Promise<void>
 }
 
 /** 魔法書完整體驗：封印 → 契約 → 內頁 */
@@ -36,8 +30,7 @@ export function CrystalMagicBook({
   busy = false,
   onToggleShare,
   onSignContract,
-  onEnableGiftClaim,
-  onCompleteTask,
+  onTransferByPhone,
 }: CrystalMagicBookProps) {
   const isOwner = mode === 'owner'
   const needsContract = isOwner && !card.contract_signed_at
@@ -47,17 +40,6 @@ export function CrystalMagicBook({
     if (needsContract) return 'contract'
     return 'book'
   })
-  const prevStatusRef = useRef<CrystalMagicStatus>(card.magic_status)
-  const [rankUpStatus, setRankUpStatus] = useState<CrystalMagicStatus | null>(null)
-
-  useEffect(() => {
-    const prevTier = magicStatusTier(prevStatusRef.current)
-    const nextTier = magicStatusTier(card.magic_status)
-    if (nextTier > prevTier && phase === 'book') {
-      setRankUpStatus(card.magic_status)
-    }
-    prevStatusRef.current = card.magic_status
-  }, [card.magic_status, phase])
 
   const finishSeal = useCallback(() => {
     markSealAnimationPlayed(card.id)
@@ -75,19 +57,11 @@ export function CrystalMagicBook({
     setPhase('book')
   }
 
-  const showTaskPanel = isOwner && phase === 'book' && Boolean(onCompleteTask)
   const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
   const bookShellTitle = headlines.secondary ?? headlines.primary
 
   return (
-    <div className={showTaskPanel ? 'magic-book-layout relative' : 'relative'}>
-      {rankUpStatus && (
-        <RankUpOverlay
-          status={rankUpStatus}
-          onDone={() => setRankUpStatus(null)}
-        />
-      )}
-
+    <div className="relative">
       {phase === 'seal' && (
         <SealUnlockOverlay
           elementPrimary={card.element_primary}
@@ -95,7 +69,6 @@ export function CrystalMagicBook({
         />
       )}
 
-      <div className={showTaskPanel ? 'magic-book-layout-main' : ''}>
       <MagicBookShell
         tier={card.magic_status}
         title={phase === 'book' ? bookShellTitle : undefined}
@@ -103,7 +76,7 @@ export function CrystalMagicBook({
           phase === 'book'
             ? card.serial_number
             : phase === 'contract'
-              ? '待締結之頁'
+              ? '待簽約'
               : undefined
         }
         className={phase === 'seal' ? 'magic-book-dimmed' : ''}
@@ -120,18 +93,18 @@ export function CrystalMagicBook({
             <EnergyContractPanel
               signerName={signerName}
               busy={busy}
-              intro="此水晶將與您建立能量連結，簽署後即可在魔導書中滋養與互動。"
+              intro="簽署後，這本魔導書就正式屬於您。若要送給朋友，請改用下方轉送。"
+              signButtonLabel="確認簽約"
               onSign={handleSignContract}
             />
-            {isOwner && onEnableGiftClaim && (
+            {isOwner && onTransferByPhone && (
               <>
                 <div className="magic-contract-divider">
                   <span>或</span>
                 </div>
                 <GiftContractSharePanel
-                  card={card}
                   busy={busy}
-                  onEnableGift={onEnableGiftClaim}
+                  onTransfer={onTransferByPhone}
                 />
               </>
             )}
@@ -144,7 +117,7 @@ export function CrystalMagicBook({
             mode={mode}
             busy={busy}
             onToggleShare={onToggleShare}
-            onCompleteTask={onCompleteTask}
+            onTransferByPhone={isOwner ? onTransferByPhone : undefined}
           />
         )}
 
@@ -154,15 +127,6 @@ export function CrystalMagicBook({
           </div>
         )}
       </MagicBookShell>
-      </div>
-
-      {showTaskPanel && onCompleteTask && (
-        <MagicGrimoireTaskPanel
-          card={card}
-          busy={busy}
-          onCompleteTask={onCompleteTask}
-        />
-      )}
     </div>
   )
 }

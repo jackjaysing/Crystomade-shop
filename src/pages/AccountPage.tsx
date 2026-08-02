@@ -161,7 +161,7 @@ export function AccountPage() {
             <p className="magic-page-eyebrow">GRIMOIRE</p>
             <h2 className="mt-2 font-display text-2xl magic-foil-text">我的水晶魔導書</h2>
         <p className="mt-2 text-base leading-relaxed text-white/65">
-          每一件水晶都會化作一本魔導書。解開封印、簽署契約，並透過淨化儀式滋養能量。
+          出貨後，水晶會出現在魔導書書架。點進去簽約，或轉送給朋友。
         </p>
             <Link
               to="/account/grimoire"

@@ -77,7 +77,7 @@ export function buildBirthdayMemberRows(
 }
 
 export function birthdayMembersExportText(rows: BirthdayMemberRow[]): string {
-  const header = '日期\t姓名\t電話\t生日\t魔法師等級\t修為\t生日禮\t禮物種類'
+  const header = '日期\t姓名\t電話\t生日\tVIP等級\t經驗值\t生日禮\t禮物種類'
   const lines = rows.map((row) => {
     const gift = row.giftEligible ? '符合' : '未達'
     const giftType = row.giftType ?? '—'

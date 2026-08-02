@@ -14,7 +14,7 @@ export function EnergyContractPanel({
   signerName,
   busy = false,
   intro,
-  signButtonLabel = '以指尖輕觸符文，完成簽署',
+  signButtonLabel = '確認簽約',
   onSign,
 }: EnergyContractPanelProps) {
   const [agreed, setAgreed] = useState(false)
@@ -64,7 +64,7 @@ export function EnergyContractPanel({
         onClick={() => void handleSign()}
         className="magic-contract-button"
       >
-        {signing ? '符文烙印中…' : signButtonLabel}
+        {signing ? '簽約中…' : signButtonLabel}
       </button>
     </div>
   )

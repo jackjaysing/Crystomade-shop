@@ -1,13 +1,10 @@
 import { X, CircleHelp } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import {
-  GRIMOIRE_MERIT_PER_TASK,
-  MAGICIAN_LEVELS,
-  MAGICIAN_STAR_LABELS,
-} from '../../constants/grimoire'
+import { MAGICIAN_LEVELS } from '../../constants/grimoire'
 import {
   computeMagicianLevelProgress,
   formatMagicianCollectionHint,
+  formatVipXp,
 } from '../../lib/grimoireMagicianLevel'
 import { magicianLevelCumulativePerks, magicianLevelPerkCells } from '../../lib/grimoireMagicianPerks'
 import type { CrystalSoulCard } from '../../lib/types'
@@ -16,33 +13,10 @@ import { GlassPanel } from '../ui/GlassPanel'
 interface MagicianLevelPanelProps {
   cards: CrystalSoulCard[]
   meritXp?: number
-  /** 下單購入的修為本數（含已轉贈；轉贈後修為仍計入下單人） */
+  /** 累積實付消費（= 經驗值） */
+  purchaseAmount?: number
+  /** @deprecated 改傳 purchaseAmount */
   purchaseMeritCardCount?: number
-}
-
-function MagicianLevelStars({
-  stars,
-  maxStars = 3,
-}: {
-  stars: number
-  maxStars?: number
-}) {
-  return (
-    <div className="magician-level-stars" aria-hidden>
-      {Array.from({ length: maxStars }, (_, index) => (
-        <span
-          key={index}
-          className={
-            index < stars
-              ? 'magician-level-star magician-level-star--on'
-              : 'magician-level-star'
-          }
-        >
-          ✦
-        </span>
-      ))}
-    </div>
-  )
 }
 
 function MagicianPerkCell({ value }: { value: string | null }) {
@@ -58,9 +32,9 @@ function MagicianPerksTable({ currentTier }: { currentTier: number }) {
       <table className="magician-perk-table">
         <thead>
           <tr>
+            <th scope="col">VIP</th>
             <th scope="col">等級</th>
-            <th scope="col">稱號</th>
-            <th scope="col">修為</th>
+            <th scope="col">累積消費</th>
             <th scope="col">能量加持</th>
             <th scope="col">生日禮</th>
             <th scope="col">免運額度</th>
@@ -88,7 +62,9 @@ function MagicianPerksTable({ currentTier }: { currentTier: number }) {
                   <span className="magician-perk-table-title">{item.title}</span>
                   <span className="magician-perk-table-epithet">{item.epithet}</span>
                 </td>
-                <td className="magician-perk-table-xp">{item.minXp}</td>
+                <td className="magician-perk-table-xp">
+                  {item.minXp === 0 ? '—' : formatVipXp(item.minXp)}
+                </td>
                 <td>
                   <MagicianPerkCell value={cells.blessing} />
                 </td>
@@ -111,14 +87,14 @@ interface MagicianLevelLadderModalProps {
   open: boolean
   onClose: () => void
   currentTier: number
-  totalXp: number
+  purchaseAmount: number
 }
 
 function MagicianLevelLadderModal({
   open,
   onClose,
   currentTier,
-  totalXp,
+  purchaseAmount,
 }: MagicianLevelLadderModalProps) {
   useEffect(() => {
     if (!open) return
@@ -148,7 +124,7 @@ function MagicianLevelLadderModal({
         type="button"
         className="absolute inset-0 bg-void/85 backdrop-blur-sm"
         onClick={onClose}
-        aria-label="關閉等級說明"
+        aria-label="關閉 VIP 等級說明"
       />
 
       <div
@@ -166,50 +142,51 @@ function MagicianLevelLadderModal({
           </button>
 
           <div className="border-b border-amber-glow/15 px-5 pb-4 pt-5 sm:px-6">
-            <p className="text-[10px] tracking-[0.35em] text-amber-glow/70">WIZARD RANK</p>
+            <p className="text-[10px] tracking-[0.35em] text-amber-glow/70">VIP LEVEL</p>
             <h2 id="magician-ladder-title" className="mt-2 font-display text-xl text-white">
-              魔法師等級總覽
+              VIP 等級禮遇
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-white/55">
-              共七階，每階三星。修為來自魔導書里程碑與極境後的日常修行。
+              經驗值依累積實付消費計算；點數折抵與點數兌換不計入。
             </p>
-            <p className="mt-2 text-sm text-amber-glow/80">目前巫師修為：{totalXp}</p>
+            <p className="mt-2 text-sm text-amber-glow/80">
+              目前經驗值：{formatVipXp(purchaseAmount)}
+            </p>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6">
-            <h3 className="magician-perk-table-heading">典藏禮遇對照</h3>
+            <h3 className="magician-perk-table-heading">禮遇對照</h3>
             <MagicianPerksTable currentTier={currentTier} />
 
             <h3 className="magician-ladder-section-heading">等級說明</h3>
             <ol className="magician-ladder-list">
-            {MAGICIAN_LEVELS.map((item) => {
-              const state =
-                item.tier < currentTier
-                  ? 'passed'
-                  : item.tier === currentTier
-                    ? 'current'
-                    : 'locked'
+              {MAGICIAN_LEVELS.map((item) => {
+                const state =
+                  item.tier < currentTier
+                    ? 'passed'
+                    : item.tier === currentTier
+                      ? 'current'
+                      : 'locked'
 
-              return (
-                <li
-                  key={item.tier}
-                  className={`magician-ladder-item magician-ladder-item--${state}`}
-                >
-                  <div className="magician-ladder-item-head">
-                    <span className="magician-ladder-roman">{item.roman}</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="magician-ladder-title">{item.title}</p>
-                      <p className="magician-ladder-epithet">{item.epithet}</p>
+                return (
+                  <li
+                    key={item.tier}
+                    className={`magician-ladder-item magician-ladder-item--${state}`}
+                  >
+                    <div className="magician-ladder-item-head">
+                      <span className="magician-ladder-roman">{item.roman}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="magician-ladder-title">{item.title}</p>
+                        <p className="magician-ladder-epithet">{item.epithet}</p>
+                      </div>
+                      <span className="magician-ladder-xp">
+                        {item.minXp === 0 ? '入門' : formatVipXp(item.minXp)}
+                      </span>
                     </div>
-                    <span className="magician-ladder-xp">{item.minXp} 修為</span>
-                  </div>
-                  <p className="magician-ladder-flavor">{item.flavor}</p>
-                  <p className="magician-ladder-stars">
-                    {MAGICIAN_STAR_LABELS.join(' · ')}
-                  </p>
-                </li>
-              )
-            })}
+                    <p className="magician-ladder-flavor">{item.flavor}</p>
+                  </li>
+                )
+              })}
             </ol>
           </div>
         </GlassPanel>
@@ -218,18 +195,18 @@ function MagicianLevelLadderModal({
   )
 }
 
-/** 會員魔法師等級（魔導書書架頂部） */
+/** 會員 VIP 等級（魔導書書架頂部） */
 export function MagicianLevelPanel({
   cards,
   meritXp = 0,
+  purchaseAmount,
   purchaseMeritCardCount = 0,
 }: MagicianLevelPanelProps) {
   const [ladderOpen, setLadderOpen] = useState(false)
-  const progress = computeMagicianLevelProgress(cards, meritXp, purchaseMeritCardCount)
-  const { level, nextLevel, stats, stars, starLabel } = progress
+  const amount = purchaseAmount ?? purchaseMeritCardCount
+  const progress = computeMagicianLevelProgress(cards, meritXp, amount)
+  const { level, nextLevel, stats } = progress
   const atMaxLevel = !nextLevel
-  const nextMilestoneLabel =
-    stars < 3 ? MAGICIAN_STAR_LABELS[stars as 1 | 2] : nextLevel!.title
   const collectionHint = formatMagicianCollectionHint(progress)
   const activePerks = magicianLevelCumulativePerks(level.tier)
 
@@ -237,7 +214,7 @@ export function MagicianLevelPanel({
     <>
       <section
         className={`magician-level-panel magician-level-panel--tier-${level.tier}`}
-        aria-label={`魔法師等級 ${level.title} ${starLabel}`}
+        aria-label={`VIP 等級 ${level.title}`}
       >
         <div className="magician-level-panel-glow" aria-hidden />
         <div className="magician-level-panel-inner">
@@ -247,82 +224,56 @@ export function MagicianLevelPanel({
             </div>
             <div className="min-w-0 flex-1">
               <div className="magician-level-title-row">
-                <p className="magician-level-eyebrow">WIZARD RANK · Lv.{level.tier}</p>
+                <p className="magician-level-eyebrow">VIP LEVEL · {level.title}</p>
                 <button
                   type="button"
                   onClick={() => setLadderOpen(true)}
                   className="magician-level-info-btn"
-                  aria-label="查看魔法師等級總覽"
-                  title="等級總覽"
+                  aria-label="查看 VIP 等級禮遇"
+                  title="查看 VIP 等級禮遇"
                 >
                   <CircleHelp className="h-4 w-4" strokeWidth={1.75} />
                 </button>
               </div>
               <h2 className="magician-level-title magic-foil-heading">{level.title}</h2>
-              <div className="magician-level-star-row">
-                <MagicianLevelStars stars={stars} />
-                <p className="magician-level-star-label">{starLabel}</p>
-              </div>
               <p className="magician-level-epithet">{level.epithet}</p>
             </div>
             <div className="magician-level-xp text-right">
-              <p className="magician-level-xp-label">巫師修為</p>
-              <p className="magician-level-xp-value">{progress.totalXp}</p>
-              {progress.meritXp > 0 && (
-                <p className="magician-level-xp-sub">含日常 +{progress.meritXp}</p>
-              )}
-              {progress.purchaseXp > 0 && (
-                <p className="magician-level-xp-sub">含購入 +{progress.purchaseXp}</p>
-              )}
+              <p className="magician-level-xp-label">經驗值</p>
+              <p className="magician-level-xp-value text-base sm:text-lg">
+                {formatVipXp(progress.totalXp)}
+              </p>
             </div>
           </div>
 
-        <p className="magician-level-flavor">{level.flavor}</p>
+          {activePerks.length > 0 && (
+            <ul className="magician-level-active-perks" aria-label="目前 VIP 禮遇">
+              {activePerks.map((perk) => (
+                <li key={perk}>{perk}</li>
+              ))}
+            </ul>
+          )}
 
-        {activePerks.length > 0 && (
-          <ul className="magician-level-active-perks" aria-label="目前典藏禮遇">
-            {activePerks.map((perk) => (
-              <li key={perk}>{perk}</li>
-            ))}
-          </ul>
-        )}
-
-        {atMaxLevel ? (
-            <p className="magician-level-max">已達傳說巔峰 · 永恆大魔導 · 三星</p>
+          {atMaxLevel ? (
+            <p className="magician-level-max">已達最高 VIP 等級</p>
           ) : (
             <div className="magician-level-progress-wrap">
               <div className="magician-level-progress-meta">
-                <span>距離 {nextMilestoneLabel}</span>
-                <span>
-                  {progress.xpIntoStar} / {progress.xpForNextStar}
-                </span>
+                <span>距離 {nextLevel.title}</span>
+                <span>還差 {formatVipXp(progress.amountToNextLevel ?? 0)}</span>
               </div>
               <div
                 className="magician-level-progress-track"
                 role="progressbar"
-                aria-valuenow={progress.starProgressPercent}
+                aria-valuenow={progress.progressPercent}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={`${starLabel}進度 ${progress.starProgressPercent}%`}
+                aria-label={`升級進度 ${progress.progressPercent}%`}
               >
                 <div
                   className="magician-level-progress-fill"
-                  style={{ width: `${progress.starProgressPercent}%` }}
+                  style={{ width: `${progress.progressPercent}%` }}
                 />
-              </div>
-              <div className="magician-level-star-steps" aria-hidden>
-                {MAGICIAN_STAR_LABELS.map((label, index) => (
-                  <span
-                    key={label}
-                    className={
-                      index < stars
-                        ? 'magician-level-star-step magician-level-star-step--on'
-                        : 'magician-level-star-step'
-                    }
-                  >
-                    {label}
-                  </span>
-                ))}
               </div>
             </div>
           )}
@@ -331,32 +282,34 @@ export function MagicianLevelPanel({
 
           <dl className="magician-level-stats">
             <div>
-              <dt>魔導書</dt>
+              <dt>經驗值</dt>
+              <dd className="text-sm">{formatVipXp(stats.purchaseAmount)}</dd>
+            </div>
+            <div>
+              <dt>書架上</dt>
               <dd>{stats.bookCount}</dd>
             </div>
             <div>
-              <dt>已簽契約</dt>
+              <dt>已簽約</dt>
               <dd>{stats.signedCount}</dd>
             </div>
             <div>
-              <dt>極境之書</dt>
-              <dd>{stats.ascendantCount}</dd>
-            </div>
-            <div>
-              <dt>日常修為</dt>
-              <dd>
-                {stats.meritXp > 0 ? `+${stats.meritXp}` : '—'}
-                <span className="magician-level-stats-note">
-                  （極境任務 +{GRIMOIRE_MERIT_PER_TASK}/次）
-                </span>
-              </dd>
+              <dt>待簽約</dt>
+              <dd>{Math.max(0, stats.bookCount - stats.signedCount)}</dd>
             </div>
           </dl>
 
-          {stats.bookCount === 0 && (
+          <button
+            type="button"
+            onClick={() => setLadderOpen(true)}
+            className="magician-level-info-btn mt-3 text-sm text-amber-glow/80 underline-offset-2 hover:underline"
+          >
+            查看 VIP 等級禮遇
+          </button>
+
+          {stats.purchaseAmount === 0 && (
             <p className="magician-level-hint">
-              收藏第一本魔導書後，修為將隨契約與滋養任務累積；練至極境約可達水晶行者。
-              典藏四本極境之書，有機會晉升永恆大魔導。
+              完成付款後會累積經驗值；出貨後才會出現魔法身分證。
             </p>
           )}
         </div>
@@ -366,7 +319,7 @@ export function MagicianLevelPanel({
         open={ladderOpen}
         onClose={() => setLadderOpen(false)}
         currentTier={level.tier}
-        totalXp={progress.totalXp}
+        purchaseAmount={progress.totalXp}
       />
     </>
   )

@@ -47,7 +47,7 @@ export const PAGE_META: Record<string, PageMeta> = {
   '/account/grimoire': {
     title: `我的水晶魔導書｜${SITE_NAME}`,
     description:
-      '查看已賁得水晶的魔法身分證、五行屬性與覺醒狀態，並可分享給友人瀏覽。',
+      '查看我的魔導書、簽約或轉送；消費累積經驗值提升 VIP 等級。',
   },
 }
 
@@ -59,7 +59,7 @@ export function getPageMeta(pathname: string): PageMeta {
     return {
       title: `魔導書詳情｜${SITE_NAME}`,
       description:
-        '翻閱水晶魔導書、簽署能量契約並完成修行任務，滋養靈魂印記與巫師修為。',
+        '翻閱水晶魔導書、簽約或轉送給朋友；消費可累積經驗值提升 VIP 等級。',
     }
   }
 

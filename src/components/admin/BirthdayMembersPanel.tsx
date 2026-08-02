@@ -116,8 +116,8 @@ export function BirthdayMembersPanel({
                 <th className="px-3 py-2.5 font-medium">姓名</th>
                 <th className="px-3 py-2.5 font-medium">電話</th>
                 <th className="px-3 py-2.5 font-medium">生日</th>
-                <th className="px-3 py-2.5 font-medium">魔法師等級</th>
-                <th className="px-3 py-2.5 font-medium">修為</th>
+                <th className="px-3 py-2.5 font-medium">VIP 等級</th>
+                <th className="px-3 py-2.5 font-medium">經驗值</th>
                 <th className="px-3 py-2.5 font-medium">生日禮</th>
                 <th className="px-3 py-2.5 font-medium">禮物種類</th>
               </tr>

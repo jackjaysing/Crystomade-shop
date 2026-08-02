@@ -79,6 +79,11 @@ export function normalizeCrystalSoulCard(row: Record<string, unknown>): CrystalS
     gifted_at: row.gifted_at != null ? String(row.gifted_at) : null,
     magic_birth_date:
       row.magic_birth_date != null ? String(row.magic_birth_date).slice(0, 10) : null,
+    purchase_amount:
+      typeof row.purchase_amount === 'number'
+        ? Math.max(0, Math.round(row.purchase_amount))
+        : Math.max(0, Math.round(Number(row.purchase_amount) || 0)),
+    released_to_member: Boolean(row.released_to_member),
     created_at: String(row.created_at ?? ''),
   }
 }

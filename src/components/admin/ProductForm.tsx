@@ -308,7 +308,7 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
             }
             className="rounded border-white/20 bg-void"
           />
-          付款後發行水晶魔法身分證（魔導書）
+          出貨後發行水晶魔法身分證（魔導書）
         </label>
 
         <div>

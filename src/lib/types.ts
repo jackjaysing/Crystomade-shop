@@ -61,7 +61,7 @@ export interface Product {
   is_studio_available: boolean
   /** 是否為私人訂製（非訂製者勿下單） */
   is_private_custom: boolean
-  /** 付款後是否發行水晶魔法身分證 */
+  /** 出貨後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 排序：數字越小越前面（熱門商品仍置頂） */
   sort_order: number
@@ -376,7 +376,7 @@ export interface ProductFormData {
   is_studio_available: boolean
   /** 是否為私人訂製（非訂製者勿下單） */
   is_private_custom: boolean
-  /** 付款後是否發行水晶魔法身分證 */
+  /** 出貨後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 封面圖 */
   coverFile: File | null
@@ -490,7 +490,7 @@ export interface ProductEditData {
   is_studio_available: boolean
   /** 是否為私人訂製（非訂製者勿下單） */
   is_private_custom: boolean
-  /** 付款後是否發行水晶魔法身分證 */
+  /** 出貨後是否發行水晶魔法身分證 */
   generates_soul_card: boolean
   /** 新封面；null 表示沿用原圖 */
   coverFile: File | null
@@ -534,5 +534,9 @@ export interface CrystalSoulCard {
   gifted_from_user_id: string | null
   gifted_at: string | null
   magic_birth_date: string | null
+  /** 單本經驗值（對應下單金額；與 VIP 分開） */
+  purchase_amount: number
+  /** 出貨後才對會員發放 */
+  released_to_member: boolean
   created_at: string
 }

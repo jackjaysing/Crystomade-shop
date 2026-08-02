@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildPurchaseMeritCountByUser,
   formatMemberMagicianBookSummary,
+  formatMemberMagicianXpBreakdown,
   resolvePurchaseMeritByUser,
   summarizeMemberMagician,
 } from './adminMemberMagician'
@@ -43,6 +44,8 @@ function makeCard(overrides: Partial<CrystalSoulCard> = {}): CrystalSoulCard {
     gifted_from_user_id: null,
     gifted_at: null,
     magic_birth_date: null,
+    purchase_amount: 0,
+    released_to_member: true,
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   }
@@ -59,9 +62,9 @@ const member: AdminRegisteredCustomer = {
   grimoire_merit_xp: 0,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  order_count: 0,
+  order_count: 1,
   last_order_at: null,
-  total_spent: 0,
+  total_spent: 3500,
 }
 
 describe('buildPurchaseMeritCountByUser', () => {
@@ -96,7 +99,7 @@ describe('summarizeMemberMagician', () => {
     expect(formatMemberMagicianBookSummary(summary)).toBe('購入 1 本 · 待簽約 1 本')
   })
 
-  it('shows signed count only after contract', () => {
+  it('levels VIP from total_spent', () => {
     const cards = [
       makeCard({
         user_id: 'buyer-1',
@@ -110,10 +113,13 @@ describe('summarizeMemberMagician', () => {
       cards,
       new Map([['buyer-1', 1]])
     )
+    expect(summary.title).toBe('VIP 2')
+    expect(summary.totalXp).toBe(3500)
+    expect(formatMemberMagicianXpBreakdown(summary)).toBe('經驗值 3,500')
     expect(formatMemberMagicianBookSummary(summary)).toBe('購入 1 本 · 已簽約 1 本')
   })
 
-  it('uses purchase merit map when soul card snapshot lacks purchaser field', () => {
+  it('uses total_spent even when purchase merit map is present', () => {
     const cards = [
       makeCard({
         purchased_by_user_id: null,
@@ -124,8 +130,8 @@ describe('summarizeMemberMagician', () => {
     const meritMap = new Map([['buyer-1', 1]])
 
     const summary = summarizeMemberMagician(member, cardsByUser, cards, meritMap)
-    expect(summary.totalXp).toBe(15)
-    expect(summary.purchaseXp).toBe(15)
+    expect(summary.totalXp).toBe(3500)
+    expect(summary.purchaseXp).toBe(3500)
     expect(summary.purchaseMeritCardCount).toBe(1)
   })
 })

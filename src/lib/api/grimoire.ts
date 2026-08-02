@@ -5,34 +5,54 @@ import { supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../
 import type { GrimoireTaskType } from '../../constants/grimoire'
 import type { CrystalSoulCard } from '../types'
 
-/** 會員：列出所有靈魂卡 */
+/** 會員：列出已發放的靈魂卡（僅已出貨；排除已刪訂單） */
 export async function fetchMyCrystalSoulCards(userId: string): Promise<CrystalSoulCard[]> {
   const { data, error } = await supabase
     .from('crystal_soul_cards')
-    .select('*')
+    .select('*, orders!inner(deleted_at, status)')
     .eq('user_id', userId)
+    .eq('released_to_member', true)
+    .eq('orders.status', 'shipped')
+    .is('orders.deleted_at', null)
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(formatErrorMessage(error))
-  return (data ?? []).map((row) => normalizeCrystalSoulCard(row as Record<string, unknown>))
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/released_to_member|orders/i.test(msg)) {
+      const fallback = await supabase
+        .from('crystal_soul_cards')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      if (fallback.error) throw new Error(formatErrorMessage(fallback.error))
+      // 無新欄位時：無法可靠判斷出貨，寧可不顯示未標記卡
+      return (fallback.data ?? [])
+        .map((row) => normalizeCrystalSoulCard(row as Record<string, unknown>))
+        .filter((card) => card.released_to_member)
+    }
+    throw new Error(msg)
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeCrystalSoulCard(row as Record<string, unknown>)
+  )
 }
 
-/** 會員：購入修為本數（下單人；含已轉贈出去的魔導書） */
-export async function fetchPurchaseMeritCardCount(userId: string): Promise<number> {
-  const { data, error } = await supabase.rpc('count_grimoire_purchase_merit_cards', {
+/** 會員：VIP 經驗值（累積實付消費） */
+export async function fetchMemberVipPurchaseXp(userId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('member_vip_purchase_xp', {
     p_user_id: userId,
   })
 
   if (error) {
     const msg = formatErrorMessage(error)
-    if (/count_grimoire_purchase_merit_cards|42883/i.test(msg)) {
-      const { count, error: countError } = await supabase
-        .from('crystal_soul_cards')
-        .select('id', { count: 'exact', head: true })
-        .eq('purchased_by_user_id', userId)
-
-      if (countError) return 0
-      return count ?? 0
+    if (/member_vip_purchase_xp|42883/i.test(msg)) {
+      const { data: legacy, error: legacyError } = await supabase.rpc(
+        'count_grimoire_purchase_merit_cards',
+        { p_user_id: userId }
+      )
+      if (legacyError) return 0
+      return (typeof legacy === 'number' ? legacy : Number(legacy) || 0) * 100
     }
     throw new Error(msg)
   }
@@ -40,19 +60,99 @@ export async function fetchPurchaseMeritCardCount(userId: string): Promise<numbe
   return typeof data === 'number' ? data : Number(data) || 0
 }
 
-/** 會員：單張靈魂卡 */
+/** @deprecated 改用 fetchMemberVipPurchaseXp */
+export async function fetchPurchaseMeritCardCount(userId: string): Promise<number> {
+  return fetchMemberVipPurchaseXp(userId)
+}
+
+export interface VipXpLedgerEntry {
+  spendDate: string
+  amount: number
+}
+
+/** 會員：VIP 經驗累積紀錄（依日加總實付消費） */
+export async function fetchMemberVipXpLedger(userId: string): Promise<VipXpLedgerEntry[]> {
+  const { data, error } = await supabase.rpc('member_vip_xp_ledger', {
+    p_user_id: userId,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/member_vip_xp_ledger|42883/i.test(msg)) {
+      return fetchMemberVipXpLedgerFallback(userId)
+    }
+    throw new Error(msg)
+  }
+
+  const rows = Array.isArray(data) ? data : []
+  return rows
+    .map((row) => {
+      const record = row as Record<string, unknown>
+      const spendDate = String(record.spend_date ?? '').slice(0, 10)
+      const amount = Math.max(0, Math.round(Number(record.amount) || 0))
+      return { spendDate, amount }
+    })
+    .filter((entry) => entry.spendDate && entry.amount > 0)
+}
+
+async function fetchMemberVipXpLedgerFallback(userId: string): Promise<VipXpLedgerEntry[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('created_at, total_amount, is_point_redemption, status, is_paid, deleted_at')
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .neq('status', 'cancelled')
+
+  if (error || !data?.length) return []
+
+  const byDate = new Map<string, number>()
+  for (const row of data) {
+    if (row.is_point_redemption) continue
+    if (!(row.is_paid || row.status === 'shipped')) continue
+    const amount = Math.max(0, Math.round(Number(row.total_amount) || 0))
+    if (amount <= 0) continue
+    const spendDate = new Date(String(row.created_at)).toLocaleDateString('en-CA', {
+      timeZone: 'Asia/Taipei',
+    })
+    byDate.set(spendDate, (byDate.get(spendDate) ?? 0) + amount)
+  }
+
+  return [...byDate.entries()]
+    .map(([spendDate, amount]) => ({ spendDate, amount }))
+    .sort((a, b) => b.spendDate.localeCompare(a.spendDate))
+}
+
+/** 會員：單張已發放靈魂卡（僅已出貨；排除已刪訂單） */
 export async function fetchMyCrystalSoulCard(
   userId: string,
   cardId: string
 ): Promise<CrystalSoulCard | null> {
   const { data, error } = await supabase
     .from('crystal_soul_cards')
-    .select('*')
+    .select('*, orders!inner(deleted_at, status)')
     .eq('user_id', userId)
     .eq('id', cardId)
+    .eq('released_to_member', true)
+    .eq('orders.status', 'shipped')
+    .is('orders.deleted_at', null)
     .maybeSingle()
 
-  if (error) throw new Error(formatErrorMessage(error))
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/released_to_member|orders/i.test(msg)) {
+      const fallback = await supabase
+        .from('crystal_soul_cards')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('id', cardId)
+        .maybeSingle()
+      if (fallback.error) throw new Error(formatErrorMessage(fallback.error))
+      if (!fallback.data) return null
+      const card = normalizeCrystalSoulCard(fallback.data as Record<string, unknown>)
+      return card.released_to_member ? card : null
+    }
+    throw new Error(msg)
+  }
   if (!data) return null
   return normalizeCrystalSoulCard(data as Record<string, unknown>)
 }
@@ -125,12 +225,28 @@ export async function completeCrystalGrimoireTask(
   return normalizeCrystalSoulCard(data as Record<string, unknown>)
 }
 
-/** 原持有人：產生贈送契約連結 */
+/** 原持有人：產生贈送契約連結（舊流程；主流程改電話轉送） */
 export async function enableCrystalSoulCardGiftClaim(
   cardId: string
 ): Promise<CrystalSoulCard> {
   const { data, error } = await supabase.rpc('enable_crystal_soul_card_gift_claim', {
     p_card_id: cardId,
+  })
+
+  if (error) throw new Error(formatErrorMessage(error))
+  return normalizeCrystalSoulCard(data as Record<string, unknown>)
+}
+
+/** 持有人：以對方手機立即轉送魔導書 */
+export async function transferCrystalSoulCardByPhone(
+  cardId: string,
+  phone: string,
+  confirmCode: string
+): Promise<CrystalSoulCard> {
+  const { data, error } = await supabase.rpc('transfer_crystal_soul_card_by_phone', {
+    p_card_id: cardId,
+    p_phone: phone,
+    p_confirm_code: confirmCode,
   })
 
   if (error) throw new Error(formatErrorMessage(error))
@@ -267,11 +383,21 @@ export async function fetchActivationCrystalSoulCardRole(
   return 'invalid'
 }
 
-/** 後台出貨：查訂單對應靈魂卡 */
+/** 後台出貨：確保已付款訂單有準備用靈魂卡，並查出結果 */
 export async function fetchFulfillmentSoulCards(
   orderIds: string[]
 ): Promise<FulfillmentSoulCard[]> {
   if (orderIds.length === 0) return []
+
+  const { error: ensureError } = await supabase.rpc('ensure_fulfillment_soul_cards', {
+    p_order_ids: orderIds,
+  })
+  if (ensureError) {
+    const msg = formatErrorMessage(ensureError)
+    if (!/ensure_fulfillment_soul_cards|42883/i.test(msg)) {
+      throw new Error(msg)
+    }
+  }
 
   const { data, error } = await supabase.rpc('get_fulfillment_soul_cards', {
     p_order_ids: orderIds,

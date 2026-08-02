@@ -55,9 +55,9 @@ export function resolvePurchaseMeritByUser(
   return buildPurchaseMeritCountByUser(fromCards)
 }
 
-/** 後台：單一會員魔法師等級與修為 */
+/** 後台：單一會員 VIP 等級與經驗值（經驗值 = 累積消費） */
 export function summarizeMemberMagician(
-  member: Pick<AdminRegisteredCustomer, 'id' | 'grimoire_merit_xp'>,
+  member: Pick<AdminRegisteredCustomer, 'id' | 'grimoire_merit_xp' | 'total_spent'>,
   cardsByUser: Map<string, CrystalSoulCard[]>,
   soulCards: CrystalSoulCard[],
   purchaseMeritByUser?: Map<string, number>
@@ -69,7 +69,7 @@ export function summarizeMemberMagician(
   const progress = computeMagicianLevelProgress(
     owned,
     member.grimoire_merit_xp,
-    purchaseMeritCardCount
+    member.total_spent ?? 0
   )
 
   return {
@@ -87,7 +87,7 @@ export function summarizeMemberMagician(
   }
 }
 
-/** 後台：魔導書本數標籤（未簽約不算「持有」） */
+/** 後台：魔導書本數標籤 */
 export function formatMemberMagicianBookSummary(summary: MemberMagicianSummary): string {
   const parts: string[] = []
   if (summary.purchaseMeritCardCount > 0) {
@@ -102,19 +102,10 @@ export function formatMemberMagicianBookSummary(summary: MemberMagicianSummary):
 }
 
 export function formatMemberMagicianXpBreakdown(summary: MemberMagicianSummary): string {
-  const parts: string[] = []
-  if (summary.purchaseXp > 0) {
-    parts.push(`購入+${summary.purchaseXp}`)
-  }
-  if (summary.ownerCultivationXp > 0) {
-    parts.push(`修行+${summary.ownerCultivationXp}`)
-  }
-  if (summary.meritXp > 0) {
-    parts.push(`日常+${summary.meritXp}`)
-  }
-  return parts.join(' · ')
+  if (summary.totalXp <= 0) return '尚無消費'
+  return `經驗值 ${summary.totalXp.toLocaleString('zh-TW')}`
 }
 
 export function formatMemberMagicianLabel(summary: MemberMagicianSummary): string {
-  return `${summary.title} · ${summary.starLabel}`
+  return summary.title
 }

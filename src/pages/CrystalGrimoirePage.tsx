@@ -2,18 +2,24 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AccountGate } from '../components/account/AccountGate'
 import { MagicianLevelPanel } from '../components/grimoire/MagicianLevelPanel'
+import { VipXpLedgerPanel } from '../components/grimoire/VipXpLedgerPanel'
 import { GlassPanel } from '../components/ui/GlassPanel'
-import { fetchMyCrystalSoulCards, fetchPurchaseMeritCardCount } from '../lib/api/grimoire'
+import {
+  fetchMyCrystalSoulCards,
+  fetchMemberVipPurchaseXp,
+  fetchMemberVipXpLedger,
+  type VipXpLedgerEntry,
+} from '../lib/api/grimoire'
 import { useAuth } from '../contexts/AuthContext'
 import type { CrystalSoulCard } from '../lib/types'
 import { resolveSoulCardDisplayHeadlines } from '../lib/grimoireFulfillment'
-import { energyLevelLabel, CRYSTAL_MAGIC_RANK } from '../constants/grimoire'
 
 /** 會員：魔導書書架 */
 export function CrystalGrimoirePage() {
   const { user, profile, loading: authLoading, refreshProfile } = useAuth()
   const [cards, setCards] = useState<CrystalSoulCard[]>([])
-  const [purchaseMeritCardCount, setPurchaseMeritCardCount] = useState(0)
+  const [purchaseAmount, setPurchaseAmount] = useState(0)
+  const [xpLedger, setXpLedger] = useState<VipXpLedgerEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
 
@@ -23,15 +29,18 @@ export function CrystalGrimoirePage() {
     setMessage('')
     try {
       await refreshProfile()
-      const [nextCards, purchaseCount] = await Promise.all([
+      const [nextCards, vipXp, ledger] = await Promise.all([
         fetchMyCrystalSoulCards(user.id),
-        fetchPurchaseMeritCardCount(user.id),
+        fetchMemberVipPurchaseXp(user.id),
+        fetchMemberVipXpLedger(user.id),
       ])
       setCards(nextCards)
-      setPurchaseMeritCardCount(purchaseCount)
+      setPurchaseAmount(vipXp)
+      setXpLedger(ledger)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '載入失敗')
       setCards([])
+      setXpLedger([])
     } finally {
       setLoading(false)
     }
@@ -63,7 +72,7 @@ export function CrystalGrimoirePage() {
         <p className="magic-page-eyebrow mt-6">GRIMOIRE</p>
         <h1 className="magic-page-heading magic-foil-text mt-2">我的水晶魔導書</h1>
         <p className="magic-page-lead mt-2">
-          每一本魔導書封印著一件水晶的靈魂印記。輕觸書脊，解開封印並締結能量契約。
+          已購買商品可選擇簽約，或轉送給他人。
         </p>
 
         {message && (
@@ -76,16 +85,24 @@ export function CrystalGrimoirePage() {
           <MagicianLevelPanel
             cards={cards}
             meritXp={profile.grimoire_merit_xp}
-            purchaseMeritCardCount={purchaseMeritCardCount}
+            purchaseAmount={purchaseAmount}
           />
         </div>
 
         <div className="mt-8">
+          <VipXpLedgerPanel entries={xpLedger} loading={loading} />
+        </div>
+
+        <div className="mt-8">
+          <h2 className="font-display text-lg text-white/90">我的魔導書</h2>
+        </div>
+
+        <div className="mt-4">
           {loading ? (
             <GlassPanel className="p-6 text-sm text-white/40">魔導書感應中…</GlassPanel>
           ) : cards.length === 0 ? (
             <GlassPanel className="p-6 text-sm text-white/45">
-              書架空無一物。付款確認後，水晶的靈魂將在此顯現。
+              還沒有魔導書。商品出貨後，水晶魔法身分證會出現在這裡。
             </GlassPanel>
           ) : (
             <ul className="magic-bookshelf-grid grid gap-5 sm:grid-cols-2">
@@ -118,19 +135,14 @@ export function CrystalGrimoirePage() {
                           <p className="magic-bookshelf-subtitle">{headlines.secondary}</p>
                         )}
                         <p className="magic-bookshelf-serial">{card.serial_number}</p>
-                        <p className={`magic-bookshelf-rank magic-bookshelf-rank--${card.magic_status}`}>
-                          {CRYSTAL_MAGIC_RANK[card.magic_status].roman} ·{' '}
-                          {CRYSTAL_MAGIC_RANK[card.magic_status].title}
-                        </p>
-                        <p className="magic-bookshelf-energy">
-                          {energyLevelLabel(card.energy_level)} · {card.energy_level}%
-                        </p>
                         <div className="magic-bookshelf-badge-slot">
-                          {!card.contract_signed_at && (
-                            <span className="magic-bookshelf-badge">
-                              {card.gift_claim_slug ? '待朋友簽署' : '待簽契約'}
-                            </span>
-                          )}
+                          <span
+                            className={`magic-bookshelf-badge${
+                              card.contract_signed_at ? ' magic-bookshelf-badge--signed' : ''
+                            }`}
+                          >
+                            {card.contract_signed_at ? '已簽約' : '待簽約'}
+                          </span>
                         </div>
                       </div>
                     </div>

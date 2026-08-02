@@ -133,76 +133,81 @@ export const MAGICIAN_STARS_PER_LEVEL = 3
 
 export const MAGICIAN_STAR_LABELS = ['一星', '二星', '三星'] as const
 
-/** 會員魔法師等級（依魔導書修為累積；每級再分三星） */
+/**
+ * 會員 VIP 等級（依累積消費金額；花 1 元 = 1 經驗值）
+ * minXp = 累積實付消費門檻（NT$）
+ */
 export const MAGICIAN_LEVELS = [
   {
     tier: 1,
     roman: 'I',
-    title: '見習魔法師',
-    epithet: '靈感初啟',
-    flavor: '魔法之門為你敞開，每一本魔導書都是一段修行。',
+    title: 'VIP 1',
+    epithet: '入門',
+    flavor: 'VIP 入門等級。',
     minXp: 0,
   },
   {
     tier: 2,
     roman: 'II',
-    title: '符文學徒',
-    epithet: '印記學徒',
-    flavor: '你已能讀懂水晶的細語，符文開始在指尖流轉。',
-    minXp: 100,
+    title: 'VIP 2',
+    epithet: '新星',
+    flavor: '解鎖生日月小禮。',
+    minXp: 3000,
   },
   {
     tier: 3,
     roman: 'III',
-    title: '水晶行者',
-    epithet: '脈動行者',
-    flavor: '意念與晶石同頻，行走之間自有光痕跟隨。',
-    minXp: 280,
+    title: 'VIP 3',
+    epithet: '進階',
+    flavor: '進階會員禮遇。',
+    minXp: 8000,
   },
   {
     tier: 4,
     roman: 'IV',
-    title: '能量編織者',
-    epithet: '織光之手',
-    flavor: '你編織的不只是能量，而是與水晶之間的永恆連結。',
-    minXp: 500,
+    title: 'VIP 4',
+    epithet: '菁英',
+    flavor: '加持頻率提升。',
+    minXp: 15000,
   },
   {
     tier: 5,
     roman: 'V',
-    title: '占星術士',
-    epithet: '星盤守望',
-    flavor: '五行與星軌皆在掌中，魔導書群為你共鳴。',
-    minXp: 720,
+    title: 'VIP 5',
+    epithet: '尊榮',
+    flavor: '尊榮會員，含定期加持與免運。',
+    minXp: 25000,
   },
   {
     tier: 6,
     roman: 'VI',
-    title: '大魔法師',
-    epithet: '晶光宗師',
-    flavor: '你的修行已臻高深，光與意志融為一體。',
-    minXp: 900,
+    title: 'VIP 6',
+    epithet: '大師',
+    flavor: '高階 VIP 禮遇。',
+    minXp: 35000,
   },
   {
     tier: 7,
     roman: 'VII',
-    title: '永恆大魔導',
-    epithet: '晶刻至尊',
-    flavor: '傳說級的共鳴者，晶刻殿堂為你留名。',
-    minXp: 1100,
+    title: 'VIP 7',
+    epithet: '傳奇',
+    flavor: '最高 VIP 等級，完整禮遇。',
+    minXp: 50000,
   },
 ] as const
 
-/** 極境後每完成一次任務額外獲得的巫師修為 */
+/** 極境任務加成（VIP 等級已改消費經驗值，僅保留相容） */
 export const GRIMOIRE_MERIT_PER_TASK = 2
 
-/** 下單人每本魔導書的固定修為（轉贈後仍保留在下單人） */
-export const GRIMOIRE_BUYER_XP_PER_CARD = 15
+/**
+ * @deprecated VIP 改以消費金額累積；保留常數避免舊引用炸掉
+ */
+export const GRIMOIRE_BUYER_XP_PER_CARD = 100
 
-/** 全帳號每日日常巫師修為上限（極境任務） */
+/** 全帳號每日日常加成上限（僅保留相容） */
 export const GRIMOIRE_MERIT_DAILY_CAP = 6
 
-/** 建議極境典藏本數（達永恆大魔導） */
+/** 建議極境典藏本數（僅保留相容） */
 export const GRIMOIRE_ASCENDANT_COLLECTION_GOAL = 4
 
 export type MagicianLevelDef = (typeof MAGICIAN_LEVELS)[number]

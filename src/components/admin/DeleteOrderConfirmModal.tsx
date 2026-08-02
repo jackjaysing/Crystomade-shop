@@ -71,7 +71,7 @@ export function DeleteOrderConfirmModal({
 
         <p className="mt-4 text-sm leading-relaxed text-white/65">
           確定要刪除訂單 <span className="text-amber-glow">{orderLabel}</span>？
-          訂單將移至「已刪除訂單」，可稍後一鍵恢復。待出貨品項會還原庫存。
+          訂單將移至「已刪除訂單」。會退還折抵／兌換點數，並收回已發放的消費贈點；魔導書一併移除。待出貨品項會還原庫存。
         </p>
 
         <p className="mt-4 text-sm text-white/50">

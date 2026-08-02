@@ -1,18 +1,11 @@
 import { Link2 } from 'lucide-react'
 import { useState } from 'react'
-import {
-  CRYSTAL_MAGIC_RANK,
-  CRYSTAL_MAGIC_STATUS_LABELS,
-} from '../../constants/grimoire'
 import { crystalSoulCardPublicUrl } from '../../lib/grimoire'
 import { resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
 import type { CrystalSoulCard } from '../../lib/types'
 import type { FiveElement } from '../../constants/fiveElements'
-import type { GrimoireTaskType } from '../../constants/grimoire'
 import { formatEfficacyTags } from '../../lib/efficacyTags'
-import { MagicEnergyMeter } from './MagicEnergyMeter'
-import { MagicRankBadge } from './MagicRankBadge'
-import { MagicRankLadder } from './MagicRankLadder'
+import { GiftContractSharePanel } from './GiftContractSharePanel'
 
 function formatMagicBirthDate(isoDate: string): string {
   const parts = isoDate.slice(0, 10).split('-')
@@ -28,7 +21,7 @@ interface MagicBookContentProps {
   mode: MagicBookMode
   busy?: boolean
   onToggleShare?: (isPublic: boolean) => Promise<void>
-  onCompleteTask?: (task: GrimoireTaskType) => Promise<void>
+  onTransferByPhone?: (phone: string, confirmCode: string) => Promise<void>
 }
 
 function BookFiveElements({ elements }: { elements: FiveElement[] }) {
@@ -49,18 +42,23 @@ function BookFiveElements({ elements }: { elements: FiveElement[] }) {
   )
 }
 
+function contractStatusLabel(signed: boolean): string {
+  return signed ? '已簽約' : '待簽約'
+}
+
 /** 魔導書內頁內容 */
 export function MagicBookContent({
   card,
   mode,
   busy = false,
   onToggleShare,
+  onTransferByPhone,
 }: MagicBookContentProps) {
   const [copied, setCopied] = useState(false)
   const isOwner = mode === 'owner'
   const shareUrl = crystalSoulCardPublicUrl(card.public_slug)
-  const rank = CRYSTAL_MAGIC_RANK[card.magic_status]
   const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
+  const signed = Boolean(card.contract_signed_at)
 
   const handleCopy = async () => {
     if (!card.is_public) return
@@ -75,12 +73,6 @@ export function MagicBookContent({
 
   return (
     <div className={`magic-book-content magic-book-content--tier-${card.magic_status}`}>
-      <MagicRankBadge status={card.magic_status} />
-      <MagicRankLadder current={card.magic_status} />
-      <p className="magic-rank-flavor">{rank.flavor}</p>
-
-      <div className="magic-id-divider" aria-hidden />
-
       <div className="magic-book-hero">
         {card.product_image_url ? (
           <div className={`magic-book-crystal-frame magic-book-crystal-frame--${card.magic_status}`}>
@@ -104,10 +96,6 @@ export function MagicBookContent({
           )}
         </div>
       </div>
-
-      {!isOwner && (
-        <MagicEnergyMeter card={card} interactive={false} showTasks={false} />
-      )}
 
       <dl className="magic-book-stats">
         <div>
@@ -133,9 +121,9 @@ export function MagicBookContent({
           <dd>{formatEfficacyTags(card.product_tags)}</dd>
         </div>
         <div>
-          <dt>覺醒狀態</dt>
-          <dd className={`magic-book-status magic-book-status--${card.magic_status}`}>
-            {CRYSTAL_MAGIC_STATUS_LABELS[card.magic_status]}
+          <dt>狀態</dt>
+          <dd className={`magic-book-status magic-book-status--${signed ? 'starlight' : 'dormant'}`}>
+            {contractStatusLabel(signed)}
           </dd>
         </div>
       </dl>
@@ -159,14 +147,21 @@ export function MagicBookContent({
         <blockquote className="magic-book-quote">{card.awakening_verse}</blockquote>
       )}
 
-      {card.contract_signed_at && (
+      {signed && (
         <div className="magic-book-contract-stamp">
-          <p className="magic-foil-text-subtle">契約已締結</p>
+          <p className="magic-foil-text-subtle">已簽約</p>
           <p className="magic-book-contract-date">
-            {new Date(card.contract_signed_at).toLocaleDateString('zh-TW')}
+            {new Date(card.contract_signed_at!).toLocaleDateString('zh-TW')}
             {card.contract_signer_name ? ` · ${card.contract_signer_name}` : ''}
           </p>
         </div>
+      )}
+
+      {isOwner && onTransferByPhone && (
+        <GiftContractSharePanel
+          busy={busy}
+          onTransfer={onTransferByPhone}
+        />
       )}
 
       {isOwner && onToggleShare && (
@@ -188,14 +183,14 @@ export function MagicBookContent({
               className="magic-book-copy-link"
             >
               <Link2 className="h-3.5 w-3.5" />
-              {copied ? '連結已複製' : '複製魔法頁面連結'}
+              {copied ? '連結已複製' : '複製分享連結'}
             </button>
           )}
         </div>
       )}
 
       {!isOwner && (
-        <p className="magic-book-guest-note">友人分享 · 唯讀閱覽，無法操作能量儀式</p>
+        <p className="magic-book-guest-note">友人分享 · 唯讀閱覽</p>
       )}
     </div>
   )

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   computeMagicianLevelProgress,
-  soulCardBuyerXp,
   soulCardOwnerCultivationXp,
 } from './grimoireMagicianLevel'
 import type { CrystalSoulCard } from './types'
@@ -42,91 +41,46 @@ function makeCard(overrides: Partial<CrystalSoulCard> = {}): CrystalSoulCard {
     gifted_from_user_id: null,
     gifted_at: null,
     magic_birth_date: null,
+    purchase_amount: 0,
+    released_to_member: true,
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   }
 }
 
-describe('soulCardOwnerCultivationXp', () => {
-  it('adds milestone XP for signed ascendant cards', () => {
-    const xp = soulCardOwnerCultivationXp(
-      makeCard({
-        contract_signed_at: '2026-01-02T00:00:00Z',
-        magic_status: 'ascendant',
-        energy_level: 100,
-        last_purify_at: '2026-01-03T00:00:00Z',
-        last_moon_charge_at: '2026-01-03T00:00:00Z',
-        last_meditation_at: '2026-01-03T00:00:00Z',
-        is_public: true,
-      })
-    )
-    expect(xp).toBe(268)
-  })
-
-  it('unsigned card has no owner cultivation XP', () => {
-    expect(soulCardOwnerCultivationXp(makeCard())).toBe(0)
-  })
-})
-
-describe('computeMagicianLevelProgress', () => {
-  it('resolves tier II at 100 XP', () => {
-    const progress = computeMagicianLevelProgress([], 100)
+describe('computeMagicianLevelProgress (VIP spend XP)', () => {
+  it('maps NT$3000 spend to VIP 2', () => {
+    const progress = computeMagicianLevelProgress([], 0, 3000)
     expect(progress.level.tier).toBe(2)
+    expect(progress.level.title).toBe('VIP 2')
+    expect(progress.totalXp).toBe(3000)
   })
 
-  it('splits buyer purchase XP from owner cultivation', () => {
+  it('uses purchase amount only; cultivation ignored', () => {
     const ownerCard = makeCard({
-      user_id: 'friend-1',
-      purchased_by_user_id: 'buyer-1',
       contract_signed_at: '2026-01-01T00:00:00Z',
+      magic_status: 'ascendant',
+      energy_level: 100,
     })
-
-    const buyerProgress = computeMagicianLevelProgress([], 0, 1)
-    expect(buyerProgress.purchaseXp).toBe(soulCardBuyerXp())
-    expect(buyerProgress.ownerCultivationXp).toBe(0)
-
-    const ownerProgress = computeMagicianLevelProgress([ownerCard], 0, 0)
-    expect(ownerProgress.purchaseXp).toBe(0)
-    expect(ownerProgress.ownerCultivationXp).toBe(soulCardOwnerCultivationXp(ownerCard))
+    const progress = computeMagicianLevelProgress([ownerCard], 99, 7999)
+    expect(progress.totalXp).toBe(7999)
+    expect(progress.level.tier).toBe(2)
+    expect(progress.amountToNextLevel).toBe(1)
+    expect(progress.ownerCultivationXp).toBe(soulCardOwnerCultivationXp(ownerCard))
+    expect(progress.meritXp).toBe(99)
   })
 
-  it('includes merit XP in total', () => {
-    const cardXp = soulCardOwnerCultivationXp(
-      makeCard({ contract_signed_at: '2026-01-01T00:00:00Z' })
-    )
-    const progress = computeMagicianLevelProgress(
-      [makeCard({ contract_signed_at: '2026-01-01T00:00:00Z' })],
-      6,
-      1
-    )
-    expect(progress.totalXp).toBe(cardXp + soulCardBuyerXp() + 6)
+  it('reaches VIP 7 at NT$50000', () => {
+    const progress = computeMagicianLevelProgress([], 0, 50000)
+    expect(progress.level.tier).toBe(7)
+    expect(progress.nextLevel).toBeNull()
+    expect(progress.amountToNextLevel).toBeNull()
   })
 
-  it('1 unsigned purchase is only +15 purchase XP', () => {
-    const card = makeCard({
-      user_id: 'buyer-1',
-      purchased_by_user_id: 'buyer-1',
-      contract_signed_at: null,
-    })
-    const progress = computeMagicianLevelProgress([card], 0, 1)
-    expect(progress.totalXp).toBe(15)
-    expect(progress.purchaseXp).toBe(15)
-    expect(progress.ownerCultivationXp).toBe(0)
-  })
-
-  it('195 is not a valid single unsigned purchase total', () => {
-    const progress = computeMagicianLevelProgress([], 0, 13)
-    expect(progress.totalXp).toBe(195)
-    expect(progress.purchaseXp).toBe(195)
-  })
-
-  it('star progress uses integer XP (no floating display)', () => {
-    const progress = computeMagicianLevelProgress([], 383)
-    expect(progress.level.tier).toBe(3)
-    expect(progress.stars).toBe(2)
-    expect(progress.xpIntoStar).toBe(29)
-    expect(progress.xpForNextStar).toBe(73)
-    expect(Number.isInteger(progress.xpIntoStar)).toBe(true)
-    expect(Number.isInteger(progress.xpForNextStar)).toBe(true)
+  it('shows remaining spend to next VIP', () => {
+    const progress = computeMagicianLevelProgress([], 0, 1000)
+    expect(progress.level.tier).toBe(1)
+    expect(progress.amountToNextLevel).toBe(2000)
+    expect(progress.nextLevel?.title).toBe('VIP 2')
   })
 })

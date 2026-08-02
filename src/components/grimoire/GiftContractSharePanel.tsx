@@ -1,82 +1,157 @@
 import { useState } from 'react'
-import { Link2, Gift } from 'lucide-react'
-import { crystalSoulCardGiftClaimUrl } from '../../lib/grimoire'
-import type { CrystalSoulCard } from '../../lib/types'
+import { Gift } from 'lucide-react'
+import { isValidTaiwanMobile, normalizePhone } from '../../lib/phoneAuth'
 
 interface GiftContractSharePanelProps {
-  card: CrystalSoulCard
   busy?: boolean
-  onEnableGift: () => Promise<void>
+  onTransfer: (phone: string, confirmCode: string) => Promise<void>
 }
 
-/** 下單人：產生贈送契約連結給朋友簽署 */
-export function GiftContractSharePanel({
-  card,
-  busy = false,
-  onEnableGift,
-}: GiftContractSharePanelProps) {
-  const [copied, setCopied] = useState(false)
-  const [enabling, setEnabling] = useState(false)
-  const giftSlug = card.gift_claim_slug
-  const giftUrl = giftSlug ? crystalSoulCardGiftClaimUrl(giftSlug) : null
+function generateConfirmCode(): string {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
 
-  const handleEnable = async () => {
-    setEnabling(true)
+/** 持有人：以對方手機轉送魔導書（防誤觸驗證碼） */
+export function GiftContractSharePanel({
+  busy = false,
+  onTransfer,
+}: GiftContractSharePanelProps) {
+  const [open, setOpen] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [confirmCode, setConfirmCode] = useState('')
+  const [confirmInput, setConfirmInput] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [done, setDone] = useState(false)
+
+  const handleSubmit = async () => {
+    setError('')
+    if (!isValidTaiwanMobile(phone)) {
+      setError('請填寫有效的台灣手機號碼')
+      return
+    }
+    if (confirmInput.trim() !== confirmCode) {
+      setError('驗證碼不符，請再確認一次以免轉錯')
+      return
+    }
+
+    setSubmitting(true)
     try {
-      await onEnableGift()
+      await onTransfer(normalizePhone(phone), confirmCode)
+      setDone(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '轉送失敗')
     } finally {
-      setEnabling(false)
+      setSubmitting(false)
     }
   }
 
-  const handleCopy = async () => {
-    if (!giftUrl) return
-    try {
-      await navigator.clipboard.writeText(giftUrl)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* ignore */
-    }
+  if (done) {
+    return (
+      <section className="magic-gift-panel">
+        <div className="magic-gift-panel-header">
+          <Gift className="magic-gift-panel-icon h-4 w-4" />
+          <h4 className="magic-gift-panel-title">已轉送</h4>
+        </div>
+        <p className="magic-gift-panel-desc">
+          魔導書已轉入對方帳戶。對方登入後可自行簽約。
+        </p>
+      </section>
+    )
   }
 
   return (
     <section className="magic-gift-panel">
       <div className="magic-gift-panel-header">
         <Gift className="magic-gift-panel-icon h-4 w-4" />
-        <h4 className="magic-gift-panel-title">轉贈朋友簽署契約</h4>
+        <h4 className="magic-gift-panel-title">轉送給朋友</h4>
       </div>
       <p className="magic-gift-panel-desc">
-        若要將此本魔導書送給朋友簽署契約，可產生專屬連結。朋友登入後簽署能量契約，魔導書將轉入朋友的帳戶。
+        填寫對方手機即可轉送。對方需已用此電話註冊會員；轉送後需由對方自行簽約。
       </p>
 
-      {giftUrl ? (
-        <div className="magic-gift-link-box">
-          <p className="magic-gift-link-url" title={giftUrl}>
-            {giftUrl}
-          </p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void handleCopy()}
-            className="magic-gift-copy-btn"
-          >
-            <Link2 className="h-3.5 w-3.5" />
-            {copied ? '已複製' : '複製贈送連結'}
-          </button>
-          <p className="magic-gift-hint">
-            連結在朋友完成簽署前有效。請勿自行開啟此連結簽署。
-          </p>
-        </div>
-      ) : (
+      {!open ? (
         <button
           type="button"
-          disabled={busy || enabling}
-          onClick={() => void handleEnable()}
+          disabled={busy}
+          onClick={() => {
+            setConfirmCode(generateConfirmCode())
+            setConfirmInput('')
+            setError('')
+            setOpen(true)
+          }}
           className="magic-gift-enable-btn"
         >
-          {enabling ? '符文生成中…' : '產生贈送契約連結'}
+          轉送給朋友
         </button>
+      ) : (
+        <div className="magic-gift-link-box space-y-3">
+          <label className="block text-sm text-white/70">
+            對方手機
+            <input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="0912345678"
+              value={phone}
+              disabled={busy || submitting}
+              onChange={(e) => setPhone(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-white/15 bg-void/60 px-3 py-2 text-white outline-none focus:border-amber-glow/50"
+            />
+          </label>
+
+          <div className="rounded-lg border border-amber-glow/25 bg-amber-glow/5 px-3 py-3">
+            <p className="text-xs tracking-wide text-amber-glow/80">防誤觸驗證碼</p>
+            <p className="mt-1 font-mono text-2xl tracking-[0.35em] text-amber-glow">
+              {confirmCode}
+            </p>
+            <p className="mt-1 text-xs text-white/45">請在下方再輸入一次相同數字後確認轉送</p>
+          </div>
+
+          <label className="block text-sm text-white/70">
+            再次輸入驗證碼
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder="六位數字"
+              value={confirmInput}
+              disabled={busy || submitting}
+              onChange={(e) => setConfirmInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="mt-1 w-full rounded-lg border border-white/15 bg-void/60 px-3 py-2 font-mono tracking-[0.2em] text-white outline-none focus:border-amber-glow/50"
+            />
+          </label>
+
+          {error && (
+            <p className="text-sm text-rose-300/90" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy || submitting}
+              onClick={() => void handleSubmit()}
+              className="magic-gift-enable-btn"
+            >
+              {submitting ? '轉送中…' : '確認轉送'}
+            </button>
+            <button
+              type="button"
+              disabled={busy || submitting}
+              onClick={() => {
+                setOpen(false)
+                setError('')
+                setConfirmInput('')
+              }}
+              className="magic-gift-copy-btn"
+            >
+              取消
+            </button>
+          </div>
+        </div>
       )}
     </section>
   )

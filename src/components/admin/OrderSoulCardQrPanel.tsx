@@ -663,7 +663,7 @@ export function OrderSoulCardQrPanel({ orderIds, paid }: OrderSoulCardQrPanelPro
   return (
     <div className="mt-4 space-y-3">
       <p className="text-xs tracking-widest text-amber-glow/60">
-        魔法身分證 · 隨貨 QR 與實體卡
+        魔法身分證 · 出貨前可先填功效／列印 QR；出貨後才發放到會員書架
       </p>
       {cards.map((card) => (
         <SoulCardQrCard

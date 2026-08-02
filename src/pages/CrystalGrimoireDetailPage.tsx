@@ -1,30 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CrystalMagicBook } from '../components/grimoire/CrystalMagicBook'
 import { AccountGate } from '../components/account/AccountGate'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import {
-  completeCrystalGrimoireTask,
-  enableCrystalSoulCardGiftClaim,
   fetchMyCrystalSoulCard,
   setCrystalSoulCardPublic,
   signCrystalEnergyContract,
+  transferCrystalSoulCardByPhone,
 } from '../lib/api/grimoire'
-import { devMaxUpgradeCrystalSoulCard } from '../lib/dev/grimoireUpgrade'
-import { CRYSTAL_MAGIC_RANK } from '../constants/grimoire'
 import { useAuth } from '../contexts/AuthContext'
 import type { CrystalSoulCard } from '../lib/types'
 
 /** 會員：單本魔導書沉浸式閱讀 */
 export function CrystalGrimoireDetailPage() {
   const { cardId } = useParams<{ cardId: string }>()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth()
+  const navigate = useNavigate()
+  const { user, profile, loading: authLoading } = useAuth()
   const [card, setCard] = useState<CrystalSoulCard | null>(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
-  const devUpgradeRan = useRef(false)
 
   const reload = useCallback(async () => {
     if (!user?.id || !cardId) return
@@ -45,33 +41,6 @@ export function CrystalGrimoireDetailPage() {
     void reload()
   }, [cardId, reload, user?.id])
 
-  const runDevUpgrade = useCallback(async () => {
-    if (!card || !profile) return
-    setBusy(true)
-    setMessage('開發升級中…')
-    try {
-      const upgraded = await devMaxUpgradeCrystalSoulCard(card)
-      setCard(upgraded)
-      setMessage(
-        `已晉升至 ${CRYSTAL_MAGIC_RANK[upgraded.magic_status].title}階 · ${CRYSTAL_MAGIC_RANK[upgraded.magic_status].epithet} · 能量 ${upgraded.energy_level}%`
-      )
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : '開發升級失敗')
-    } finally {
-      setBusy(false)
-    }
-  }, [card, profile])
-
-  useEffect(() => {
-    if (!import.meta.env.DEV || !card || busy || devUpgradeRan.current) return
-    if (searchParams.get('devUpgrade') !== '1') return
-    devUpgradeRan.current = true
-    const next = new URLSearchParams(searchParams)
-    next.delete('devUpgrade')
-    setSearchParams(next, { replace: true })
-    void runDevUpgrade()
-  }, [busy, card, runDevUpgrade, searchParams, setSearchParams])
-
   if (authLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center pt-28 text-white/40">
@@ -90,9 +59,6 @@ export function CrystalGrimoireDetailPage() {
     try {
       const updated = await action()
       setCard(updated)
-      if (updated.magic_status === 'ascendant') {
-        await refreshProfile()
-      }
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '操作失敗')
     } finally {
@@ -116,17 +82,6 @@ export function CrystalGrimoireDetailPage() {
           </p>
         )}
 
-        {import.meta.env.DEV && card && (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void runDevUpgrade()}
-            className="mt-4 rounded-lg border border-dashed border-amber-glow/35 bg-amber-glow/5 px-4 py-2 text-xs tracking-wide text-amber-glow/80 transition hover:bg-amber-glow/10 disabled:opacity-50"
-          >
-            開發：一鍵升級至極境滿級
-          </button>
-        )}
-
         <div className="mt-8">
           {loading ? (
             <GlassPanel className="p-6 text-sm text-white/40">封印感應中…</GlassPanel>
@@ -143,14 +98,25 @@ export function CrystalGrimoireDetailPage() {
               onSignContract={() =>
                 runAction(() => signCrystalEnergyContract(card.id, profile.real_name))
               }
-              onEnableGiftClaim={() =>
-                runAction(() => enableCrystalSoulCardGiftClaim(card.id))
-              }
+              onTransferByPhone={async (phone, confirmCode) => {
+                setBusy(true)
+                setMessage('')
+                try {
+                  await transferCrystalSoulCardByPhone(card.id, phone, confirmCode)
+                  setMessage('已轉送給朋友，對方可自行簽約。')
+                  window.setTimeout(() => {
+                    void navigate('/account/grimoire')
+                  }, 1200)
+                } catch (err) {
+                  const text = err instanceof Error ? err.message : '轉送失敗'
+                  setMessage(text)
+                  throw err
+                } finally {
+                  setBusy(false)
+                }
+              }}
               onToggleShare={(isPublic) =>
                 runAction(() => setCrystalSoulCardPublic(card.id, isPublic))
-              }
-              onCompleteTask={(task) =>
-                runAction(() => completeCrystalGrimoireTask(card.id, task))
               }
             />
           )}
