@@ -263,11 +263,12 @@ export function AccountPage() {
                   <ul className="space-y-1.5">
                     {group.lineItems.map((line) => (
                       <li
-                        key={`${line.productId}-${line.selectedSize ?? ''}`}
+                        key={`${line.productId}-${line.variantName ?? ''}-${line.selectedSize ?? ''}`}
                         className="flex justify-between gap-2 text-sm text-white/70"
                       >
                         <span className="min-w-0 truncate">
                           {line.productName}
+                          {line.variantName ? ` · ${line.variantName}` : ''}
                           {line.selectedSize ? ` · ${line.selectedSize}` : ''}
                           {line.quantity > 1 ? ` ×${line.quantity}` : ''}
                         </span>

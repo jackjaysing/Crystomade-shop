@@ -11,7 +11,7 @@ import {
   swapProductOrder,
 } from '../../lib/api/products'
 import type { ProductShareStats, ProductViewStats } from '../../lib/api/analytics'
-import { getProductSalePrice, hasProductDiscount } from '../../lib/productPricing'
+import { formatPriceRangeLabel, getProductPriceRange, getProductSalePrice, hasProductDiscount } from '../../lib/productPricing'
 import { canSwapProductWithNeighbor, sortProducts } from '../../lib/sortProducts'
 import { adminProductThumbAlt } from '../../lib/imageAlt'
 import type { Product, ProductCategory } from '../../lib/types'
@@ -133,15 +133,25 @@ export function ProductListAdmin({
           {p.is_hot && <HotProductBadge variant="inline" />}
         </div>
         <p className="text-sm text-amber-glow">
-          {hasProductDiscount(p) ? (
-            <>
-              特價 NT$ {getProductSalePrice(p).toLocaleString()}
-              <span className="ml-2 text-xs text-white/40 line-through">
-                原價 {p.price.toLocaleString()}
-              </span>
-            </>
-          ) : (
-            <>NT$ {p.price.toLocaleString()}</>
+          {(() => {
+            const range = getProductPriceRange(p)
+            const saleLabel = formatPriceRangeLabel(range.min, range.max)
+            if (!hasProductDiscount(p)) {
+              return <>{saleLabel}</>
+            }
+            return (
+              <>
+                特價 {saleLabel}
+                <span className="ml-2 text-xs text-white/40 line-through">
+                  原價 {formatPriceRangeLabel(range.minOriginal, range.maxOriginal)}
+                </span>
+              </>
+            )
+          })()}
+          {p.variants.length > 0 && (
+            <span className="ml-2 text-xs text-white/40">
+              · {p.variants.length} 規格
+            </span>
           )}
         </p>
         <p className="text-xs text-white/40">

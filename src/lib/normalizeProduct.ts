@@ -1,6 +1,6 @@
 import { parseBraceletStyle } from '../constants/braceletStyles'
 import { parseStudioLocation } from '../constants/studioLocations'
-import type { Product, ProductCategory } from './types'
+import type { Product, ProductCategory, ProductVariant } from './types'
 import { resolveProductSubcategory } from './productSubcategory'
 import { sanitizeFiveElements } from './fiveElements'
 import { parseDiscountZhe } from './productPricing'
@@ -14,6 +14,48 @@ function parseCategory(value: unknown): ProductCategory {
     return s as ProductCategory
   }
   return '礦石'
+}
+
+export function normalizeProductVariant(
+  row: Record<string, unknown>,
+  fallbackProductId = ''
+): ProductVariant | null {
+  const id = String(row.id ?? '').trim()
+  const name = String(row.name ?? '').trim()
+  if (!id || !name) return null
+  const price = Number(row.price)
+  const stock = Number(row.stock)
+  return {
+    id,
+    product_id: String(row.product_id ?? fallbackProductId),
+    name,
+    price: Number.isFinite(price) ? price : 0,
+    stock: Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0,
+    sort_order: Number(row.sort_order ?? 0) || 0,
+    created_at: String(row.created_at ?? ''),
+  }
+}
+
+function normalizeVariants(
+  row: Record<string, unknown>,
+  productId: string
+): ProductVariant[] {
+  const raw =
+    row.product_variants ??
+    row.variants ??
+    (Array.isArray(row.product_variant) ? row.product_variant : null)
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((item) =>
+      item && typeof item === 'object'
+        ? normalizeProductVariant(item as Record<string, unknown>, productId)
+        : null
+    )
+    .filter((v): v is ProductVariant => v != null)
+    .sort(
+      (a, b) =>
+        a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at)
+    )
 }
 
 /** 將 Supabase 回傳資料整理成安全格式，避免 tags 為 null 導致崩潰 */
@@ -32,9 +74,11 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
           : 1
 
   const category = parseCategory(row.category)
+  const id = String(row.id ?? '')
+  const variants = normalizeVariants(row, id)
 
   return {
-    id: String(row.id ?? ''),
+    id,
     name: String(row.name ?? ''),
     category,
     bracelet_style:
@@ -56,7 +100,10 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
       ? row.gallery_urls.map(String)
       : [],
     status,
-    stock,
+    stock: variants.length
+      ? variants.reduce((sum, v) => sum + v.stock, 0)
+      : stock,
+    variants,
     description: String(row.description ?? ''),
     created_at: String(row.created_at ?? ''),
     deleted_at: row.deleted_at != null ? String(row.deleted_at) : null,

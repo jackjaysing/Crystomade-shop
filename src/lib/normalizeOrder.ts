@@ -63,6 +63,8 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
     selected_size:
       row.selected_size != null ? String(row.selected_size) : null,
     bracelet_config: normalizeBraceletConfig(row.bracelet_config),
+    variant_id: row.variant_id != null ? String(row.variant_id) : null,
+    variant_name: row.variant_name != null ? String(row.variant_name) : null,
     total_amount:
       typeof row.total_amount === 'number'
         ? row.total_amount

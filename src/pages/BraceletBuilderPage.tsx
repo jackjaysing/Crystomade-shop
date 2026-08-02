@@ -3,6 +3,10 @@ import { Link, useParams } from 'react-router-dom'
 import { BraceletBuilderView } from '../components/bracelet/BraceletBuilderView'
 import { GlassPanel } from '../components/ui/GlassPanel'
 import { SiteMaintenancePanel } from '../components/ui/SiteMaintenancePanel'
+import {
+  BRACELET_SELF_CONFIG_LOCKED,
+  BRACELET_SELF_CONFIG_LOCKED_MESSAGE,
+} from '../constants/braceletBuilder'
 import { fetchProductById } from '../lib/api/products'
 import { formatErrorMessage } from '../lib/formatError'
 import { isBespokeSoulCardProduct } from '../lib/grimoireFulfillment'
@@ -117,6 +121,27 @@ export function BraceletBuilderPage() {
             className="mt-4 inline-block text-amber-glow"
           >
             返回商品頁
+          </Link>
+        </GlassPanel>
+      </div>
+    )
+  }
+
+  if (BRACELET_SELF_CONFIG_LOCKED) {
+    return (
+      <div className="mx-auto max-w-lg px-4 pt-28">
+        <GlassPanel className="p-8 text-center">
+          <p className="font-display text-2xl tracking-wide text-amber-glow">
+            自行配珠
+          </p>
+          <p className="mt-3 text-base text-white/70">
+            {BRACELET_SELF_CONFIG_LOCKED_MESSAGE}
+          </p>
+          <Link
+            to={productDetailPath(product)}
+            className="mt-6 inline-block text-amber-glow"
+          >
+            返回商品頁改選官方配珠
           </Link>
         </GlassPanel>
       </div>

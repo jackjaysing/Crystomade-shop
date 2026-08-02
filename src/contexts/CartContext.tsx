@@ -25,8 +25,9 @@ import {
   normalizeBraceletConfig,
   type BraceletConfig,
 } from '../lib/braceletConfig'
-import { getProductSalePrice } from '../lib/productPricing'
-import type { CartItem, PointProduct, Product } from '../lib/types'
+import { getProductSalePrice, getVariantSalePrice, productHasVariants } from '../lib/productPricing'
+import { getProductAvailableStock } from '../lib/productStock'
+import type { CartItem, PointProduct, Product, ProductVariant } from '../lib/types'
 
 const STORAGE_KEY = 'crystomade-cart'
 
@@ -34,6 +35,7 @@ export interface AddToCartOptions {
   quantity?: number
   selectedSize?: string | null
   braceletConfig?: BraceletConfig | null
+  variantId?: string | null
 }
 
 interface CartContextValue {
@@ -72,6 +74,14 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
     raw.selectedSize != null && String(raw.selectedSize).trim()
       ? String(raw.selectedSize).trim()
       : null
+  const variantId =
+    raw.variantId != null && String(raw.variantId).trim()
+      ? String(raw.variantId).trim()
+      : null
+  const variantName =
+    raw.variantName != null && String(raw.variantName).trim()
+      ? String(raw.variantName).trim()
+      : null
   const braceletConfig = normalizeBraceletConfig(raw.braceletConfig ?? null)
   const cartItemKey =
     typeof raw.cartItemKey === 'string' && raw.cartItemKey
@@ -79,7 +89,8 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
       : buildCartItemKey(
           raw.productId,
           selectedSize,
-          braceletConfig ? braceletConfigFingerprint(braceletConfig) : null
+          braceletConfig ? braceletConfigFingerprint(braceletConfig) : null,
+          variantId
         )
 
   const kind =
@@ -101,6 +112,8 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
     image_url: String(raw.image_url ?? ''),
     quantity: raw.quantity,
     selectedSize,
+    variantId,
+    variantName,
     braceletConfig,
     maxStock: Math.max(Number(raw.maxStock) || 0, 0),
     memberCouponId:
@@ -124,25 +137,48 @@ function loadStoredItems(): CartItem[] {
   }
 }
 
+function resolveCartVariant(
+  product: Product,
+  variantId: string | null | undefined
+): ProductVariant | null {
+  if (!productHasVariants(product)) return null
+  if (!variantId) return null
+  return product.variants.find((v) => v.id === variantId) ?? null
+}
+
 function productToCartItem(
   product: Product,
   quantity: number,
   selectedSize: string | null,
-  braceletConfig: BraceletConfig | null = null
+  braceletConfig: BraceletConfig | null = null,
+  variant: ProductVariant | null = null
 ): CartItem {
   const fingerprint = braceletConfig
     ? braceletConfigFingerprint(braceletConfig)
     : null
+  const maxStock = variant
+    ? Math.max(variant.stock, 0)
+    : getProductAvailableStock(product)
+  const price = variant
+    ? getVariantSalePrice(variant, product.discount_zhe)
+    : getProductSalePrice(product)
   return {
-    cartItemKey: buildCartItemKey(product.id, selectedSize, fingerprint),
+    cartItemKey: buildCartItemKey(
+      product.id,
+      selectedSize,
+      fingerprint,
+      variant?.id ?? null
+    ),
     productId: product.id,
     name: product.name,
-    price: getProductSalePrice(product),
+    price,
     image_url: product.image_url,
     quantity,
     selectedSize,
+    variantId: variant?.id ?? null,
+    variantName: variant?.name ?? null,
     braceletConfig,
-    maxStock: Math.max(product.stock, 0),
+    maxStock,
   }
 }
 
@@ -177,44 +213,57 @@ export function CartProvider({ children }: { children: ReactNode }) {
       options.selectedSize?.trim() ||
       braceletConfig?.wrist_size?.trim() ||
       null
+    const variant = resolveCartVariant(product, options.variantId)
 
     if (needsSize && !selectedSize) return
+    if (productHasVariants(product) && !variant) return
+    if (variant && variant.stock <= 0) return
 
     // 配置手串：每筆配置固定 1 件，避免同配置加量混淆串製單
     const addQty = braceletConfig ? 1 : qty
+    const maxStock = variant
+      ? Math.max(variant.stock, 0)
+      : getProductAvailableStock(product)
+    const unitPrice = variant
+      ? getVariantSalePrice(variant, product.discount_zhe)
+      : getProductSalePrice(product)
     const cartItemKey = buildCartItemKey(
       product.id,
       selectedSize,
-      braceletConfig ? braceletConfigFingerprint(braceletConfig) : null
+      braceletConfig ? braceletConfigFingerprint(braceletConfig) : null,
+      variant?.id ?? null
     )
 
     setItems((prev) => {
       const existing = prev.find((item) => item.cartItemKey === cartItemKey)
       if (existing) {
         if (braceletConfig) return prev
-        const nextQty = Math.min(existing.quantity + addQty, product.stock)
+        const nextQty = Math.min(existing.quantity + addQty, maxStock)
         if (nextQty <= 0) return prev
         return prev.map((item) =>
           item.cartItemKey === cartItemKey
             ? {
                 ...item,
                 name: product.name,
-                price: getProductSalePrice(product),
+                price: unitPrice,
                 image_url: product.image_url,
-                maxStock: product.stock,
+                maxStock,
+                variantId: variant?.id ?? null,
+                variantName: variant?.name ?? null,
                 quantity: nextQty,
               }
             : item
         )
       }
-      if (product.stock <= 0) return prev
+      if (maxStock <= 0) return prev
       return [
         ...prev,
         productToCartItem(
           product,
-          Math.min(addQty, product.stock),
+          Math.min(addQty, maxStock),
           selectedSize,
-          braceletConfig
+          braceletConfig,
+          variant
         ),
       ]
     })
@@ -330,7 +379,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const newKey = buildCartItemKey(
           current.productId,
           size,
-          braceletConfigFingerprint(nextConfig)
+          braceletConfigFingerprint(nextConfig),
+          current.variantId
         )
         if (newKey === cartItemKey) {
           return prev.map((item) =>
@@ -352,7 +402,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         ]
       }
 
-      const newKey = buildCartItemKey(current.productId, size)
+      const newKey = buildCartItemKey(
+        current.productId,
+        size,
+        null,
+        current.variantId
+      )
       if (newKey === cartItemKey) return prev
 
       const rest = prev.filter((item) => item.cartItemKey !== cartItemKey)

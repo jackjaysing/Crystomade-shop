@@ -105,6 +105,7 @@ function buildPaidLinesJson(items: CartItem[]) {
       product_id: item.productId,
       quantity: item.quantity,
       selected_size: item.selectedSize,
+      ...(item.variantId ? { variant_id: item.variantId } : {}),
       ...(item.braceletConfig
         ? { bracelet_config: item.braceletConfig }
         : {}),

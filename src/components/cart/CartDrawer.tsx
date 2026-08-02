@@ -158,6 +158,11 @@ export function CartDrawer() {
                           selectedSize={item.selectedSize}
                           disabled={isFullySnatched}
                         />
+                        {item.variantName && (
+                          <p className="mt-1 text-[11px] text-amber-glow/80">
+                            規格：{item.variantName}
+                          </p>
+                        )}
                         {item.braceletConfig && (
                           <p className="mt-1 text-[11px] text-violet-200/80">
                             自行配珠 {item.braceletConfig.beads.length} 顆

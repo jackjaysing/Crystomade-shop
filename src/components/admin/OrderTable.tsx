@@ -751,6 +751,11 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm text-white">{item.productName}</p>
+                          {item.variantName && (
+                            <p className="mt-1 text-[11px] text-amber-glow/80">
+                              規格：{item.variantName}
+                            </p>
+                          )}
                           {item.selectedSize && (
                             <p className="mt-1 text-[11px] text-amber-glow/80">
                               {formatBraceletSizeLabel(item.selectedSize)}

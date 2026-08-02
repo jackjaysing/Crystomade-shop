@@ -21,6 +21,7 @@ import { AdminProductSubcategoryPicker } from './AdminProductSubcategoryPicker'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { AdminProductStudioPicker } from './AdminProductStudioPicker'
+import { AdminProductVariantsEditor } from './AdminProductVariantsEditor'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
 import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
@@ -51,6 +52,13 @@ function toEditForm(product: Product): ProductEditData {
     five_elements: [...product.five_elements],
     description: product.description,
     stock: product.stock,
+    variants: (product.variants ?? []).map((v) => ({
+      id: v.id,
+      name: v.name,
+      price: v.price,
+      stock: v.stock,
+      sort_order: v.sort_order,
+    })),
     is_hot: product.is_hot,
     is_quick_add: product.is_quick_add,
     is_studio_available: product.is_studio_available,
@@ -199,15 +207,28 @@ export function ProductEditModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!form.name.trim() || form.price <= 0) {
+    const namedVariants = form.variants.filter((v) => v.name.trim())
+    const hasVariants = namedVariants.length > 0
+
+    if (!form.name.trim()) {
+      setMessage('請填寫名稱')
+      return
+    }
+    if (!hasVariants && form.price <= 0) {
       setMessage('請填寫名稱與價格')
+      return
+    }
+    if (hasVariants && namedVariants.some((v) => v.price <= 0)) {
+      setMessage('每個規格都需要大於 0 的原價')
       return
     }
     if (form.tags.length === 0) {
       setMessage('請至少勾選一個標籤')
       return
     }
-    const stock = parseIntegerInput(stockDraftRef.current, 0)
+    const stock = hasVariants
+      ? namedVariants.reduce((sum, v) => sum + Math.max(0, v.stock), 0)
+      : parseIntegerInput(stockDraftRef.current, 0)
     if (stock < 0) {
       setMessage('庫存不可為負數')
       return
@@ -218,7 +239,14 @@ export function ProductEditModal({
     try {
       await updateProduct(
         product.id,
-        { ...form, stock },
+        {
+          ...form,
+          stock,
+          variants: namedVariants,
+          price: hasVariants
+            ? Math.min(...namedVariants.map((v) => v.price))
+            : form.price,
+        },
         product.image_url,
         { updateCost: isSuperAdmin }
       )
@@ -315,14 +343,24 @@ export function ProductEditModal({
             }
             onCostChange={(cost) => setForm({ ...form, cost })}
           />
-          <IntegerField
-            min={0}
-            placeholder="庫存件數（0 = 售罄）"
-            value={form.stock}
-            onDraftChange={(text) => {
-              stockDraftRef.current = text
-            }}
-            onChange={(stock) => setForm({ ...form, stock })}
+          {form.variants.some((v) => v.name.trim()) ? (
+            <p className="text-xs text-white/45">
+              已使用規格：上方原價為區間參考；實際售價與庫存以規格為準。折扣仍套用至各規格。
+            </p>
+          ) : (
+            <IntegerField
+              min={0}
+              placeholder="庫存件數（0 = 售罄）"
+              value={form.stock}
+              onDraftChange={(text) => {
+                stockDraftRef.current = text
+              }}
+              onChange={(stock) => setForm({ ...form, stock })}
+            />
+          )}
+          <AdminProductVariantsEditor
+            variants={form.variants}
+            onChange={(variants) => setForm({ ...form, variants })}
           />
 
           <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">

@@ -21,15 +21,18 @@ export function productRequiresBraceletSize(category: ProductCategory): boolean 
   return category === '手串'
 }
 
-/** 購物車列唯一識別：同款不同手圍／不同配置為不同列 */
+/** 購物車列唯一識別：同款不同手圍／規格／配置為不同列 */
 export function buildCartItemKey(
   productId: string,
   selectedSize: string | null | undefined,
-  configFingerprint?: string | null
+  configFingerprint?: string | null,
+  variantId?: string | null
 ): string {
   const size = selectedSize?.trim()
   const config = configFingerprint?.trim()
+  const variant = variantId?.trim()
   let key = productId
+  if (variant) key = `${key}_v_${variant}`
   if (size) key = `${key}_${size}`
   if (config) key = `${key}_cfg_${config}`
   return key
@@ -49,13 +52,17 @@ export function formatOrderLineItemDetail(item: {
   productName: string
   quantity: number
   selectedSize?: string | null
+  variantName?: string | null
   braceletConfigSummary?: string | null
 }): string {
+  const variantPart = item.variantName?.trim()
+    ? `（${item.variantName.trim()}）`
+    : ''
   const sizePart = item.selectedSize
     ? `（${formatBraceletSizeLabel(item.selectedSize)}）`
     : ''
   const configPart = item.braceletConfigSummary?.trim()
     ? `（${item.braceletConfigSummary.trim()}）`
     : ''
-  return `${item.productName}${sizePart}${configPart} x ${item.quantity}`
+  return `${item.productName}${variantPart}${sizePart}${configPart} x ${item.quantity}`
 }

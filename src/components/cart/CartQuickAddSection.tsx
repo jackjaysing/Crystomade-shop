@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { productRequiresBraceletSize } from '../../constants/braceletSizes'
+import { productHasVariants } from '../../lib/productPricing'
 import { isProductSoldOut } from '../../lib/productStock'
 import { productPhotoAlt } from '../../lib/imageAlt'
 import type { Product } from '../../lib/types'
@@ -27,6 +28,7 @@ export function CartQuickAddSection({
   }
 
   const handleAdd = (product: Product) => {
+    if (productHasVariants(product)) return
     const needsSize = productRequiresBraceletSize(product.category)
     const selectedSize = needsSize ? sizeByProduct[product.id] : null
 
@@ -57,7 +59,9 @@ export function CartQuickAddSection({
       ) : (
         <div className="-mx-1 mt-4 overflow-x-auto px-1 pb-2">
           <ul className="flex min-w-max gap-4">
-            {products.map((product) => {
+            {products
+              .filter((product) => !productHasVariants(product))
+              .map((product) => {
               const soldOut = isProductSoldOut(product)
               const needsSize = productRequiresBraceletSize(product.category)
 

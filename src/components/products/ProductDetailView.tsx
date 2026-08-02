@@ -2,12 +2,17 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft, TriangleAlert } from 'lucide-react'
 import { getProductCategoryLabel } from '../../constants/categories'
+import {
+  BRACELET_SELF_CONFIG_LOCKED,
+  BRACELET_SELF_CONFIG_LOCKED_MESSAGE,
+} from '../../constants/braceletBuilder'
 import { productRequiresBraceletSize } from '../../constants/braceletSizes'
 import { useCart } from '../../contexts/CartContext'
 import { useProductViewTracker } from '../../hooks/useProductViewTracker'
 import { fetchBraceletShopSettings } from '../../lib/api/braceletShopSettings'
 import { isBespokeSoulCardProduct } from '../../lib/grimoireFulfillment'
 import { isProductSoldOut } from '../../lib/productStock'
+import { getVariantSalePrice, productHasVariants } from '../../lib/productPricing'
 import { productConfigurePath } from '../../lib/productSlug'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
@@ -31,15 +36,29 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const { addItem } = useCart()
   const [feedback, setFeedback] = useState<string | null>(null)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
   const [sizeError, setSizeError] = useState<string | null>(null)
+  const [variantError, setVariantError] = useState<string | null>(null)
   const [beadsRestocking, setBeadsRestocking] = useState(false)
 
   useProductViewTracker(product.id)
 
   const isSold = isProductSoldOut(product)
   const needsSize = productRequiresBraceletSize(product.category)
+  const hasVariants = productHasVariants(product)
+  const selectedVariant =
+    hasVariants && selectedVariantId
+      ? product.variants.find((v) => v.id === selectedVariantId) ?? null
+      : null
   const isConfigurable = isBespokeSoulCardProduct(product.name)
-  const canAdd = !needsSize || Boolean(selectedSize)
+  const canAdd =
+    (!needsSize || Boolean(selectedSize)) &&
+    (!hasVariants || Boolean(selectedVariant && selectedVariant.stock > 0))
+
+  useEffect(() => {
+    setSelectedVariantId(null)
+    setVariantError(null)
+  }, [product.id])
 
   useEffect(() => {
     if (!isConfigurable) return
@@ -61,8 +80,20 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
       setSizeError('請先選擇淨手圍')
       return
     }
+    if (hasVariants && !selectedVariant) {
+      setVariantError('請先選擇規格')
+      return
+    }
+    if (selectedVariant && selectedVariant.stock <= 0) {
+      setVariantError('此規格已售罄')
+      return
+    }
     setSizeError(null)
-    addItem(product, { selectedSize: needsSize ? selectedSize : null })
+    setVariantError(null)
+    addItem(product, {
+      selectedSize: needsSize ? selectedSize : null,
+      variantId: selectedVariant?.id ?? null,
+    })
     onSuccess()
   }
 
@@ -134,7 +165,12 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             <div className="p-6 sm:p-8">
               <p className="text-xs tracking-[0.25em] text-amber-glow/70">
                 {getProductCategoryLabel(product)}
-                {!isSold && ` · 庫存 ${product.stock} 件`}
+                {!isSold &&
+                  ` · 庫存 ${
+                    selectedVariant
+                      ? selectedVariant.stock
+                      : product.stock
+                  } 件`}
               </p>
               <div className="mt-2 flex items-start justify-between gap-4">
                 <h1
@@ -146,7 +182,11 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                 <ProductShareButton product={product} />
               </div>
               <div className="mt-2">
-                <ProductPriceDisplay product={product} variant="detail" />
+                <ProductPriceDisplay
+                  product={product}
+                  selectedVariant={selectedVariant}
+                  variant="detail"
+                />
               </div>
               {product.is_studio_available && (
                 <p className="mt-2 text-sm text-emerald-300/90">
@@ -182,6 +222,55 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
               <ProductOrderPaymentNotice />
 
+              {!isSold && hasVariants && (
+                <div className="mt-6">
+                  <p className="text-sm tracking-wide text-amber-glow/90">
+                    請選擇規格
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {product.variants.map((variantOption) => {
+                      const sale = getVariantSalePrice(
+                        variantOption,
+                        product.discount_zhe
+                      )
+                      const soldOut = variantOption.stock <= 0
+                      const selected = selectedVariantId === variantOption.id
+                      return (
+                        <button
+                          key={variantOption.id}
+                          type="button"
+                          disabled={soldOut}
+                          onClick={() => {
+                            setSelectedVariantId(variantOption.id)
+                            setVariantError(null)
+                          }}
+                          className={`rounded-xl border px-3 py-3 text-left transition ${
+                            selected
+                              ? 'border-amber-glow/70 bg-amber-glow/15'
+                              : 'border-white/15 bg-black/20 hover:border-amber-glow/40'
+                          } disabled:cursor-not-allowed disabled:opacity-40`}
+                        >
+                          <p className="text-sm font-medium text-white">
+                            {variantOption.name}
+                          </p>
+                          <p className="mt-1 text-sm text-amber-glow">
+                            NT$ {sale.toLocaleString()}
+                          </p>
+                          <p className="mt-1 text-xs text-white/45">
+                            {soldOut
+                              ? '已售罄'
+                              : `剩餘 ${variantOption.stock} 件`}
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {variantError && (
+                    <p className="mt-2 text-xs text-red-300/90">{variantError}</p>
+                  )}
+                </div>
+              )}
+
               {!isSold && needsSize && (
                 <div className="mt-6">
                   <BraceletSizePicker
@@ -213,23 +302,43 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Link
-                      to={productConfigurePath(product)}
-                      className="group flex flex-col rounded-xl border border-amber-glow/40 bg-gradient-to-b from-amber-glow/15 to-black/20 px-4 py-5 text-left transition hover:border-amber-glow/65 hover:from-amber-glow/20"
-                    >
-                      <span className="text-xs tracking-[0.2em] text-amber-glow/80">
-                        方式一
-                      </span>
-                      <span className="mt-1 text-xl font-medium tracking-[0.12em] text-amber-glow">
-                        自行配珠
-                      </span>
-                      <span className="mt-2 flex-1 text-base leading-relaxed text-white/70">
-                        自己選珠、排順序與目標，下單後由晶刻串製。
-                      </span>
-                      <span className="mt-5 inline-flex items-center justify-center rounded-lg bg-amber-glow/90 py-3.5 text-base font-medium tracking-wider text-void transition group-hover:bg-amber-glow">
-                        開始自行配珠
-                      </span>
-                    </Link>
+                    {BRACELET_SELF_CONFIG_LOCKED ? (
+                      <div
+                        className="flex flex-col rounded-xl border border-white/15 bg-black/25 px-4 py-5 opacity-70"
+                        aria-disabled="true"
+                      >
+                        <span className="text-xs tracking-[0.2em] text-white/45">
+                          方式一
+                        </span>
+                        <span className="mt-1 text-xl font-medium tracking-[0.12em] text-white/55">
+                          自行配珠
+                        </span>
+                        <span className="mt-2 flex-1 text-base leading-relaxed text-white/45">
+                          自己選珠、排順序與目標，下單後由晶刻串製。
+                        </span>
+                        <span className="mt-5 inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 py-3.5 text-base font-medium tracking-wider text-white/50">
+                          {BRACELET_SELF_CONFIG_LOCKED_MESSAGE}
+                        </span>
+                      </div>
+                    ) : (
+                      <Link
+                        to={productConfigurePath(product)}
+                        className="group flex flex-col rounded-xl border border-amber-glow/40 bg-gradient-to-b from-amber-glow/15 to-black/20 px-4 py-5 text-left transition hover:border-amber-glow/65 hover:from-amber-glow/20"
+                      >
+                        <span className="text-xs tracking-[0.2em] text-amber-glow/80">
+                          方式一
+                        </span>
+                        <span className="mt-1 text-xl font-medium tracking-[0.12em] text-amber-glow">
+                          自行配珠
+                        </span>
+                        <span className="mt-2 flex-1 text-base leading-relaxed text-white/70">
+                          自己選珠、排順序與目標，下單後由晶刻串製。
+                        </span>
+                        <span className="mt-5 inline-flex items-center justify-center rounded-lg bg-amber-glow/90 py-3.5 text-base font-medium tracking-wider text-void transition group-hover:bg-amber-glow">
+                          開始自行配珠
+                        </span>
+                      </Link>
+                    )}
 
                     <div className="flex flex-col rounded-xl border border-white/20 bg-black/30 px-4 py-5">
                       <span className="text-xs tracking-[0.2em] text-white/55">

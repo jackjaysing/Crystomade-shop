@@ -16,6 +16,7 @@ import { AdminProductSubcategoryPicker } from './AdminProductSubcategoryPicker'
 import { AdminProductGalleryEditor } from './AdminProductGalleryEditor'
 import { AdminProductPricingFields } from './AdminProductPricingFields'
 import { AdminProductStudioPicker } from './AdminProductStudioPicker'
+import { AdminProductVariantsEditor } from './AdminProductVariantsEditor'
 import { WatermarkedImageDownloadButton } from './WatermarkedImageDownloadButton'
 import { downloadWatermarkedImage } from '../../lib/downloadWatermarkedImage'
 import { moveListItem } from '../../lib/reorderList'
@@ -41,6 +42,7 @@ const initialForm: ProductFormData = {
   cost: 0,
   studio_location: null,
   stock: 1,
+  variants: [],
   is_hot: false,
   is_quick_add: false,
   is_studio_available: false,
@@ -146,16 +148,35 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!form.name || form.price <= 0) {
+    const namedVariants = form.variants.filter((v) => v.name.trim())
+    const hasVariants = namedVariants.length > 0
+
+    if (!form.name) {
+      setMessage('請填寫名稱')
+      return
+    }
+    if (!hasVariants && form.price <= 0) {
       setMessage('請填寫名稱與價格')
       return
+    }
+    if (hasVariants) {
+      if (namedVariants.some((v) => v.price <= 0)) {
+        setMessage('每個規格都需要大於 0 的原價')
+        return
+      }
+      if (namedVariants.some((v) => v.stock < 0)) {
+        setMessage('規格庫存不可為負')
+        return
+      }
     }
     if (form.tags.length === 0) {
       setMessage('請至少勾選一個標籤')
       return
     }
-    const stock = parseIntegerInput(stockDraftRef.current, 1)
-    if (stock < 1) {
+    const stock = hasVariants
+      ? namedVariants.reduce((sum, v) => sum + Math.max(0, v.stock), 0)
+      : parseIntegerInput(stockDraftRef.current, 1)
+    if (!hasVariants && stock < 1) {
       setMessage('庫存至少 1 件')
       return
     }
@@ -168,7 +189,14 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
     setMessage('')
     try {
       await createProduct(
-        { ...form, stock },
+        {
+          ...form,
+          stock,
+          variants: namedVariants,
+          price: hasVariants
+            ? Math.min(...namedVariants.map((v) => v.price))
+            : form.price,
+        },
         { updateCost: isSuperAdmin }
       )
       resetForm()
@@ -237,14 +265,24 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
           }
           onCostChange={(cost) => setForm({ ...form, cost })}
         />
-        <IntegerField
-          min={1}
-          placeholder="庫存件數"
-          value={form.stock}
-          onDraftChange={(text) => {
-            stockDraftRef.current = text
-          }}
-          onChange={(stock) => setForm({ ...form, stock })}
+        {form.variants.some((v) => v.name.trim()) ? (
+          <p className="text-xs text-white/45">
+            已使用規格：上方原價改為區間參考；實際售價與庫存以規格為準。折扣仍套用至各規格。
+          </p>
+        ) : (
+          <IntegerField
+            min={1}
+            placeholder="庫存件數"
+            value={form.stock}
+            onDraftChange={(text) => {
+              stockDraftRef.current = text
+            }}
+            onChange={(stock) => setForm({ ...form, stock })}
+          />
+        )}
+        <AdminProductVariantsEditor
+          variants={form.variants}
+          onChange={(variants) => setForm({ ...form, variants })}
         />
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">

@@ -24,6 +24,8 @@ export interface OrderLineItem {
   imageUrl?: string
   /** 手串手圍等規格 */
   selectedSize?: string | null
+  /** 商品規格名稱快照 */
+  variantName?: string | null
   /** 客戶配置手串快照 */
   braceletConfig?: BraceletConfig | null
   quantity: number
@@ -117,6 +119,7 @@ function buildLineItems(
       order.products?.name ?? order.product_name ?? '（商品已刪除）'
     const imageUrl = order.products?.image_url ?? order.product_image_url ?? undefined
     const selectedSize = order.selected_size?.trim() || null
+    const variantName = order.variant_name?.trim() || null
     const braceletConfig = order.bracelet_config ?? null
     const productStudioLocation = order.products?.studio_location ?? null
     const orderStudioLocation = order.studio_location ?? null
@@ -144,6 +147,7 @@ function buildLineItems(
       productName,
       imageUrl,
       selectedSize,
+      variantName,
       braceletConfig,
       quantity: 1,
       lineTotal: order.total_amount,

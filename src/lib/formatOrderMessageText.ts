@@ -28,6 +28,7 @@ export function formatNumberedItemSection(
       productName: item.productName,
       quantity: item.quantity,
       selectedSize: item.selectedSize,
+      variantName: item.variantName,
       braceletConfigSummary: formatBraceletConfigSummary(item.braceletConfig),
     })
     const amount = formatOrderLineDisplayAmount(item)

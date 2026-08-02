@@ -16,6 +16,9 @@ const HEADER_FILL = 'FF2A2418'
 const HEADER_FONT = 'FFE8C872'
 
 function formatExcelLineItem(item: OrderLineItem): string {
+  const variantSuffix = item.variantName?.trim()
+    ? ` (${item.variantName.trim()})`
+    : ''
   let sizeSuffix = ''
   if (item.selectedSize?.trim()) {
     const raw = item.selectedSize.trim()
@@ -32,7 +35,7 @@ function formatExcelLineItem(item: OrderLineItem): string {
     item.braceletConfig?.beads.length
       ? ` [${item.braceletConfig.beads.map((b) => b.name).join('→')}]`
       : ''
-  return `${item.productName}${sizeSuffix}${configSuffix}${beadSuffix} x ${item.quantity} NT$ ${formatOrderLineDisplayAmount(item)}`
+  return `${item.productName}${variantSuffix}${sizeSuffix}${configSuffix}${beadSuffix} x ${item.quantity} NT$ ${formatOrderLineDisplayAmount(item)}`
 }
 
 /** 合併儲存格欄位（同一訂單多行商品時） */

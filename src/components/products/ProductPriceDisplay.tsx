@@ -1,12 +1,18 @@
 import {
   formatDiscountZheLabel,
+  formatPriceRangeLabel,
+  getProductPriceRange,
   getProductSalePrice,
+  getVariantSalePrice,
   hasProductDiscount,
+  productHasVariants,
 } from '../../lib/productPricing'
-import type { Product } from '../../lib/types'
+import type { Product, ProductVariant } from '../../lib/types'
 
 interface ProductPriceDisplayProps {
-  product: Pick<Product, 'price' | 'discount_zhe'>
+  product: Pick<Product, 'price' | 'discount_zhe' | 'variants'>
+  /** 已選規格時詳情頁顯示該規格價 */
+  selectedVariant?: Pick<ProductVariant, 'price'> | null
   /** 卡片較小、詳情較大 */
   variant?: 'card' | 'detail'
 }
@@ -14,10 +20,31 @@ interface ProductPriceDisplayProps {
 /** 前台商品價格（折扣時僅顯示金額，不顯示特價文案） */
 export function ProductPriceDisplay({
   product,
+  selectedVariant = null,
   variant = 'card',
 }: ProductPriceDisplayProps) {
-  const salePrice = getProductSalePrice(product)
+  const range = getProductPriceRange(product)
   const onSale = hasProductDiscount(product)
+  const showSelected =
+    selectedVariant != null && productHasVariants(product)
+
+  const salePrice = showSelected
+    ? getVariantSalePrice(selectedVariant, product.discount_zhe)
+    : getProductSalePrice(product)
+  const originalPrice = showSelected
+    ? selectedVariant.price
+    : range.minOriginal === range.maxOriginal
+      ? range.minOriginal
+      : null
+  const saleLabel = showSelected
+    ? `NT$ ${salePrice.toLocaleString()}`
+    : formatPriceRangeLabel(range.min, range.max)
+  const originalLabel =
+    originalPrice != null
+      ? `NT$ ${originalPrice.toLocaleString()}`
+      : range.minOriginal !== range.maxOriginal
+        ? formatPriceRangeLabel(range.minOriginal, range.maxOriginal)
+        : `NT$ ${range.minOriginal.toLocaleString()}`
 
   if (!onSale) {
     return (
@@ -28,7 +55,7 @@ export function ProductPriceDisplay({
             : 'text-sm text-amber-glow'
         }
       >
-        NT$ {product.price.toLocaleString()}
+        {saleLabel}
       </p>
     )
   }
@@ -48,7 +75,7 @@ export function ProductPriceDisplay({
               : 'text-sm font-medium text-amber-glow'
           }
         >
-          NT$ {salePrice.toLocaleString()}
+          {saleLabel}
         </p>
         {discountLabel && variant === 'detail' && (
           <span className="rounded-full border border-amber-glow/40 bg-amber-glow/10 px-2 py-0.5 text-[10px] tracking-wider text-amber-glow/90">
@@ -63,7 +90,7 @@ export function ProductPriceDisplay({
             : 'text-xs text-white/40 line-through'
         }
       >
-        NT$ {product.price.toLocaleString()}
+        {originalLabel}
       </p>
     </div>
   )

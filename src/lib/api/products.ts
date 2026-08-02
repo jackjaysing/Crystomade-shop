@@ -24,7 +24,123 @@ import type {
   ProductEditData,
   ProductFormData,
   ProductGalleryEditItem,
+  ProductVariantInput,
 } from '../types'
+
+const PRODUCT_SELECT_WITH_VARIANTS = '*, product_variants(*)'
+
+function isMissingVariantsRelation(message: string): boolean {
+  return /product_variants|PGRST200|PGRST205|relationship|42703/i.test(message)
+}
+
+/** 後台：同步商品規格（空陣列＝清除規格，改回單庫存） */
+export async function syncProductVariants(
+  productId: string,
+  variants: ProductVariantInput[]
+): Promise<void> {
+  const cleaned = variants
+    .map((v, index) => ({
+      id: v.id?.trim() || undefined,
+      name: v.name.trim(),
+      price: Math.max(0, Number(v.price) || 0),
+      stock: Math.max(0, Math.floor(Number(v.stock) || 0)),
+      sort_order: index,
+    }))
+    .filter((v) => v.name.length > 0)
+
+  const { data: existing, error: existingError } = await supabase
+    .from('product_variants')
+    .select('id')
+    .eq('product_id', productId)
+
+  if (existingError) {
+    const msg = formatErrorMessage(existingError)
+    if (isMissingVariantsRelation(msg)) {
+      if (cleaned.length === 0) return
+      throw new Error(
+        '資料庫尚未啟用商品規格，請在 Supabase SQL Editor 執行 supabase/migration-product-variants.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  const existingIds = new Set(
+    (existing ?? []).map((row) => String((row as { id: string }).id))
+  )
+  const keepIds = new Set(
+    cleaned.map((v) => v.id).filter((id): id is string => Boolean(id))
+  )
+  const toDelete = [...existingIds].filter((id) => !keepIds.has(id))
+
+  if (toDelete.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('product_variants')
+      .delete()
+      .in('id', toDelete)
+    if (deleteError) throw new Error(formatErrorMessage(deleteError))
+  }
+
+  for (const variant of cleaned) {
+    if (variant.id && existingIds.has(variant.id)) {
+      const { error } = await supabase
+        .from('product_variants')
+        .update({
+          name: variant.name,
+          price: variant.price,
+          stock: variant.stock,
+          sort_order: variant.sort_order,
+        })
+        .eq('id', variant.id)
+        .eq('product_id', productId)
+      if (error) throw new Error(formatErrorMessage(error))
+    } else {
+      const { error } = await supabase.from('product_variants').insert({
+        product_id: productId,
+        name: variant.name,
+        price: variant.price,
+        stock: variant.stock,
+        sort_order: variant.sort_order,
+      })
+      if (error) throw new Error(formatErrorMessage(error))
+    }
+  }
+
+  if (cleaned.length > 0) {
+    const stockSum = cleaned.reduce((sum, v) => sum + v.stock, 0)
+    const minPrice = Math.min(...cleaned.map((v) => v.price))
+    const { error } = await supabase
+      .from('products')
+      .update({
+        stock: stockSum,
+        price: minPrice,
+        status: stockSum <= 0 ? 'sold' : 'available',
+      })
+      .eq('id', productId)
+    if (error) throw new Error(formatErrorMessage(error))
+  }
+}
+
+function resolveCreateStockAndPrice(form: ProductFormData): {
+  stock: number
+  price: number
+} {
+  const cleaned = (form.variants ?? [])
+    .map((v) => ({
+      name: v.name.trim(),
+      price: Math.max(0, Number(v.price) || 0),
+      stock: Math.max(0, Math.floor(Number(v.stock) || 0)),
+    }))
+    .filter((v) => v.name.length > 0)
+
+  if (cleaned.length === 0) {
+    return { stock: form.stock, price: form.price }
+  }
+
+  return {
+    stock: cleaned.reduce((sum, v) => sum + v.stock, 0),
+    price: Math.min(...cleaned.map((v) => v.price)),
+  }
+}
 
 function mapActiveProducts(rows: Record<string, unknown>[]): Product[] {
   return sortProducts(
@@ -97,21 +213,42 @@ export async function fetchProducts(options?: {
 
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select(PRODUCT_SELECT_WITH_VARIANTS)
     .is('deleted_at', null)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
   if (error) {
     const msg = formatErrorMessage(error)
-    if (/deleted_at|42703|column|sort_order/i.test(msg)) {
+    if (isMissingVariantsRelation(msg) || /deleted_at|42703|column|sort_order/i.test(msg)) {
       const { data: fallback, error: fallbackError } = await supabase
         .from('products')
         .select('*')
+        .is('deleted_at', null)
         .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false })
 
-      if (fallbackError) throw new Error(formatErrorMessage(fallbackError))
+      if (fallbackError) {
+        const fbMsg = formatErrorMessage(fallbackError)
+        if (/deleted_at|42703|column|sort_order/i.test(fbMsg)) {
+          const { data: legacy, error: legacyError } = await supabase
+            .from('products')
+            .select('*')
+            .order('sort_order', { ascending: true })
+            .order('created_at', { ascending: false })
+          if (legacyError) throw new Error(formatErrorMessage(legacyError))
+          let result = mapActiveProducts((legacy ?? []) as Record<string, unknown>[])
+          if (options?.includeCosts) {
+            const costs = await fetchProductCostsMap()
+            result = mergeProductCosts(result, costs)
+          }
+          if (!options?.includeCosts) {
+            storefrontProductsCache = { data: result, at: Date.now() }
+          }
+          return result
+        }
+        throw new Error(fbMsg)
+      }
       let result = mapActiveProducts((fallback ?? []) as Record<string, unknown>[])
       if (options?.includeCosts) {
         const costs = await fetchProductCostsMap()
@@ -144,14 +281,14 @@ export async function fetchProductById(id: string): Promise<Product | null> {
 
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select(PRODUCT_SELECT_WITH_VARIANTS)
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle()
 
   if (error) {
     const msg = formatErrorMessage(error)
-    if (/deleted_at|42703|column/i.test(msg)) {
+    if (isMissingVariantsRelation(msg) || /deleted_at|42703|column/i.test(msg)) {
       const { data: fallback, error: fallbackError } = await supabase
         .from('products')
         .select('*')
@@ -177,7 +314,7 @@ export async function fetchQuickAddProducts(): Promise<Product[]> {
 
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select(PRODUCT_SELECT_WITH_VARIANTS)
     .is('deleted_at', null)
     .eq('is_quick_add', true)
     .gt('stock', 0)
@@ -187,7 +324,7 @@ export async function fetchQuickAddProducts(): Promise<Product[]> {
 
   if (error) {
     const msg = formatErrorMessage(error)
-    if (/is_quick_add|42703|column/i.test(msg)) {
+    if (/is_quick_add|42703|column|product_variants/i.test(msg)) {
       return []
     }
     throw new Error(msg)
@@ -257,6 +394,7 @@ export async function createProduct(
       : []
 
   const sort_order = await getSortOrderForNewProduct(form.is_hot)
+  const { stock, price } = resolveCreateStockAndPrice(form)
 
   const payload = {
     name: form.name,
@@ -264,7 +402,7 @@ export async function createProduct(
     bracelet_style:
       form.category === '手串' ? form.bracelet_style ?? '通用' : null,
     subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
-    price: form.price,
+    price,
     discount_zhe: form.discount_zhe,
     studio_location: form.studio_location,
     tags: sanitizeProductTags(form.tags),
@@ -272,7 +410,7 @@ export async function createProduct(
     image_url,
     gallery_urls,
     description: form.description,
-    stock: form.stock,
+    stock,
     status: 'available' as const,
     is_hot: form.is_hot,
     is_quick_add: form.is_quick_add,
@@ -308,7 +446,10 @@ export async function createProduct(
   }
 
   if (error) throw new Error(formatErrorMessage(error))
-  const product = normalizeProduct(data as Record<string, unknown>)
+  await syncProductVariants(String((data as { id: string }).id), form.variants ?? [])
+
+  const refreshed = await fetchProductById(String((data as { id: string }).id))
+  const product = refreshed ?? normalizeProduct(data as Record<string, unknown>)
   if (updateCost) {
     product.cost = await upsertProductCost(product.id, form.cost)
   }
@@ -353,8 +494,20 @@ export async function updateProduct(
     : currentImageUrl
 
   const gallery_urls = await resolveGalleryItems(form.galleryItems)
-
-  const stock = Math.max(0, form.stock)
+  const hasVariants = (form.variants ?? []).some((v) => v.name.trim())
+  const stock = hasVariants
+    ? (form.variants ?? []).reduce(
+        (sum, v) => sum + Math.max(0, Math.floor(Number(v.stock) || 0)),
+        0
+      )
+    : Math.max(0, form.stock)
+  const price = hasVariants
+    ? Math.min(
+        ...((form.variants ?? [])
+          .filter((v) => v.name.trim())
+          .map((v) => Math.max(0, Number(v.price) || 0)) || [form.price])
+      )
+    : form.price
   const status = stock <= 0 ? 'sold' : 'available'
 
   const payload = {
@@ -363,7 +516,7 @@ export async function updateProduct(
     bracelet_style:
       form.category === '手串' ? form.bracelet_style ?? '通用' : null,
     subcategory: sanitizeSubcategoryForSave(form.category, form.subcategory),
-    price: form.price,
+    price,
     discount_zhe: form.discount_zhe,
     studio_location: form.studio_location,
     tags: sanitizeProductTags(form.tags),
@@ -408,7 +561,9 @@ export async function updateProduct(
   }
 
   if (error) throw new Error(formatErrorMessage(error))
-  const product = normalizeProduct(data as Record<string, unknown>)
+  await syncProductVariants(productId, form.variants ?? [])
+  const refreshed = await fetchProductById(productId)
+  const product = refreshed ?? normalizeProduct(data as Record<string, unknown>)
   if (updateCost) {
     product.cost = await upsertProductCost(product.id, form.cost)
   }

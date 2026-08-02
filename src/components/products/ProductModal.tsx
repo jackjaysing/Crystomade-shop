@@ -7,6 +7,7 @@ import {
 } from '../../constants/braceletSizes'
 import { useCart } from '../../contexts/CartContext'
 import { useProductViewTracker } from '../../hooks/useProductViewTracker'
+import { productHasVariants } from '../../lib/productPricing'
 import { isProductSoldOut } from '../../lib/productStock'
 import type { Product } from '../../lib/types'
 import { HotProductFrame } from './HotProductFrame'
@@ -54,9 +55,16 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
   const isSold = isProductSoldOut(product)
   const needsSize = productRequiresBraceletSize(product.category)
-  const canAdd = !needsSize || Boolean(selectedSize)
+  const hasVariants = productHasVariants(product)
+  const canAdd =
+    !hasVariants && (!needsSize || Boolean(selectedSize))
 
   const tryAdd = (onSuccess: () => void) => {
+    if (hasVariants) {
+      onClose()
+      navigate(productDetailPath(product))
+      return
+    }
     if (needsSize && !selectedSize) {
       setSizeError('請先選擇淨手圍')
       return
@@ -168,7 +176,13 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
           <ProductOrderPaymentNotice />
 
-          {!isSold && needsSize && (
+          {!isSold && hasVariants && (
+            <p className="mt-6 text-sm text-white/55">
+              此商品有多個規格，請至商品頁選擇後再下單。
+            </p>
+          )}
+
+          {!isSold && needsSize && !hasVariants && (
             <div className="mt-6">
               <BraceletSizePicker
                 value={selectedSize}
@@ -189,6 +203,19 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
           {!isSold && (
             <div className="mt-8 flex gap-3">
+              {hasVariants ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose()
+                    navigate(productDetailPath(product))
+                  }}
+                  className="flex-1 rounded-lg bg-amber-glow/90 py-4 text-sm font-medium tracking-[0.15em] text-void transition hover:bg-amber-glow"
+                >
+                  前往選擇規格
+                </button>
+              ) : (
+                <>
               <button
                 type="button"
                 onClick={handleAddToCart}
@@ -205,6 +232,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               >
                 立即購買
               </button>
+                </>
+              )}
             </div>
           )}
 

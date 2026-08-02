@@ -23,6 +23,27 @@ export type BraceletStyle = '通用' | '男款' | '女款' | '兒童款'
 /** 分潤歸屬（分潤對象） */
 export type StudioLocation = '羽薇' | 'Ken' | 'Johnman'
 
+/** 商品規格（同頁多選；各自售價／庫存） */
+export interface ProductVariant {
+  id: string
+  product_id: string
+  name: string
+  /** 規格原價（NT$） */
+  price: number
+  stock: number
+  sort_order: number
+  created_at: string
+}
+
+/** 後台編輯用規格列（新建尚無 id） */
+export interface ProductVariantInput {
+  id?: string
+  name: string
+  price: number
+  stock: number
+  sort_order: number
+}
+
 /** 商品 */
 export interface Product {
   id: string
@@ -32,7 +53,7 @@ export interface Product {
   bracelet_style: BraceletStyle | null
   /** 配飾／擺件／礦石細項；手串為 null */
   subcategory: ProductSubcategory | null
-  /** 原價（NT$） */
+  /** 原價（NT$）；有規格時多為區間下限參考 */
   price: number
   /** 折扣（折），如 8 表示 8 折；null 表示無折扣 */
   discount_zhe: number | null
@@ -47,8 +68,10 @@ export interface Product {
   /** 詳情頁額外圖片（不含封面） */
   gallery_urls: string[]
   status: ProductStatus
-  /** 庫存件數，下單成功扣 1 */
+  /** 庫存件數；有規格時為各規格加總 */
   stock: number
+  /** 規格列表；空陣列表示單庫存商品 */
+  variants: ProductVariant[]
   description: string
   created_at: string
   /** 軟刪除時間；有值表示已從前台移除 */
@@ -86,6 +109,10 @@ export interface Order {
   selected_size?: string | null
   /** 客戶配置手串快照（五行平衡配置器） */
   bracelet_config?: BraceletConfig | null
+  /** 商品規格 ID */
+  variant_id?: string | null
+  /** 下單當下規格名稱快照 */
+  variant_name?: string | null
   total_amount: number
   status: OrderStatus
   /** 後台標記是否已付款 */
@@ -194,6 +221,10 @@ export interface CartItem {
   quantity: number
   /** 手串淨手圍（cm 數字字串，如 "15"）；非手串為 null */
   selectedSize: string | null
+  /** 商品規格 ID；無規格商品為 null */
+  variantId?: string | null
+  /** 規格名稱快照 */
+  variantName?: string | null
   /** 客戶配置手串快照（配置器加入的列） */
   braceletConfig?: BraceletConfig | null
   /** 加入當下可用庫存上限 */
@@ -366,8 +397,10 @@ export interface ProductFormData {
   tags: string[]
   five_elements: FiveElement[]
   description: string
-  /** 上架庫存件數 */
+  /** 上架庫存件數（無規格時使用） */
   stock: number
+  /** 規格列；空表示單庫存 */
+  variants: ProductVariantInput[]
   /** 標記為熱門商品 */
   is_hot: boolean
   /** 推薦加購（購物車快捷區） */
@@ -482,6 +515,8 @@ export interface ProductEditData {
   five_elements: FiveElement[]
   description: string
   stock: number
+  /** 規格列；空表示單庫存 */
+  variants: ProductVariantInput[]
   /** 標記為熱門商品 */
   is_hot: boolean
   /** 推薦加購（購物車快捷區） */
