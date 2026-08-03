@@ -119,7 +119,7 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
             >
               抽獎活動
               {hasUnseenOpenRaffles && (
-                <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white raffle-fab-new-badge">
+                <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold tracking-wider text-white raffle-fab-new-badge">
                   NEW
                 </span>
               )}
@@ -211,7 +211,7 @@ export function RaffleActivityPanel({ open, onClose }: RaffleActivityPanelProps)
                         className="relative rounded-xl border border-white/10 bg-white/5 p-4"
                       >
                         {!isRaffleActivitySeen(r.id) && (
-                          <span className="absolute right-3 top-3 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white raffle-fab-new-badge">
+                          <span className="absolute right-3 top-3 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white raffle-fab-new-badge">
                             NEW
                           </span>
                         )}

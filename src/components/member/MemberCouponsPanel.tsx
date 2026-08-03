@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchMemberCouponHistory } from '../../lib/api/coupons'
 import type { MemberCouponWithDefinition } from '../../lib/types'
 import { GlassPanel } from '../ui/GlassPanel'
+import { AccountSectionHeader } from '../account/AccountSectionHeader'
 import {
   MemberCouponList,
   splitMemberCoupons,
@@ -39,15 +40,16 @@ export function MemberCouponsPanel({ userId }: MemberCouponsPanelProps) {
   }, [userId, reloadKey])
 
   return (
-    <GlassPanel className="mt-6 p-6 sm:p-8">
-      <h2 className="text-sm tracking-widest text-white/50">我的優惠券</h2>
-      <p className="mt-1 text-xs text-white/35">
-        結帳時可選用，含折抵、打折與滿額贈禮
-      </p>
+    <GlassPanel className="p-6 sm:p-8">
+      <AccountSectionHeader
+        eyebrow="COUPONS"
+        title="我的優惠券"
+        lead="結帳時可選用，含折抵、打折與滿額贈禮"
+      />
       {loading ? (
-        <p className="mt-4 text-sm text-white/35">載入中…</p>
+        <p className="mt-5 text-sm text-white/45">載入中…</p>
       ) : discountCoupons.length === 0 ? (
-        <p className="mt-4 text-sm text-white/35">尚無優惠券，請留意活動發放。</p>
+        <p className="mt-5 text-sm text-white/45">尚無優惠券，請留意活動發放。</p>
       ) : (
         <MemberCouponList
           items={discountCoupons}

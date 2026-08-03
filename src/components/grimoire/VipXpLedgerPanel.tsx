@@ -6,7 +6,7 @@ function formatLedgerDate(isoDate: string): string {
   const parts = isoDate.slice(0, 10).split('-')
   if (parts.length !== 3) return isoDate
   const [y, m, d] = parts
-  return `${y} 年 ${Number(m)} 月 ${Number(d)} 日`
+  return `${y}年${Number(m)}月${Number(d)}日`
 }
 
 interface VipXpLedgerPanelProps {
@@ -14,11 +14,11 @@ interface VipXpLedgerPanelProps {
   loading?: boolean
 }
 
-/** 魔導書頁：經驗累積紀錄（依日） */
+/** 會員魔導書：經驗累積紀錄（依日） */
 export function VipXpLedgerPanel({ entries, loading = false }: VipXpLedgerPanelProps) {
   return (
     <GlassPanel className="p-5 sm:p-6">
-      <p className="text-[10px] tracking-[0.35em] text-amber-glow/70">XP HISTORY</p>
+      <p className="text-xs tracking-[0.35em] text-amber-glow/70">XP HISTORY</p>
       <h2 className="mt-2 font-display text-xl text-white">經驗累積紀錄</h2>
 
       {loading ? (

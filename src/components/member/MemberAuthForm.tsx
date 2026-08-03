@@ -239,17 +239,17 @@ export function MemberAuthForm({
                 maxLength={12}
               />
               {activeReferralCode ? (
-                <p className="mt-2 text-[11px] text-amber-glow/85">
+                <p className="mt-2 text-xs text-amber-glow/85">
                   已套用推薦碼 {activeReferralCode}，註冊完成即享{' '}
                   {REFERRAL_WELCOME_BONUS_POINTS} 點迎新禮金。
                 </p>
               ) : referralCodeInput ? (
-                <p className="mt-2 text-[11px] text-white/35">
+                <p className="mt-2 text-xs text-white/35">
                   推薦碼為 4–12 碼英數字
                 </p>
               ) : (
                 !compact && (
-                  <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+                  <p className="mt-2 text-xs leading-relaxed text-white/40">
                     從好友推薦連結進入會自動帶入；亦可手動輸入。
                   </p>
                 )

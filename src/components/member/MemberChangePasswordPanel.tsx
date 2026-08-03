@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { changeMemberPassword } from '../../lib/api/members'
+import { AccountSectionHeader } from '../account/AccountSectionHeader'
 import { GlassPanel } from '../ui/GlassPanel'
 import { PasswordInput } from '../ui/PasswordInput'
 
@@ -47,12 +48,11 @@ export function MemberChangePasswordPanel() {
   }
 
   return (
-    <GlassPanel className="mt-6 p-6 sm:p-8">
-      <p className="text-xs tracking-[0.35em] text-amber-glow/70">SECURITY</p>
-      <h2 className="mt-2 font-display text-xl text-white sm:text-2xl">重設密碼</h2>
+    <GlassPanel className="p-6 sm:p-8">
+      <AccountSectionHeader eyebrow="SECURITY" title="重設密碼" />
 
       {!expanded ? (
-        <p className="mt-2 text-sm leading-relaxed text-white/50">
+        <p className="mt-2 text-sm leading-relaxed text-white/55">
           需要更新登入密碼？
           <button
             type="button"

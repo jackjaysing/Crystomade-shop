@@ -57,7 +57,7 @@ export function CheckoutCouponSelect({
   return (
     <GlassPanel className="border border-white/10 p-4">
       <p className="text-xs tracking-widest text-white/50">優惠券</p>
-      <p className="mt-0.5 text-[11px] text-white/35">
+      <p className="mt-0.5 text-xs text-white/35">
         不含抽獎禮物券（請至會員中心「我的禮物券」）
       </p>
       <ul className="mt-3 space-y-2">
@@ -115,7 +115,7 @@ export function CheckoutCouponSelect({
                     </span>
                   )}
                   {mc.expires_at && (
-                    <span className="mt-0.5 block text-[11px] text-white/35">
+                    <span className="mt-0.5 block text-xs text-white/35">
                       有效至{' '}
                       {new Date(mc.expires_at).toLocaleDateString('zh-TW')}
                     </span>

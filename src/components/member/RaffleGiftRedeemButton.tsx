@@ -60,7 +60,7 @@ export function RaffleGiftRedeemButton({
       {message && (
         <p className="mt-1 text-xs text-red-300/90">{message}</p>
       )}
-      <p className="mt-1 text-[11px] text-white/35">
+      <p className="mt-1 text-xs text-white/35">
         {RAFFLE_GIFT_REQUIRES_BASE_MESSAGE}
       </p>
     </div>

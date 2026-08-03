@@ -51,7 +51,7 @@ export function CheckoutEarnPointsPreview({
               <span className="text-amber-glow/90">{earnedPoints}</span> 點
             </p>
           )}
-          <p className="mt-1 text-[11px] text-white/35">
+          <p className="mt-1 text-xs text-white/35">
             會員回饋 2% · 每 10 點可折 NT$1
           </p>
         </div>

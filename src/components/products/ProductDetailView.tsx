@@ -313,7 +313,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                         <span className="mt-1 text-xl font-medium tracking-[0.12em] text-white/55">
                           自行配珠
                         </span>
-                        <span className="mt-2 flex-1 text-base leading-relaxed text-white/45">
+                        <span className="mt-2 flex-1 text-sm leading-relaxed text-white/45">
                           自己選珠、排順序與目標，下單後由晶刻串製。
                         </span>
                         <span className="mt-5 inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 py-3.5 text-base font-medium tracking-wider text-white/50">
@@ -331,7 +331,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                         <span className="mt-1 text-xl font-medium tracking-[0.12em] text-amber-glow">
                           自行配珠
                         </span>
-                        <span className="mt-2 flex-1 text-base leading-relaxed text-white/70">
+                        <span className="mt-2 flex-1 text-sm leading-relaxed text-white/70">
                           自己選珠、排順序與目標，下單後由晶刻串製。
                         </span>
                         <span className="mt-5 inline-flex items-center justify-center rounded-lg bg-amber-glow/90 py-3.5 text-base font-medium tracking-wider text-void transition group-hover:bg-amber-glow">
@@ -347,7 +347,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                       <span className="mt-1 text-xl font-medium tracking-[0.12em] text-white">
                         官方配珠
                       </span>
-                      <span className="mt-2 flex-1 text-base leading-relaxed text-white/70">
+                      <span className="mt-2 flex-1 text-sm leading-relaxed text-white/70">
                         交由晶刻依五行及需求配置，較精準。
                       </span>
                       <div className="mt-5 flex gap-2">
@@ -371,7 +371,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-base leading-relaxed text-white/60">
+                  <div className="space-y-2 text-sm leading-relaxed text-white/60">
                     <p>
                       五行與功效提示僅供參考。串製時晶刻會依手圍適當增減水晶或補隔珠。
                     </p>

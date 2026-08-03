@@ -80,7 +80,7 @@ export function BraceletSizePicker({
           onClick={() => setGuideOpen(true)}
           disabled={disabled}
           className={`rounded-full border border-amber-glow/35 px-2.5 text-amber-glow/90 transition hover:border-amber-glow/55 hover:bg-amber-glow/10 disabled:cursor-not-allowed disabled:opacity-40 ${
-            compact ? 'py-0.5 text-[11px]' : 'py-1 text-xs sm:text-sm'
+            compact ? 'py-0.5 text-xs' : 'py-1 text-xs sm:text-sm'
           }`}
         >
           淨手圍測量教學
@@ -96,7 +96,7 @@ export function BraceletSizePicker({
               onClick={() => onChange(size)}
               disabled={disabled}
               className={`rounded-full border px-3 transition ${
-                compact ? 'py-1 text-[11px]' : 'py-1.5 text-xs'
+                compact ? 'py-1 text-xs' : 'py-1.5 text-xs'
               } ${
                 selected
                   ? 'border-amber-glow bg-amber-glow/15 text-amber-glow'
@@ -112,7 +112,7 @@ export function BraceletSizePicker({
           onClick={() => onChange(BRACELET_SIZE_UNDECIDED)}
           disabled={disabled}
           className={`rounded-full border px-3 transition ${
-            compact ? 'py-1 text-[11px]' : 'py-1.5 text-xs'
+            compact ? 'py-1 text-xs' : 'py-1.5 text-xs'
           } ${
             value === BRACELET_SIZE_UNDECIDED
               ? 'border-amber-glow bg-amber-glow/15 text-amber-glow'

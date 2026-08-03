@@ -540,7 +540,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                           />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm text-white">{bead.name}</p>
-                            <p className="text-[11px] text-white/40">
+                            <p className="text-xs text-white/40">
                               {formatBeadElements(bead.elements)}
                               {' · '}
                               {formatBeadSizeLabel(bead.size)}
@@ -587,7 +587,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                   <button
                     type="button"
                     onClick={() => setFilterElement('全部')}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                    className={`rounded-full border px-2.5 py-1 text-xs ${
                       filterElement === '全部'
                         ? 'border-amber-glow/50 text-amber-glow'
                         : 'border-white/15 text-white/45'
@@ -600,7 +600,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                       key={el}
                       type="button"
                       onClick={() => setFilterElement(el)}
-                      className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                      className={`rounded-full border px-2.5 py-1 text-xs ${
                         filterElement === el
                           ? 'border-amber-glow/50 text-amber-glow'
                           : 'border-white/15 text-white/45'
@@ -628,7 +628,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                   <button
                     type="button"
                     onClick={() => setFilterEfficacy('全部')}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                    className={`rounded-full border px-2.5 py-1 text-xs ${
                       filterEfficacy === '全部'
                         ? 'border-violet-400/50 text-violet-200'
                         : 'border-white/15 text-white/45'
@@ -641,7 +641,7 @@ export function BraceletBuilderView({ product }: BraceletBuilderViewProps) {
                       key={tag}
                       type="button"
                       onClick={() => setFilterEfficacy(tag)}
-                      className={`rounded-full border px-2.5 py-1 text-[11px] ${
+                      className={`rounded-full border px-2.5 py-1 text-xs ${
                         filterEfficacy === tag
                           ? 'border-violet-400/50 text-violet-200'
                           : 'border-white/15 text-white/45'

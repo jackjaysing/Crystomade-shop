@@ -3,6 +3,7 @@ import { REFERRAL_WELCOME_BONUS_POINTS, WELCOME_BONUS_POINTS } from '../../const
 import { claimMemberReferralCode } from '../../lib/api/members'
 import { normalizeReferralCode, sanitizeReferralInput } from '../../lib/referral'
 import type { MemberProfile } from '../../lib/types'
+import { AccountSectionHeader } from '../account/AccountSectionHeader'
 import { GlassPanel } from '../ui/GlassPanel'
 
 interface MemberClaimReferralPanelProps {
@@ -58,21 +59,16 @@ export function MemberClaimReferralPanel({
   }
 
   return (
-    <GlassPanel className="mt-6 p-6 sm:p-8">
-      <p className="text-xs tracking-[0.35em] text-amber-glow/70">REFERRAL</p>
-      <h2 className="mt-2 font-display text-xl text-white sm:text-2xl">
-        補填好友推薦碼
-      </h2>
-      <p className="mt-2 text-sm leading-relaxed text-white/50">
-        註冊時忘了填推薦碼？在此補填即可綁定推薦關係。
-        {bonusTopUp > 0 && (
-          <>
-            {' '}
-            若尚未領取推薦加碼，將額外獲得 {bonusTopUp} 點（合計{' '}
-            {REFERRAL_WELCOME_BONUS_POINTS} 點迎新禮）。
-          </>
-        )}
-      </p>
+    <GlassPanel className="p-6 sm:p-8">
+      <AccountSectionHeader
+        eyebrow="REFERRAL"
+        title="補填好友推薦碼"
+        lead={
+          bonusTopUp > 0
+            ? `註冊時忘了填？補填即可綁定。若尚未領取推薦加碼，將額外獲得 ${bonusTopUp} 點（合計 ${REFERRAL_WELCOME_BONUS_POINTS} 點迎新禮）。`
+            : '註冊時忘了填推薦碼？在此補填即可綁定推薦關係。'
+        }
+      />
 
       <form onSubmit={(e) => void handleSubmit(e)} className="mt-5 space-y-3">
         <div>
@@ -91,7 +87,7 @@ export function MemberClaimReferralPanel({
             disabled={submitting}
           />
           {input && !activeCode && (
-            <p className="mt-1 text-[11px] text-white/35">推薦碼為 4–12 碼英數字</p>
+            <p className="mt-1 text-xs text-white/35">推薦碼為 4–12 碼英數字</p>
           )}
         </div>
 

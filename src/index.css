@@ -290,6 +290,23 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
+/* Storefront type roles: reduce arbitrary px clutter */
+.shop-eyebrow {
+  @apply text-xs tracking-[0.35em] text-amber-glow/70;
+}
+
+.shop-meta {
+  @apply text-xs leading-relaxed text-white/50;
+}
+
+.shop-body {
+  @apply text-sm leading-relaxed text-white/70;
+}
+
+.shop-chip {
+  @apply text-xs tracking-wider text-white/55;
+}
+
 /* 會員魔法師等級 */
 .magician-level-panel {
   position: relative;
@@ -454,6 +471,27 @@
   text-shadow: 0 0 16px rgba(255, 235, 180, 0.25);
 }
 
+.magician-level-grimoire-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(212, 175, 116, 0.4);
+  background: rgba(212, 175, 116, 0.1);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  color: #e8c98a;
+  text-align: center;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.magician-level-grimoire-link:hover {
+  border-color: rgba(212, 175, 116, 0.65);
+  background: rgba(212, 175, 116, 0.18);
+  color: #f5e6b8;
+}
+
 .magician-level-flavor {
   margin-top: 0.9rem;
   font-size: 0.9375rem;
@@ -558,7 +596,7 @@
 
 .magician-level-xp-sub {
   margin-top: 0.15rem;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: rgba(212, 175, 116, 0.65);
 }
 
@@ -577,7 +615,7 @@
 .magician-level-stats-note {
   display: block;
   margin-top: 0.1rem;
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   color: rgba(212, 175, 116, 0.55);
 }
 
@@ -658,7 +696,7 @@
 
 .magician-ladder-stars {
   margin-top: 0.35rem;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   color: rgba(212, 175, 116, 0.55);
 }
@@ -672,7 +710,7 @@
 }
 
 .magician-ladder-perks-label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.1em;
   color: rgba(212, 175, 116, 0.65);
 }
@@ -700,7 +738,7 @@
 .magician-perk-table-heading,
 .magician-ladder-section-heading {
   margin: 0 0 0.65rem;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.12em;
   color: rgba(212, 175, 116, 0.75);
 }
@@ -727,7 +765,7 @@
 .magician-perk-table thead th {
   padding: 0.55rem 0.5rem;
   text-align: left;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.06em;
   color: rgba(212, 175, 116, 0.7);
@@ -774,7 +812,7 @@
 .magician-perk-table-epithet {
   display: block;
   margin-top: 0.1rem;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.42);
 }
 
@@ -1886,7 +1924,7 @@
 }
 
 .magic-grimoire-task-panel-eyebrow {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.2em;
   color: var(--magic-label);
 }

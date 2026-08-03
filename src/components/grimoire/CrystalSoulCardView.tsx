@@ -65,7 +65,7 @@ export function CrystalSoulCardView({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] tracking-[0.35em] text-violet-300/70">
+          <p className="text-xs tracking-[0.35em] text-violet-300/70">
             CRYSTAL SOUL ID
           </p>
           <h3 className="mt-1 font-display text-lg text-white">{headlines.primary}</h3>
@@ -80,19 +80,19 @@ export function CrystalSoulCardView({
 
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <dt className="text-[10px] tracking-widest text-white/35">序號</dt>
+          <dt className="text-xs tracking-widest text-white/35">序號</dt>
           <dd className="mt-0.5 font-mono text-xs text-amber-glow/90">{card.serial_number}</dd>
         </div>
         <div>
-          <dt className="text-[10px] tracking-widest text-white/35">魔法系別</dt>
+          <dt className="text-xs tracking-widest text-white/35">魔法系別</dt>
           <dd className="mt-0.5 text-white/80">{card.magic_affiliation}</dd>
         </div>
         <div>
-          <dt className="text-[10px] tracking-widest text-white/35">主屬性</dt>
+          <dt className="text-xs tracking-widest text-white/35">主屬性</dt>
           <dd className="mt-0.5 text-lg text-violet-200">{card.element_primary}</dd>
         </div>
         <div>
-          <dt className="text-[10px] tracking-widest text-white/35">狀態</dt>
+          <dt className="text-xs tracking-widest text-white/35">狀態</dt>
           <dd className="mt-0.5 text-white/80">
             {CRYSTAL_MAGIC_STATUS_LABELS[card.magic_status]}
           </dd>
@@ -136,7 +136,7 @@ export function CrystalSoulCardView({
 
           {card.is_public && (
             <div className="flex flex-wrap items-center gap-2">
-              <p className="min-w-0 flex-1 truncate text-[11px] text-white/35" title={shareUrl}>
+              <p className="min-w-0 flex-1 truncate text-xs text-white/35" title={shareUrl}>
                 {shareUrl}
               </p>
               <button
@@ -166,7 +166,7 @@ export function CrystalSoulCardView({
       )}
 
       {!isOwner && (
-        <p className="mt-4 text-center text-[11px] text-white/30">
+        <p className="mt-4 text-center text-xs text-white/30">
           友人分享 · 唯讀瀏覽
         </p>
       )}

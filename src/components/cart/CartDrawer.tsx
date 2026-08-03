@@ -140,7 +140,7 @@ export function CartDrawer() {
                           }`}
                         />
                         {isFullySnatched && (
-                          <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-void/60 px-1 text-center text-[10px] leading-tight tracking-wide text-red-300">
+                          <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-void/60 px-1 text-center text-xs leading-tight tracking-wide text-red-300">
                             已被搶先收藏
                           </span>
                         )}
@@ -159,12 +159,12 @@ export function CartDrawer() {
                           disabled={isFullySnatched}
                         />
                         {item.variantName && (
-                          <p className="mt-1 text-[11px] text-amber-glow/80">
+                          <p className="mt-1 text-xs text-amber-glow/80">
                             規格：{item.variantName}
                           </p>
                         )}
                         {item.braceletConfig && (
-                          <p className="mt-1 text-[11px] text-violet-200/80">
+                          <p className="mt-1 text-xs text-violet-200/80">
                             自行配珠 {item.braceletConfig.beads.length} 顆
                             {item.braceletConfig.beads.length > 0
                               ? ` · ${item.braceletConfig.beads
@@ -298,7 +298,7 @@ export function CartDrawer() {
               </p>
             )}
             {hasRaffleGift && raffleGiftBaseOk && (
-              <p className="text-center text-[11px] text-white/40">
+              <p className="text-center text-xs text-white/40">
                 抽獎禮物將隨本筆訂單一併出貨
               </p>
             )}
@@ -308,7 +308,7 @@ export function CartDrawer() {
                 <span>NT$ {subtotal.toLocaleString()}</span>
               </div>
               {hasPointRedemption && (
-                <p className="text-[11px] text-white/35">
+                <p className="text-xs text-white/35">
                   兌換商品不可折抵運費；僅兌換時仍需支付運費
                 </p>
               )}

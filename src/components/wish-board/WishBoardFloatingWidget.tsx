@@ -76,7 +76,7 @@ export function WishBoardFabSlot() {
             strokeWidth={1.75}
           />
           {!isCollapsed && (
-            <span className="mt-0.5 text-[10px] font-medium tracking-wide">許願板</span>
+            <span className="mt-0.5 text-xs font-medium tracking-wide">許願板</span>
           )}
         </button>
       </div>

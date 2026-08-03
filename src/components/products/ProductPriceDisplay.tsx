@@ -80,7 +80,7 @@ export function ProductPriceDisplay({
           {saleLabel}
         </p>
         {discountLabel && variant === 'detail' && (
-          <span className="rounded-full border border-amber-glow/40 bg-amber-glow/10 px-2 py-0.5 text-[10px] tracking-wider text-amber-glow/90">
+          <span className="rounded-full border border-amber-glow/40 bg-amber-glow/10 px-2 py-0.5 text-xs tracking-wider text-amber-glow/90">
             {discountLabel}
           </span>
         )}

@@ -98,7 +98,7 @@ export function CartQuickAddSection({
                       />
                     )}
                     {sizeErrors[product.id] && (
-                      <p className="text-[10px] text-red-300/90">
+                      <p className="text-xs text-red-300/90">
                         {sizeErrors[product.id]}
                       </p>
                     )}

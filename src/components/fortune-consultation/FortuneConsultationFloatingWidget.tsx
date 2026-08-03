@@ -79,7 +79,7 @@ export function FortuneConsultationFabSlot() {
             strokeWidth={1.75}
           />
           {!isCollapsed && (
-            <span className="mt-0.5 text-[10px] font-medium tracking-wide">
+            <span className="mt-0.5 text-xs font-medium tracking-wide">
               命理諮詢
             </span>
           )}

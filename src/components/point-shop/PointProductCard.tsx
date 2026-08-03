@@ -53,7 +53,7 @@ export function PointProductCard({
         <h3
           className={`leading-snug text-white/90 ${
             isCompact
-              ? 'line-clamp-2 min-h-[2.25rem] text-[11px]'
+              ? 'line-clamp-2 min-h-[2.25rem] text-xs'
               : 'font-display text-lg sm:min-h-[3.25rem]'
           }`}
         >
@@ -78,7 +78,7 @@ export function PointProductCard({
             to="/account"
             state={{ from: '/point-shop' }}
             className={`block w-full rounded-lg border border-amber-glow/40 bg-amber-glow/15 text-center tracking-wide text-amber-glow transition hover:bg-amber-glow/25 ${
-              isCompact ? 'py-1.5 text-[11px]' : 'py-3 text-sm'
+              isCompact ? 'py-1.5 text-xs' : 'py-3 text-sm'
             }`}
           >
             {getPointRedeemButtonLabel('guest')}
@@ -89,7 +89,7 @@ export function PointProductCard({
             disabled={disabled}
             onClick={onRedeem}
             className={`w-full rounded-lg border tracking-wide transition disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30 border-amber-glow/40 bg-amber-glow/15 text-amber-glow hover:bg-amber-glow/25 ${
-              isCompact ? 'py-1.5 text-[11px]' : 'py-3 text-sm'
+              isCompact ? 'py-1.5 text-xs' : 'py-3 text-sm'
             }`}
           >
             {getPointRedeemButtonLabel(buttonState)}

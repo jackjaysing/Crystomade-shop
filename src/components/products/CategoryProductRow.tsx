@@ -191,7 +191,7 @@ function RowNavButton({
 
         <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
 
-        <span className="text-[11px] font-medium tracking-wider sm:text-xs">
+        <span className="text-xs font-medium tracking-wider sm:text-xs">
 
           {caption}
 

@@ -53,7 +53,7 @@ export function CheckoutPointsDiscount({
           （僅付費商品、不含運費）
         </p>
       </div>
-      <p className="mt-1 text-[11px] text-white/35">
+      <p className="mt-1 text-xs text-white/35">
         每 {POINTS_PER_NTD_DISCOUNT} 點折 NT$1 · 本單上限{' '}
         {Math.round(MAX_ORDER_DISCOUNT_RATE * 100)}%
       </p>

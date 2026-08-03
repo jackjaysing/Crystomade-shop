@@ -26,7 +26,7 @@ export function MemberPointsBadge({ variant = 'compact' }: MemberPointsBadgeProp
         <span className="text-sm font-medium text-amber-glow">
           {availablePoints} 點
           {pointsReserved > 0 && (
-            <span className="ml-1 text-[10px] font-normal text-white/40">
+            <span className="ml-1 text-xs font-normal text-white/40">
               （預留 {pointsReserved}）
             </span>
           )}
@@ -49,7 +49,7 @@ export function MemberPointsBadge({ variant = 'compact' }: MemberPointsBadgeProp
       <span className="text-xs font-medium tabular-nums text-amber-glow">
         {availablePoints}
       </span>
-      <span className="hidden text-[10px] text-amber-glow/70 sm:inline">點</span>
+      <span className="hidden text-xs text-amber-glow/70 sm:inline">點</span>
     </Link>
   )
 }

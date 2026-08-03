@@ -48,7 +48,7 @@ export function FreeShippingProgress({
             <p className="text-xs font-medium tracking-wide text-white/85">
               {qualified ? '已達免運門檻' : '湊免運進度'}
             </p>
-            <p className="mt-0.5 text-[11px] text-white/45">
+            <p className="mt-0.5 text-xs text-white/45">
               滿 NT$ {FREE_SHIPPING_THRESHOLD.toLocaleString()} 免運
             </p>
           </div>
@@ -81,7 +81,7 @@ export function FreeShippingProgress({
         </div>
       </div>
 
-      <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px] tabular-nums">
+      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs tabular-nums">
         <span className="text-white/40">
           NT$ {Math.min(subtotal, FREE_SHIPPING_THRESHOLD).toLocaleString()}
         </span>

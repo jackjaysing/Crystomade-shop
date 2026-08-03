@@ -174,7 +174,7 @@ export function Navbar() {
                 >
                   <Store className="h-5 w-5 shrink-0" strokeWidth={1.5} />
                   {profile && (
-                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-[10px] font-medium tabular-nums text-void">
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-xs font-medium tabular-nums text-void">
                       {availablePoints > 999 ? '999+' : availablePoints}
                     </span>
                   )}
@@ -197,7 +197,7 @@ export function Navbar() {
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.5} />
               {cartItemCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-[10px] font-medium text-void">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-glow px-1 text-xs font-medium text-void">
                   {cartItemCount > 99 ? '99+' : cartItemCount}
                 </span>
               )}

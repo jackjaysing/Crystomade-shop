@@ -344,7 +344,7 @@ export function CheckoutPage() {
                       }`}
                     />
                     {isFullySnatched && (
-                      <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-void/60 px-0.5 text-center text-[9px] leading-tight text-red-300">
+                      <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-void/60 px-0.5 text-center text-xs leading-tight text-red-300">
                         已被搶先收藏
                       </span>
                     )}
@@ -363,12 +363,12 @@ export function CheckoutPage() {
                       disabled={isFullySnatched}
                     />
                     {item.variantName && (
-                      <p className="mt-0.5 text-[11px] text-amber-glow/80">
+                      <p className="mt-0.5 text-xs text-amber-glow/80">
                         規格：{item.variantName}
                       </p>
                     )}
                     {item.braceletConfig && (
-                      <p className="mt-0.5 text-[11px] text-violet-200/80">
+                      <p className="mt-0.5 text-xs text-violet-200/80">
                         自行配珠 {item.braceletConfig.beads.length} 顆
                         {item.braceletConfig.request_official_review
                           ? ' · 需官方確認'
@@ -420,7 +420,7 @@ export function CheckoutPage() {
               <span>NT$ {subtotal.toLocaleString()}</span>
             </div>
             {hasPointRedemption && (
-              <p className="text-[11px] text-white/35">
+              <p className="text-xs text-white/35">
                 兌換商品為 NT$0，不可折抵運費；僅兌換時仍需支付運費
               </p>
             )}
@@ -578,7 +578,7 @@ export function CheckoutPage() {
                 onChange={(e) => setForm({ ...form, cvs_store: e.target.value })}
                 className="input-field"
               />
-              <p className="text-[11px] text-white/35">
+              <p className="text-xs text-white/35">
                 例：7-11 信義門市、全家 南京復興店，或超商地圖上的店號
               </p>
             </div>

@@ -46,7 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="pointer-events-none absolute inset-0 bg-metal-gradient opacity-0 transition group-hover:opacity-100" />
 
         <span
-          className={`absolute left-3 top-3 max-w-[4.5rem] border border-white/20 bg-void/70 px-2 py-1 text-[10px] leading-tight tracking-wider text-amber-glow/90 backdrop-blur-sm ${
+          className={`absolute left-3 top-3 max-w-[4.5rem] border border-white/20 bg-void/70 px-2 py-1 text-xs leading-tight tracking-wider text-amber-glow/90 backdrop-blur-sm ${
             categoryLines.length > 1 ? 'rounded-md text-center' : 'rounded-full px-2.5'
           }`}
         >
@@ -87,7 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {displayTags.map((tag) => (
             <span
               key={tag}
-              className="rounded border border-white/10 px-2 py-0.5 text-[10px] tracking-wider text-white/40"
+              className="rounded border border-white/10 px-2 py-0.5 text-xs tracking-wider text-white/40"
             >
               {tag}
             </span>

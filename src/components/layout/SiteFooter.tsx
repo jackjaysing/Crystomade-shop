@@ -46,7 +46,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-white/[0.06] bg-black/40 py-10">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-5 px-6">
-        <p className="text-[10px] tracking-[0.35em] text-white/30">CRYSTOMADE</p>
+        <p className="text-xs tracking-[0.35em] text-white/30">CRYSTOMADE</p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
           {SOCIAL_LINKS.map((link) => (
@@ -64,7 +64,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <p className="text-[10px] text-white/25">晶刻 · 天然水晶典藏</p>
+        <p className="text-xs text-white/25">晶刻 · 天然水晶典藏</p>
 
         <section
           className="mt-6 w-full max-w-3xl border-t border-white/[0.06] pt-8"
@@ -76,10 +76,10 @@ export function SiteFooter() {
           >
             【能量水晶免責聲明】
           </h2>
-          <p className="mt-4 text-left text-[11px] leading-relaxed text-white/40 sm:text-center sm:text-xs">
+          <p className="mt-4 text-left text-xs leading-relaxed text-white/40 sm:text-center sm:text-xs">
             晶刻 Crystomade 網站內所載之水晶、礦石之「五行」、「生命靈數」及「能量場描述」，皆屬於傳統自然療癒、心靈輔助與個人信念領域，並非醫療行為，亦不能取代任何正式的醫學診斷與心理治療。
           </p>
-          <p className="mt-3 text-left text-[11px] leading-relaxed text-white/40 sm:text-center sm:text-xs">
+          <p className="mt-3 text-left text-xs leading-relaxed text-white/40 sm:text-center sm:text-xs">
             如有任何身體、生理或心理疾病之不適，請務必尋求專業合格之醫療機構與醫師協助。
           </p>
         </section>

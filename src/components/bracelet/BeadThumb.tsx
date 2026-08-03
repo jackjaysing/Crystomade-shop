@@ -28,7 +28,7 @@ export function BeadThumb({
   if (!showImg) {
     return (
       <div
-        className={`flex shrink-0 items-center justify-center rounded-full border bg-[#2a231c] text-[10px] leading-tight text-amber-glow ${
+        className={`flex shrink-0 items-center justify-center rounded-full border bg-[#2a231c] text-xs leading-tight text-amber-glow ${
           emphasize ? 'border-amber-glow' : 'border-amber-glow/45'
         } ${className}`}
         style={{ width: sizePx, height: sizePx }}

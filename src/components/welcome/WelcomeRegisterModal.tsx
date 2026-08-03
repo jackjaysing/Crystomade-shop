@@ -46,7 +46,7 @@ export function WelcomeRegisterModal({ open, onClose }: WelcomeRegisterModalProp
           </button>
 
           <div className="relative px-6 pb-8 pt-10 sm:px-8 sm:pb-10 sm:pt-12">
-            <p className="text-center text-[10px] tracking-[0.45em] text-amber-glow/70">
+            <p className="text-center text-xs tracking-[0.45em] text-amber-glow/70">
               WELCOME
             </p>
             <h2

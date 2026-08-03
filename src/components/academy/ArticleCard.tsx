@@ -34,7 +34,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
           </div>
         )}
         <div className="flex flex-1 flex-col p-5">
-          <p className="text-[11px] text-white/35">{dateLabel}</p>
+          <p className="text-xs text-white/35">{dateLabel}</p>
           <h2 className="mt-2 font-display text-xl text-white transition group-hover:text-amber-glow">
             {article.title}
           </h2>

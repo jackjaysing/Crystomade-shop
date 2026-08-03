@@ -349,11 +349,11 @@ export function BraceletBeadPreview({
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-[5] w-[58%] -translate-x-1/2 -translate-y-1/2 text-center">
           {selectedBead && selectedIndex != null ? (
             <div className="rounded-lg bg-black/75 px-2.5 py-2 shadow-lg backdrop-blur-sm">
-              <p className="text-[11px] text-amber-glow/80">第 {selectedIndex + 1} 顆</p>
+              <p className="text-xs text-amber-glow/80">第 {selectedIndex + 1} 顆</p>
               <p className="mt-0.5 text-sm font-medium leading-snug text-white">
                 {selectedBead.name}
               </p>
-              <p className="mt-0.5 text-[11px] leading-snug text-white/55">
+              <p className="mt-0.5 text-xs leading-snug text-white/55">
                 {formatBeadElements(selectedBead.elements)}
                 {' · '}
                 {formatBeadSizeLabel(selectedBead.size)}

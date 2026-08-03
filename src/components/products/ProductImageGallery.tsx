@@ -70,14 +70,14 @@ export function ProductImageGallery({ product, isSold }: ProductImageGalleryProp
             >
               ›
             </button>
-            <span className="absolute bottom-3 right-3 rounded-full bg-void/70 px-2.5 py-1 text-[10px] text-white/70 backdrop-blur-sm">
+            <span className="absolute bottom-3 right-3 rounded-full bg-void/70 px-2.5 py-1 text-xs text-white/70 backdrop-blur-sm">
               {activeIndex + 1} / {images.length}
             </span>
           </>
         )}
 
         {activeIndex === 0 && (
-          <span className="absolute left-3 top-3 rounded-full border border-amber-glow/40 bg-void/70 px-2.5 py-1 text-[10px] tracking-wider text-amber-glow backdrop-blur-sm">
+          <span className="absolute left-3 top-3 rounded-full border border-amber-glow/40 bg-void/70 px-2.5 py-1 text-xs tracking-wider text-amber-glow backdrop-blur-sm">
             封面
           </span>
         )}

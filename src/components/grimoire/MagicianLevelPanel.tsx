@@ -1,5 +1,6 @@
 import { X, CircleHelp } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { MAGICIAN_LEVELS } from '../../constants/grimoire'
 import {
   computeMagicianLevelProgress,
@@ -17,6 +18,8 @@ interface MagicianLevelPanelProps {
   purchaseAmount?: number
   /** @deprecated 改傳 purchaseAmount */
   purchaseMeritCardCount?: number
+  /** 會員中心：顯示開啟魔導書按鈕 */
+  showGrimoireLink?: boolean
 }
 
 function MagicianPerkCell({ value }: { value: string | null }) {
@@ -142,7 +145,7 @@ function MagicianLevelLadderModal({
           </button>
 
           <div className="border-b border-amber-glow/15 px-5 pb-4 pt-5 sm:px-6">
-            <p className="text-[10px] tracking-[0.35em] text-amber-glow/70">VIP LEVEL</p>
+            <p className="text-xs tracking-[0.35em] text-amber-glow/70">VIP LEVEL</p>
             <h2 id="magician-ladder-title" className="mt-2 font-display text-xl text-white">
               VIP 等級禮遇
             </h2>
@@ -201,6 +204,7 @@ export function MagicianLevelPanel({
   meritXp = 0,
   purchaseAmount,
   purchaseMeritCardCount = 0,
+  showGrimoireLink = false,
 }: MagicianLevelPanelProps) {
   const [ladderOpen, setLadderOpen] = useState(false)
   const amount = purchaseAmount ?? purchaseMeritCardCount
@@ -243,6 +247,16 @@ export function MagicianLevelPanel({
               <p className="magician-level-xp-value text-base sm:text-lg">
                 {formatVipXp(progress.totalXp)}
               </p>
+              {showGrimoireLink ? (
+                <Link
+                  to="/account/grimoire"
+                  className="magician-level-grimoire-link"
+                >
+                  開啟我的
+                  <br />
+                  水晶魔導書
+                </Link>
+              ) : null}
             </div>
           </div>
 

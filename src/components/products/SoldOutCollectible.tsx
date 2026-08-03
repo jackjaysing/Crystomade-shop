@@ -31,7 +31,7 @@ export function SoldOutCollectibleBadge({
           <p className="font-display text-base tracking-[0.22em] text-amber-glow sm:text-lg">
             SOLD OUT
           </p>
-          <p className="mt-1.5 text-[11px] tracking-[0.35em] text-white/75">
+          <p className="mt-1.5 text-xs tracking-[0.35em] text-white/75">
             已被收藏
           </p>
         </div>

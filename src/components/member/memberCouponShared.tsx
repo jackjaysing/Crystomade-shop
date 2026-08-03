@@ -116,7 +116,7 @@ export function MemberCouponList({
                 className="mt-3"
               />
             )}
-            <p className="mt-2 text-[11px] text-white/35">
+            <p className="mt-2 text-xs text-white/35">
               發放：{new Date(mc.issued_at).toLocaleDateString('zh-TW')}
               {mc.expires_at &&
                 ` · 有效至 ${new Date(mc.expires_at).toLocaleDateString('zh-TW')}`}

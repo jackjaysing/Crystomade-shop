@@ -170,7 +170,7 @@ export function RaffleFloatingWidget() {
               className={`absolute z-10 rounded-full bg-red-500 px-1.5 py-0.5 font-bold leading-none text-white shadow-lg raffle-fab-new-badge ${
                 isCollapsed
                   ? '-right-0.5 -top-1 text-[8px]'
-                  : '-right-1 -top-1 text-[10px]'
+                  : '-right-1 -top-1 text-xs'
               }`}
             >
               NEW
@@ -184,7 +184,7 @@ export function RaffleFloatingWidget() {
             }
           />
           {!isCollapsed && (
-            <span className="mt-0.5 text-[10px] font-medium tracking-wide">抽獎區</span>
+            <span className="mt-0.5 text-xs font-medium tracking-wide">抽獎區</span>
           )}
         </button>
         </div>

@@ -43,7 +43,7 @@ export function SaleProductBadge({
       </span>
       <span
         className={`whitespace-nowrap font-display font-semibold tracking-[0.18em] text-rose-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] ${
-          isOverlay ? 'text-xs' : 'text-[10px]'
+          isOverlay ? 'text-xs' : 'text-xs'
         }`}
       >
         活動
