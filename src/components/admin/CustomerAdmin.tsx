@@ -23,6 +23,7 @@ import type {
 } from '../../lib/types'
 import { useAdminSession } from '../../hooks/useAdminSession'
 import { BirthdayMembersPanel } from './BirthdayMembersPanel'
+import { CustomerPointsHistoryModal } from './CustomerPointsHistoryModal'
 import { DeleteMemberConfirmModal } from './DeleteMemberConfirmModal'
 import { LegacyGrimoireIssueModal } from './LegacyGrimoireIssueModal'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -76,6 +77,8 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
     useState<AdminRegisteredCustomer | null>(null)
   const [deleteSubmitting, setDeleteSubmitting] = useState(false)
   const [legacyIssueMember, setLegacyIssueMember] =
+    useState<AdminRegisteredCustomer | null>(null)
+  const [historyMember, setHistoryMember] =
     useState<AdminRegisteredCustomer | null>(null)
 
   const reloadMembers = useCallback(async () => {
@@ -348,9 +351,7 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                     <th className="px-4 py-3 font-medium">點數</th>
                     <th className="px-4 py-3 font-medium">訂單</th>
                     <th className="px-4 py-3 font-medium">註冊日</th>
-                    {isSuperAdmin && (
-                      <th className="px-4 py-3 font-medium">操作</th>
-                    )}
+                    <th className="px-4 py-3 font-medium">操作</th>
                   </>
                 ) : (
                   <>
@@ -413,33 +414,42 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                       <td className="px-4 py-3 text-xs text-white/50">
                         {new Date(c.created_at).toLocaleDateString('zh-TW')}
                       </td>
-                      {isSuperAdmin && (
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setLegacyIssueMember(c)}
-                              className="rounded border border-violet-400/35 px-3 py-1 text-xs text-violet-200 transition hover:bg-violet-500/10"
-                            >
-                              補登魔導書
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => openEdit(c)}
-                              className="rounded border border-amber-glow/35 px-3 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/10"
-                            >
-                              編輯點數
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeletingMember(c)}
-                              className="rounded border border-red-400/35 px-3 py-1 text-xs text-red-300 transition hover:bg-red-500/10"
-                            >
-                              刪除註冊
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setHistoryMember(c)}
+                            className="rounded border border-white/20 px-3 py-1 text-xs text-white/75 transition hover:border-amber-glow/40 hover:text-amber-glow"
+                          >
+                            點數紀錄
+                          </button>
+                          {isSuperAdmin && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setLegacyIssueMember(c)}
+                                className="rounded border border-violet-400/35 px-3 py-1 text-xs text-violet-200 transition hover:bg-violet-500/10"
+                              >
+                                補登魔導書
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openEdit(c)}
+                                className="rounded border border-amber-glow/35 px-3 py-1 text-xs text-amber-glow transition hover:bg-amber-glow/10"
+                              >
+                                編輯點數
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeletingMember(c)}
+                                className="rounded border border-red-400/35 px-3 py-1 text-xs text-red-300 transition hover:bg-red-500/10"
+                              >
+                                刪除註冊
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                     )
                   })
@@ -473,6 +483,13 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         <p className="text-xs text-white/35">
           未註冊客戶為訪客下單紀錄（無會員帳號），依電話彙總；若已註冊同號碼則僅顯示於「已註冊會員」。
         </p>
+      )}
+
+      {historyMember && (
+        <CustomerPointsHistoryModal
+          customer={historyMember}
+          onClose={() => setHistoryMember(null)}
+        />
       )}
 
       {legacyIssueMember && (
