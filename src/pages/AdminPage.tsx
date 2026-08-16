@@ -25,6 +25,10 @@ import { useProductShareStats } from '../hooks/useProductShareStats'
 import { useProductViewStats } from '../hooks/useProductViewStats'
 import { useAdminActivityLogs } from '../hooks/useAdminActivityLogs'
 import { useProducts } from '../hooks/useProducts'
+import {
+  applyProductCostsToOrders,
+  productCostsMapFromProducts,
+} from '../lib/api/productCosts'
 import { ADMIN_ROLE_LABELS } from '../constants/adminAccounts'
 import { useAdminSession } from '../hooks/useAdminSession'
 import { recordAdminLogout } from '../lib/api/adminActivityLog'
@@ -87,6 +91,10 @@ export function AdminPage() {
     authed,
     { includeCosts: isSuperAdmin }
   )
+  const ordersForProfit = useMemo(() => {
+    if (!isSuperAdmin) return orders
+    return applyProductCostsToOrders(orders, productCostsMapFromProducts(products))
+  }, [isSuperAdmin, orders, products])
   const {
     alerts,
     orderBadge,
@@ -184,6 +192,9 @@ export function AdminPage() {
   }, [activeTab])
 
   useEffect(() => {
+    if (activeTab === 'orders' || activeTab === 'revenue') {
+      void reloadOrders({ silent: true })
+    }
     if (activeTab === 'orders') clearOrderBadge()
     if (activeTab === 'customers') {
       clearMemberBadge()
@@ -207,6 +218,7 @@ export function AdminPage() {
     clearWishBadge,
     clearFortuneBadge,
     reloadActivityLogs,
+    reloadOrders,
   ])
 
   if (!authed) {
@@ -322,6 +334,7 @@ export function AdminPage() {
                 reloadProducts()
                 reloadProductViewStats()
                 reloadProductShareStats()
+                void reloadOrders({ silent: true })
               }}
               onEditProduct={(product) => {
                 if (editReopenLockRef.current) return
@@ -339,6 +352,7 @@ export function AdminPage() {
                   reloadProducts()
                   reloadProductViewStats()
                   reloadProductShareStats()
+                  void reloadOrders({ silent: true })
                   window.setTimeout(() => {
                     editReopenLockRef.current = false
                   }, 400)
@@ -348,7 +362,10 @@ export function AdminPage() {
             <ProductForm
               open={showCreateProduct}
               onClose={() => setShowCreateProduct(false)}
-              onCreated={reloadProducts}
+              onCreated={() => {
+                reloadProducts()
+                void reloadOrders({ silent: true })
+              }}
             />
           </section>
         )}
@@ -415,7 +432,7 @@ export function AdminPage() {
 
             {orderListView === 'active' ? (
               <OrderTable
-                orders={orders}
+                orders={ordersForProfit}
                 loading={ordersLoading}
                 onUpdated={(options) => void reloadOrders(options)}
                 onDeleted={() => void reloadOrders({ silent: true })}
@@ -489,7 +506,7 @@ export function AdminPage() {
 
         {isSuperAdmin && activeTab === 'revenue' && (
           <RevenueStatsPanel
-            orders={orders}
+            orders={ordersForProfit}
             loading={ordersLoading}
             onReload={() => void reloadOrders()}
           />

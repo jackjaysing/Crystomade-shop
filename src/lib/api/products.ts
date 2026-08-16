@@ -486,7 +486,7 @@ export async function updateProduct(
   const beforeProduct = normalizeProduct(beforeRow as Record<string, unknown>)
   if (updateCost) {
     const beforeCosts = await fetchProductCostsByIds([productId])
-    beforeProduct.cost = beforeCosts.get(productId) ?? 0
+    beforeProduct.cost = beforeCosts.get(productId.toLowerCase()) ?? beforeCosts.get(productId) ?? 0
   }
 
   const image_url = form.coverFile

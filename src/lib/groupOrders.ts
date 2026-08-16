@@ -129,6 +129,10 @@ function buildLineItems(
       existing.quantity += 1
       existing.lineTotal += order.total_amount
       existing.orderIds.push(order.id)
+      existing.unitCost = Math.max(
+        existing.unitCost,
+        Math.max(0, Number(order.products?.cost ?? 0) || 0)
+      )
       if (existing.orderStudioLocation !== orderStudioLocation) {
         existing.orderStudioLocation = null
       }

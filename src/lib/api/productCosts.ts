@@ -1,12 +1,24 @@
 import { formatErrorMessage } from '../formatError'
 import { isSupabaseConfigured, supabase } from '../supabase'
+import type { Order } from '../types'
 
 let productCostsRpcAvailable = true
+let productCostsByIdsRpcAvailable = true
 
 function isMissingProductCostsRpc(message: string): boolean {
   return /admin_fetch_product_costs|admin_upsert_product_cost|product_costs|42883|function/i.test(
     message
   )
+}
+
+function costKey(productId: string): string {
+  return productId.trim().toLowerCase()
+}
+
+function setCost(map: Map<string, number>, productId: string, cost: number) {
+  const id = costKey(productId)
+  if (!id) return
+  map.set(id, Math.max(0, Number(cost) || 0))
 }
 
 /** 後台：讀取全部商品成本（私密表，前台不會呼叫） */
@@ -25,9 +37,8 @@ export async function fetchProductCostsMap(): Promise<Map<string, number>> {
   }
 
   for (const row of data ?? []) {
-    const id = row?.product_id != null ? String(row.product_id) : ''
-    if (!id) continue
-    map.set(id, Math.max(0, Number(row.cost ?? 0) || 0))
+    if (row?.product_id == null) continue
+    setCost(map, String(row.product_id), Number(row.cost ?? 0))
   }
   return map
 }
@@ -36,28 +47,38 @@ export async function fetchProductCostsMap(): Promise<Map<string, number>> {
 export async function fetchProductCostsByIds(
   productIds: string[]
 ): Promise<Map<string, number>> {
-  const map = new Map<string, number>()
   const uniqueIds = [...new Set(productIds.filter(Boolean))]
-  if (!isSupabaseConfigured || !productCostsRpcAvailable || uniqueIds.length === 0) {
-    return map
+  if (!isSupabaseConfigured || uniqueIds.length === 0) {
+    return new Map()
   }
 
-  const { data, error } = await supabase.rpc('admin_fetch_product_costs_by_ids', {
-    p_product_ids: uniqueIds,
-  })
-  if (error) {
-    const msg = formatErrorMessage(error)
-    if (isMissingProductCostsRpc(msg)) {
-      productCostsRpcAvailable = false
+  if (productCostsByIdsRpcAvailable) {
+    const { data, error } = await supabase.rpc('admin_fetch_product_costs_by_ids', {
+      p_product_ids: uniqueIds,
+    })
+    if (!error) {
+      const map = new Map<string, number>()
+      for (const row of data ?? []) {
+        if (row?.product_id == null) continue
+        setCost(map, String(row.product_id), Number(row.cost ?? 0))
+      }
       return map
     }
-    throw new Error(msg)
+
+    const msg = formatErrorMessage(error)
+    if (isMissingProductCostsRpc(msg)) {
+      productCostsByIdsRpcAvailable = false
+    } else {
+      throw new Error(msg)
+    }
   }
 
-  for (const row of data ?? []) {
-    const id = row?.product_id != null ? String(row.product_id) : ''
-    if (!id) continue
-    map.set(id, Math.max(0, Number(row.cost ?? 0) || 0))
+  const all = await fetchProductCostsMap()
+  if (all.size === 0) return all
+  const map = new Map<string, number>()
+  for (const id of uniqueIds) {
+    const cost = all.get(costKey(id))
+    if (cost != null) map.set(costKey(id), cost)
   }
   return map
 }
@@ -96,6 +117,41 @@ export function mergeProductCosts<T extends { id: string; cost: number }>(
   if (costs.size === 0) return products
   return products.map((product) => ({
     ...product,
-    cost: costs.get(product.id) ?? 0,
+    cost: costs.get(costKey(product.id)) ?? costs.get(product.id) ?? 0,
   }))
+}
+
+/** 以目前商品成本覆寫訂單關聯成本（已結訂單事後補成本也會算進分潤） */
+export function applyProductCostsToOrders(
+  orders: Order[],
+  costs: Map<string, number>
+): Order[] {
+  if (costs.size === 0) return orders
+
+  return orders.map((order) => {
+    if (!order.product_id) return order
+    const cost =
+      costs.get(costKey(order.product_id)) ?? costs.get(order.product_id)
+    if (cost == null) return order
+    return {
+      ...order,
+      products: order.products
+        ? { ...order.products, cost }
+        : {
+            name: order.product_name ?? '',
+            image_url: order.product_image_url ?? '',
+            cost,
+          },
+    }
+  })
+}
+
+export function productCostsMapFromProducts(
+  products: Array<{ id: string; cost: number }>
+): Map<string, number> {
+  const map = new Map<string, number>()
+  for (const product of products) {
+    setCost(map, product.id, product.cost)
+  }
+  return map
 }

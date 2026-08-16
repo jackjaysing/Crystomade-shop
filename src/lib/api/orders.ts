@@ -1,5 +1,5 @@
 import { recordAdminActivity } from './adminActivityLog'
-import { fetchProductCostsByIds } from './productCosts'
+import { applyProductCostsToOrders, fetchProductCostsMap } from './productCosts'
 import { formatErrorMessage } from '../formatError'
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
@@ -251,31 +251,10 @@ function mapOrderRows(data: unknown[] | null): Order[] {
   )
 }
 
-/** 後台：把私密成本合併進訂單關聯商品 */
+/** 後台：把私密成本合併進訂單關聯商品（讀目前商品成本，已結訂單事後補填也會扣） */
 async function attachProductCosts(orders: Order[]): Promise<Order[]> {
-  const productIds = orders
-    .map((order) => order.product_id)
-    .filter((id): id is string => Boolean(id))
-  if (productIds.length === 0) return orders
-
-  const costs = await fetchProductCostsByIds(productIds)
-  if (costs.size === 0) return orders
-
-  return orders.map((order) => {
-    if (!order.product_id) return order
-    const cost = costs.get(order.product_id)
-    if (cost == null) return order
-    return {
-      ...order,
-      products: order.products
-        ? { ...order.products, cost }
-        : {
-            name: order.product_name ?? '',
-            image_url: order.product_image_url ?? '',
-            cost,
-          },
-    }
-  })
+  const costs = await fetchProductCostsMap()
+  return applyProductCostsToOrders(orders, costs)
 }
 
 function isMissingOrderSoftDeleteColumn(message: string): boolean {
