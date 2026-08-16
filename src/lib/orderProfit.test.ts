@@ -27,7 +27,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
       name: '白水晶',
       image_url: '',
       cost: 0,
-      studio_location: 'yuwei',
+      studio_location: '羽薇',
     },
     ...overrides,
   }
