@@ -323,6 +323,19 @@ export interface MemberCouponWithDefinition extends MemberCoupon {
   coupon: Coupon
 }
 
+/** 後台：單筆優惠／禮物券發放紀錄 */
+export interface AdminCouponIssueRecord {
+  id: string
+  coupon_id: string
+  user_id: string
+  status: MemberCouponStatus
+  issued_at: string
+  expires_at: string | null
+  used_at: string | null
+  member_name: string
+  member_phone: string
+}
+
 /** 抽獎活動狀態 */
 export type RaffleStatus = 'open' | 'drawn' | 'cancelled'
 

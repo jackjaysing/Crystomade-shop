@@ -8,6 +8,7 @@ import { compressImageForUpload } from '../browserImage'
 import { formatErrorMessage } from '../formatError'
 import { supabase, PRODUCT_IMAGE_BUCKET, STORAGE_IMAGE_CACHE_CONTROL } from '../supabase'
 import type {
+  AdminCouponIssueRecord,
   Coupon,
   CouponFormData,
   GiftCouponFormData,
@@ -272,7 +273,8 @@ export async function deleteCoupon(id: string): Promise<void> {
 /** 後台：發放給單一會員 */
 export async function issueCouponToMember(
   couponId: string,
-  userId: string
+  userId: string,
+  memberLabel?: string
 ): Promise<MemberCoupon> {
   const { data, error } = await supabase.rpc('admin_issue_coupon_to_member', {
     p_coupon_id: couponId,
@@ -297,12 +299,13 @@ export async function issueCouponToMember(
     .eq('id', couponId)
     .single()
   const title = couponRow?.title ? String(couponRow.title) : couponId
+  const recipient = memberLabel?.trim() || '指定會員'
   void recordAdminActivity({
     action: 'update',
     entityType: 'coupon',
     entityId: couponId,
     entityLabel: title,
-    summary: `發放優惠券「${title}」給單一會員`,
+    summary: `發放優惠券「${title}」給 ${recipient}`,
   })
   return issued
 }
@@ -516,4 +519,63 @@ export async function fetchMemberCouponHistory(
       return { ...mc, coupon: normalizeCoupon(couponRaw) }
     })
     .filter((x): x is MemberCouponWithDefinition => x != null)
+}
+
+/** 後台：各券已發放張數 */
+export async function fetchAdminCouponIssueCounts(): Promise<Map<string, number>> {
+  const map = new Map<string, number>()
+  const { data, error } = await supabase
+    .from('member_coupons')
+    .select('coupon_id')
+
+  if (error) {
+    const hint = migrationHint(formatErrorMessage(error))
+    if (hint) return map
+    throw new Error(formatErrorMessage(error))
+  }
+
+  for (const row of data ?? []) {
+    const couponId = row?.coupon_id != null ? String(row.coupon_id) : ''
+    if (!couponId) continue
+    map.set(couponId, (map.get(couponId) ?? 0) + 1)
+  }
+  return map
+}
+
+/** 後台：某張券的發放明細（誰拿到、狀態） */
+export async function fetchAdminCouponIssues(
+  couponId: string,
+  limit = 200
+): Promise<AdminCouponIssueRecord[]> {
+  const { data, error } = await supabase
+    .from('member_coupons')
+    .select('*, member_profiles(real_name, phone)')
+    .eq('coupon_id', couponId)
+    .order('issued_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    const hint = migrationHint(formatErrorMessage(error))
+    if (hint) throw new Error(hint)
+    throw new Error(formatErrorMessage(error))
+  }
+
+  return (data ?? []).map((row) => {
+    const mc = normalizeMemberCoupon(row as Record<string, unknown>)
+    const profile = (row as {
+      member_profiles?: { real_name?: unknown; phone?: unknown } | null
+    }).member_profiles
+    return {
+      id: mc.id,
+      coupon_id: mc.coupon_id,
+      user_id: mc.user_id,
+      status: mc.status,
+      issued_at: mc.issued_at,
+      expires_at: mc.expires_at,
+      used_at: mc.used_at,
+      member_name:
+        profile?.real_name != null ? String(profile.real_name) : '（未知會員）',
+      member_phone: profile?.phone != null ? String(profile.phone) : '',
+    }
+  })
 }

@@ -3,11 +3,12 @@ import {
   createCoupon,
   deleteCoupon,
   fetchAdminCheckoutCoupons,
+  fetchAdminCouponIssueCounts,
   issueCouponToAllMembers,
   issueCouponToMember,
   updateCoupon,
 } from '../../lib/api/coupons'
-import { fetchRegisteredCustomers } from '../../lib/api/adminCustomers'
+import { fetchRegisteredCustomers, formatPhoneDisplay } from '../../lib/api/adminCustomers'
 import { formatCouponRuleSummary } from '../../lib/couponCalculation'
 import {
   COUPON_TYPE_DESCRIPTIONS,
@@ -17,6 +18,7 @@ import { parseDiscountZhe } from '../../lib/productPricing'
 import type { AdminRegisteredCustomer, Coupon, CouponFormData, CouponType } from '../../lib/types'
 import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
+import { CouponIssueHistoryModal } from './CouponIssueHistoryModal'
 import { IssueCouponMemberModal } from './IssueCouponMemberModal'
 
 const emptyForm: CouponFormData = {
@@ -48,18 +50,24 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
   const [issueCouponId, setIssueCouponId] = useState<string | null>(null)
   const [issueUserId, setIssueUserId] = useState('')
   const [issuing, setIssuing] = useState(false)
+  const [issueCounts, setIssueCounts] = useState<Map<string, number>>(
+    () => new Map()
+  )
+  const [historyCoupon, setHistoryCoupon] = useState<Coupon | null>(null)
 
   const reload = useCallback(async () => {
     if (!enabled) return
     setLoading(true)
     setMessage('')
     try {
-      const [couponRows, memberRows] = await Promise.all([
+      const [couponRows, memberRows, counts] = await Promise.all([
         fetchAdminCheckoutCoupons(),
         fetchRegisteredCustomers(),
+        fetchAdminCouponIssueCounts(),
       ])
       setCoupons(couponRows)
       setMembers(memberRows)
+      setIssueCounts(counts)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '載入失敗')
     } finally {
@@ -157,13 +165,22 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
       setMessage('請選擇會員')
       return
     }
+    const member = members.find((m) => m.id === issueUserId)
+    const memberLabel = member
+      ? `${member.real_name} · ${formatPhoneDisplay(member.phone)}`
+      : undefined
     setIssuing(true)
     setMessage('')
     try {
-      await issueCouponToMember(issueCouponId, issueUserId)
-      setMessage('已發放優惠券給指定會員')
+      await issueCouponToMember(issueCouponId, issueUserId, memberLabel)
+      setMessage(
+        memberLabel
+          ? `已發放到會員帳戶：${memberLabel}（可於「發放紀錄」確認）`
+          : '已發放優惠券給指定會員（可於「發放紀錄」確認）'
+      )
       setIssueCouponId(null)
       setIssueUserId('')
+      await reload()
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '發放失敗')
     } finally {
@@ -183,7 +200,10 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
     setMessage('')
     try {
       const count = await issueCouponToAllMembers(couponId)
-      setMessage(`已發放給 ${count} 位會員`)
+      setMessage(
+        `已發放給 ${count} 位會員（可於「發放紀錄」逐筆確認）`
+      )
+      await reload()
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '發放失敗')
     } finally {
@@ -415,6 +435,7 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
                       {c.valid_days
                         ? ` · 發放後 ${c.valid_days} 天內有效`
                         : ' · 效期不限'}
+                      {` · 已發 ${issueCounts.get(c.id) ?? 0} 張`}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -424,6 +445,13 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
                       className="rounded border border-white/15 px-3 py-1 text-xs text-white/70"
                     >
                       編輯
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryCoupon(c)}
+                      className="rounded border border-white/20 px-3 py-1 text-xs text-white/75 transition hover:border-amber-glow/40 hover:text-amber-glow"
+                    >
+                      發放紀錄
                     </button>
                     <button
                       type="button"
@@ -473,6 +501,14 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
             setIssueUserId('')
           }}
           onConfirm={() => void handleIssueOne()}
+        />
+      )}
+
+      {historyCoupon && (
+        <CouponIssueHistoryModal
+          couponId={historyCoupon.id}
+          couponTitle={historyCoupon.title}
+          onClose={() => setHistoryCoupon(null)}
         />
       )}
     </div>
