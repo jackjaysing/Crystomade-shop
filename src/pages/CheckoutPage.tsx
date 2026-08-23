@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { X } from 'lucide-react'
 import { CartItemSizeEditor } from '../components/cart/CartItemSizeEditor'
 import { OrderSuccessModal } from '../components/cart/OrderSuccessModal'
 import { CheckoutCouponSelect } from '../components/checkout/CheckoutCouponSelect'
@@ -50,8 +51,9 @@ const emptyForm: OrderFormData = {
 
 /** 結帳頁：購物車明細 + 運費 + 收件表單 */
 export function CheckoutPage() {
+  const navigate = useNavigate()
   const { user, profile, loading: authLoading, refreshProfile } = useAuth()
-  const { items, clearCart } = useCart()
+  const { items, clearCart, openCart } = useCart()
   const {
     resolvedItems,
     checkoutItems,
@@ -171,6 +173,10 @@ export function CheckoutPage() {
       <CheckoutLoginGate
         cartItemCount={items.length}
         onAuthSuccess={() => void refreshProfile()}
+        onCancel={() => {
+          navigate('/products')
+          openCart()
+        }}
       />
     )
   }
@@ -291,12 +297,34 @@ export function CheckoutPage() {
     }
   }
 
+  const handleCancelCheckout = () => {
+    if (submitting) return
+    navigate('/products')
+    openCart()
+  }
+
   return (
     <div className="min-h-screen pt-24 pb-16">
       <div className="mx-auto max-w-2xl px-6">
         <section aria-labelledby="checkout-heading">
-        <p className="text-xs tracking-[0.4em] text-amber-glow/60">CHECKOUT</p>
-        <h1 id="checkout-heading" className="mt-2 font-display text-4xl text-white">確認訂單</h1>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs tracking-[0.4em] text-amber-glow/60">CHECKOUT</p>
+            <h1 id="checkout-heading" className="mt-2 font-display text-4xl text-white">
+              確認訂單
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={handleCancelCheckout}
+            disabled={submitting}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/20 text-white/70 transition hover:border-amber-glow/50 hover:text-amber-glow disabled:opacity-40"
+            aria-label="取消結帳"
+            title="取消結帳"
+          >
+            <X className="h-5 w-5" strokeWidth={1.75} />
+          </button>
+        </div>
 
         <GlassPanel className="mt-8 p-6 sm:p-8">
           <h2 className="text-sm tracking-widest text-white/50">訂購明細</h2>
@@ -599,6 +627,14 @@ export function CheckoutPage() {
               className="mt-6 w-full rounded-lg bg-amber-glow/90 py-4 text-sm font-medium tracking-widest text-void transition hover:bg-amber-glow disabled:opacity-50"
             >
               {submitting ? '送出中…' : canCheckout ? '確認下單' : '無可結帳商品'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelCheckout}
+              disabled={submitting}
+              className="mt-3 w-full rounded-lg border border-white/15 py-3 text-sm text-white/55 transition hover:border-amber-glow/40 hover:text-amber-glow disabled:opacity-40"
+            >
+              取消結帳
             </button>
           </GlassPanel>
         </form>
