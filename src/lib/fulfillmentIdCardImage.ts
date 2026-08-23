@@ -130,7 +130,7 @@ function drawConstellation(ctx: CanvasRenderingContext2D, W: number, H: number):
     [50, 360, 0.65],
   ]
   for (const [x, y, s] of spots) {
-    drawCrystalCluster(ctx, x * (W / 1080), y * (H / 780), s * (W / 1080))
+    drawCrystalCluster(ctx, x * (W / 1080), y * (H / 648), s * (W / 1080))
   }
 }
 
@@ -176,12 +176,12 @@ function drawQrOrnament(
   ctx.restore()
 }
 
-/** 產生可分享的身分證 PNG（90×65 比例，高解析度） */
+/** 產生可分享的身分證 PNG（90×54mm 比例，高解析度） */
 export async function buildFulfillmentIdCardImageBlob(
   card: FulfillmentIdCardData
 ): Promise<Blob> {
   const W = 1080
-  const H = 780
+  const H = 648
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
@@ -212,10 +212,10 @@ export async function buildFulfillmentIdCardImageBlob(
   // 大氣商品淡影
   if (productImg) {
     ctx.save()
-    const fadeW = 520
-    const fadeH = 520
-    const fadeX = W - fadeW - 20
-    const fadeY = 140
+    const fadeW = 440
+    const fadeH = 400
+    const fadeX = W - fadeW - 10
+    const fadeY = 90
     ctx.globalAlpha = 0.16
     const scale = Math.max(fadeW / productImg.width, fadeH / productImg.height)
     const dw = productImg.width * scale
@@ -244,19 +244,19 @@ export async function buildFulfillmentIdCardImageBlob(
 
   // Header
   ctx.textAlign = 'center'
-  ctx.font = `600 18px ${MONO_FONT}`
+  ctx.font = `600 16px ${MONO_FONT}`
   ctx.fillStyle = goldGradient(ctx, W / 2 - 140, 0, 280)
   const withLetterSpacing = ctx as CanvasRenderingContext2D & {
     letterSpacing?: string
   }
   withLetterSpacing.letterSpacing = '7px'
-  ctx.fillText(LABEL.eyebrow, W / 2 + 3, 62)
+  ctx.fillText(LABEL.eyebrow, W / 2 + 3, 48)
   withLetterSpacing.letterSpacing = '0px'
 
-  ctx.font = `700 38px ${SERIF_FONT}`
+  ctx.font = `700 32px ${SERIF_FONT}`
   ctx.fillStyle = goldGradient(ctx, W / 2 - 160, 0, 320)
   withLetterSpacing.letterSpacing = '8px'
-  ctx.fillText(LABEL.cardTitle, W / 2 + 4, 116)
+  ctx.fillText(LABEL.cardTitle, W / 2 + 4, 88)
   withLetterSpacing.letterSpacing = '0px'
 
   // Header divider
@@ -267,8 +267,8 @@ export async function buildFulfillmentIdCardImageBlob(
   ctx.strokeStyle = dividerGrad
   ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.moveTo(W / 2 - 110, 138)
-  ctx.lineTo(W / 2 + 110, 138)
+  ctx.moveTo(W / 2 - 110, 104)
+  ctx.lineTo(W / 2 + 110, 104)
   ctx.stroke()
 
   ctx.textAlign = 'left'
@@ -276,9 +276,9 @@ export async function buildFulfillmentIdCardImageBlob(
   const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
 
   // Hero thumbnail
-  const thumbX = 52
-  const thumbY = 176
-  const thumbSize = 150
+  const thumbX = 48
+  const thumbY = 128
+  const thumbSize = 112
 
   ctx.save()
   roundRect(ctx, thumbX, thumbY, thumbSize, thumbSize, 8)
@@ -301,9 +301,9 @@ export async function buildFulfillmentIdCardImageBlob(
     ctx.fillStyle = 'rgba(0,0,0,0.35)'
     ctx.fillRect(thumbX, thumbY, thumbSize, thumbSize)
     ctx.fillStyle = '#e8c97a'
-    ctx.font = `64px ${SERIF_FONT}`
+    ctx.font = `52px ${SERIF_FONT}`
     ctx.textAlign = 'center'
-    ctx.fillText('✦', thumbX + thumbSize / 2, thumbY + thumbSize / 2 + 24)
+    ctx.fillText('✦', thumbX + thumbSize / 2, thumbY + thumbSize / 2 + 18)
     ctx.textAlign = 'left'
   }
   ctx.restore()
@@ -313,38 +313,38 @@ export async function buildFulfillmentIdCardImageBlob(
   ctx.stroke()
 
   // Hero text
-  const heroTextX = thumbX + thumbSize + 26
-  const heroTextMax = 690 - heroTextX
-  ctx.font = `700 40px ${SERIF_FONT}`
+  const heroTextX = thumbX + thumbSize + 22
+  const heroTextMax = 700 - heroTextX
+  ctx.font = `700 34px ${SERIF_FONT}`
   ctx.fillStyle = goldGradient(ctx, heroTextX, 0, heroTextMax)
-  ctx.fillText(truncate(ctx, headlines.primary, heroTextMax), heroTextX, thumbY + 52)
+  ctx.fillText(truncate(ctx, headlines.primary, heroTextMax), heroTextX, thumbY + 42)
 
   if (headlines.secondary) {
-    ctx.font = `400 24px ${SERIF_FONT}`
+    ctx.font = `400 20px ${SERIF_FONT}`
     ctx.fillStyle = 'rgba(240, 230, 208, 0.68)'
     ctx.fillText(
       truncate(ctx, headlines.secondary, heroTextMax),
       heroTextX,
-      thumbY + 92
+      thumbY + 74
     )
   }
 
   if (card.selected_size?.trim()) {
-    ctx.font = `400 20px ${SERIF_FONT}`
+    ctx.font = `400 18px ${SERIF_FONT}`
     ctx.fillStyle = 'rgba(212, 184, 116, 0.7)'
     ctx.fillText(
       `尺寸 · ${card.selected_size.trim()}`,
       heroTextX,
-      thumbY + (headlines.secondary ? 126 : 92)
+      thumbY + (headlines.secondary ? 102 : 74)
     )
   }
 
   // Info grid
-  const gridTop = 380
-  const colGap = 356
-  const col1 = 52
+  const gridTop = 278
+  const colGap = 340
+  const col1 = 48
   const col2 = col1 + colGap
-  const rowH = 88
+  const rowH = 64
 
   const drawField = (
     x: number,
@@ -354,23 +354,23 @@ export async function buildFulfillmentIdCardImageBlob(
     maxWidth: number,
     opts?: { gold?: boolean; mono?: boolean; big?: boolean }
   ) => {
-    ctx.font = `600 17px ${MONO_FONT}`
+    ctx.font = `600 15px ${MONO_FONT}`
     ctx.fillStyle = 'rgba(212, 184, 116, 0.82)'
     withLetterSpacing.letterSpacing = '2px'
     ctx.fillText(label, x, y)
     withLetterSpacing.letterSpacing = '0px'
 
-    const valueFont = opts?.big ? 30 : 25
+    const valueFont = opts?.big ? 26 : 22
     ctx.font = `${opts?.gold ? '700' : '500'} ${valueFont}px ${
       opts?.mono ? MONO_FONT : SERIF_FONT
     }`
     ctx.fillStyle = opts?.gold
       ? goldGradient(ctx, x, 0, maxWidth)
       : '#f2ebe0'
-    ctx.fillText(truncate(ctx, value, maxWidth), x, y + 36)
+    ctx.fillText(truncate(ctx, value, maxWidth), x, y + 28)
   }
 
-  drawField(col1, gridTop, LABEL.serial, card.serial_number, colGap - 40, {
+  drawField(col1, gridTop, LABEL.serial, card.serial_number, colGap - 36, {
     mono: true,
   })
   drawField(
@@ -378,16 +378,16 @@ export async function buildFulfillmentIdCardImageBlob(
     gridTop,
     LABEL.birthDate,
     formatBirthDate(card.magic_birth_date),
-    colGap - 40
+    colGap - 36
   )
   drawField(
     col1,
     gridTop + rowH,
     LABEL.affiliation,
     card.magic_affiliation,
-    colGap - 40
+    colGap - 36
   )
-  drawField(col2, gridTop + rowH, LABEL.primary, card.element_primary, colGap - 40, {
+  drawField(col2, gridTop + rowH, LABEL.primary, card.element_primary, colGap - 36, {
     gold: true,
     big: true,
   })
@@ -396,13 +396,13 @@ export async function buildFulfillmentIdCardImageBlob(
     gridTop + rowH * 2,
     LABEL.efficacy,
     formatEfficacyTags(card.product_tags),
-    690 - col1
+    700 - col1
   )
 
   // Five elements
-  const elemY = gridTop + rowH * 3 + 6
-  const elemSize = 54
-  const elemGap = 14
+  const elemY = gridTop + rowH * 2 + 42
+  const elemSize = 42
+  const elemGap = 12
   const active = new Set(card.five_elements)
   FIVE_ELEMENTS.forEach((el: FiveElement, i: number) => {
     const ex = col1 + i * (elemSize + elemGap)
@@ -422,24 +422,24 @@ export async function buildFulfillmentIdCardImageBlob(
       ctx.stroke()
       ctx.fillStyle = 'rgba(240, 230, 208, 0.32)'
     }
-    ctx.font = `600 26px ${SERIF_FONT}`
+    ctx.font = `600 22px ${SERIF_FONT}`
     ctx.textAlign = 'center'
-    ctx.fillText(el, ex + elemSize / 2, elemY + elemSize / 2 + 10)
+    ctx.fillText(el, ex + elemSize / 2, elemY + elemSize / 2 + 8)
     ctx.textAlign = 'left'
   })
 
-  // Extra (chakra / resonance)
+  // Extra (chakra / resonance) — only if space
   const extras = [
     card.chakra ? `${LABEL.chakra} · ${card.chakra}` : '',
     card.resonance_keyword ? `${LABEL.resonance} · ${card.resonance_keyword}` : '',
   ].filter(Boolean)
-  if (extras.length > 0) {
-    ctx.font = `400 20px ${SERIF_FONT}`
+  if (extras.length > 0 && elemY + elemSize + 28 < H - 50) {
+    ctx.font = `400 16px ${SERIF_FONT}`
     ctx.fillStyle = 'rgba(240, 230, 208, 0.52)'
     ctx.fillText(
-      truncate(ctx, extras.join('  ·  '), 690 - col1),
+      truncate(ctx, extras.join('  ·  '), 700 - col1),
       col1,
-      elemY + elemSize + 40
+      elemY + elemSize + 26
     )
   }
 
@@ -447,28 +447,28 @@ export async function buildFulfillmentIdCardImageBlob(
   if (card.qr_data_url) {
     const qrImg = await loadImage(card.qr_data_url)
     if (qrImg) {
-      const qrBoxSize = 200
-      const qrX = W - qrBoxSize - 90
-      const qrY = 220
+      const qrBoxSize = 168
+      const qrX = W - qrBoxSize - 78
+      const qrY = 150
       const cx = qrX + qrBoxSize / 2
       const cy = qrY + qrBoxSize / 2
-      drawQrOrnament(ctx, cx, cy, qrBoxSize / 2 + 8)
+      drawQrOrnament(ctx, cx, cy, qrBoxSize / 2 + 6)
 
       ctx.fillStyle = '#ffffff'
-      roundRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 10)
+      roundRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 8)
       ctx.fill()
       ctx.strokeStyle = 'rgba(201, 168, 76, 0.4)'
       ctx.lineWidth = 2
-      roundRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 10)
+      roundRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 8)
       ctx.stroke()
-      const pad = 14
+      const pad = 12
       ctx.drawImage(qrImg, qrX + pad, qrY + pad, qrBoxSize - pad * 2, qrBoxSize - pad * 2)
 
-      ctx.font = `500 18px ${SERIF_FONT}`
+      ctx.font = `500 16px ${SERIF_FONT}`
       ctx.fillStyle = 'rgba(212, 184, 116, 0.75)'
       ctx.textAlign = 'center'
-      ctx.fillText('掃描', cx, qrY + qrBoxSize + 36)
-      ctx.fillText('簽署契約', cx, qrY + qrBoxSize + 58)
+      ctx.fillText('掃描', cx, qrY + qrBoxSize + 28)
+      ctx.fillText('簽署契約', cx, qrY + qrBoxSize + 48)
       ctx.textAlign = 'left'
     }
   }
@@ -481,15 +481,15 @@ export async function buildFulfillmentIdCardImageBlob(
   ctx.strokeStyle = footerGrad
   ctx.lineWidth = 1.5
   ctx.beginPath()
-  ctx.moveTo(W / 2 - 240, H - 62)
-  ctx.lineTo(W / 2 + 240, H - 62)
+  ctx.moveTo(W / 2 - 240, H - 48)
+  ctx.lineTo(W / 2 + 240, H - 48)
   ctx.stroke()
 
-  ctx.font = `500 20px ${SERIF_FONT}`
+  ctx.font = `500 17px ${SERIF_FONT}`
   ctx.fillStyle = 'rgba(201, 168, 76, 0.72)'
   ctx.textAlign = 'center'
   withLetterSpacing.letterSpacing = '3px'
-  ctx.fillText(LABEL.footer, W / 2, H - 34)
+  ctx.fillText(LABEL.footer, W / 2, H - 26)
   withLetterSpacing.letterSpacing = '0px'
   ctx.textAlign = 'left'
 

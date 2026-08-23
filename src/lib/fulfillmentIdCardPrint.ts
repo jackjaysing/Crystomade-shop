@@ -82,7 +82,7 @@ const FOIL_TEXT = `
 
 const ID_CARD_PRINT_CSS = `
 @page {
-  size: 90mm 65mm;
+  size: 90mm 54mm;
   margin: 0;
 }
 * { box-sizing: border-box; }
@@ -90,7 +90,7 @@ html, body {
   margin: 0;
   padding: 0;
   width: 90mm;
-  height: 65mm;
+  height: 54mm;
   font-family: "LXGW WenKai TC", "PingFang TC", "Microsoft JhengHei", serif;
   color: #f0e6d0;
   background: #ebe4d6;
@@ -99,15 +99,15 @@ html, body {
 }
 .sheet {
   width: 90mm;
-  height: 65mm;
+  height: 54mm;
   margin: 0;
   padding: 0;
 }
 .card {
   position: relative;
   width: 90mm;
-  height: 65mm;
-  padding: 2.4mm 3mm 2.2mm;
+  height: 54mm;
+  padding: 1.8mm 2.6mm 1.6mm;
   border: 0.35mm solid #c9a84c;
   border-radius: 1.2mm;
   background:
@@ -141,9 +141,9 @@ html, body {
 .card-hero-fade {
   position: absolute;
   right: -2mm;
-  top: 12mm;
-  width: 42mm;
-  height: 42mm;
+  top: 10mm;
+  width: 36mm;
+  height: 36mm;
   object-fit: cover;
   opacity: 0.16;
   pointer-events: none;
@@ -194,7 +194,7 @@ html, body {
   min-height: 0;
   display: flex;
   gap: 2.2mm;
-  margin-top: 1.4mm;
+  margin-top: 0.9mm;
 }
 .card-main {
   flex: 1;
@@ -208,8 +208,8 @@ html, body {
   align-items: flex-start;
 }
 .thumb {
-  width: 11.5mm;
-  height: 11.5mm;
+  width: 10mm;
+  height: 10mm;
   border-radius: 0.6mm;
   border: 0.2mm solid rgba(201, 168, 76, 0.5);
   box-shadow: 0 0 1.2mm rgba(201, 168, 76, 0.2);
@@ -217,8 +217,8 @@ html, body {
   flex-shrink: 0;
 }
 .glyph {
-  width: 11.5mm;
-  height: 11.5mm;
+  width: 10mm;
+  height: 10mm;
   border-radius: 0.6mm;
   border: 0.2mm solid rgba(201, 168, 76, 0.4);
   display: flex;
@@ -251,10 +251,10 @@ html, body {
   white-space: nowrap;
 }
 .grid {
-  margin-top: 1.4mm;
+  margin-top: 0.9mm;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1mm 2.2mm;
+  gap: 0.7mm 2mm;
 }
 .grid .span-2 {
   grid-column: 1 / -1;
@@ -325,7 +325,7 @@ html, body {
 }
 .qr-block {
   flex-shrink: 0;
-  width: 22mm;
+  width: 19mm;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -335,8 +335,8 @@ html, body {
 }
 .qr-ornament {
   position: relative;
-  width: 20mm;
-  height: 20mm;
+  width: 17.5mm;
+  height: 17.5mm;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -350,8 +350,8 @@ html, body {
 .qr-ornament img {
   position: relative;
   z-index: 1;
-  width: 13.5mm;
-  height: 13.5mm;
+  width: 11.5mm;
+  height: 11.5mm;
   display: block;
   background: #fff;
   padding: 0.55mm;
@@ -370,8 +370,8 @@ html, body {
 .footer {
   position: relative;
   flex-shrink: 0;
-  margin: 1.1mm 0 0;
-  padding-top: 0.7mm;
+  margin: 0.7mm 0 0;
+  padding-top: 0.5mm;
   border-top: 0.12mm solid rgba(201, 168, 76, 0.22);
   text-align: center;
   font-family: "Cinzel", "LXGW WenKai TC", serif;
@@ -382,7 +382,7 @@ html, body {
 }
 @media screen {
   body {
-    min-height: 65mm;
+    min-height: 54mm;
     padding: 8mm;
     width: auto;
     height: auto;
