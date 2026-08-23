@@ -31,7 +31,7 @@ const LABEL = {
   qrAlt: '\u7c3d\u7d04 QR',
   qrHintScan: '\u6383\u63cf',
   qrHintSign: '\u7c3d\u7f72\u5951\u7d04',
-  footer: '\u6676\u523b Crystomade \u00b7 \u9748\u9b42\u5370\u8a18',
+  footer: '\u6676\u523b CRYSTOMADE \u00b7 \u9748\u9b42\u5370\u8a18',
   emptyDate: '\u2014',
   year: '\u5e74',
   month: '\u6708',
@@ -127,6 +127,35 @@ html, body {
   border: 0.12mm solid rgba(201, 168, 76, 0.28);
   border-radius: 0.8mm;
   pointer-events: none;
+  z-index: 2;
+}
+.card-constellation {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+.card-hero-fade {
+  position: absolute;
+  right: -2mm;
+  top: 12mm;
+  width: 42mm;
+  height: 42mm;
+  object-fit: cover;
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+}
+.card-head,
+.card-body,
+.footer {
+  position: relative;
+  z-index: 1;
 }
 .card-head {
   position: relative;
@@ -296,7 +325,7 @@ html, body {
 }
 .qr-block {
   flex-shrink: 0;
-  width: 20mm;
+  width: 22mm;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -304,13 +333,29 @@ html, body {
   padding-left: 1.2mm;
   border-left: 0.15mm solid rgba(201, 168, 76, 0.22);
 }
-.qr-block img {
-  width: 17mm;
-  height: 17mm;
+.qr-ornament {
+  position: relative;
+  width: 20mm;
+  height: 20mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-ornament svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.qr-ornament img {
+  position: relative;
+  z-index: 1;
+  width: 13.5mm;
+  height: 13.5mm;
   display: block;
   background: #fff;
-  padding: 0.7mm;
-  border-radius: 0.6mm;
+  padding: 0.55mm;
+  border-radius: 0.5mm;
   border: 0.2mm solid rgba(201, 168, 76, 0.4);
   box-shadow: 0 0 1.5mm rgba(0, 0, 0, 0.25);
 }
@@ -361,11 +406,22 @@ export function buildFulfillmentIdCardPrintHtml(card: FulfillmentIdCardData): st
       : '',
   ].filter(Boolean)
 
+  const qrRays = `<svg viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="rgba(212,184,116,0.55)" stroke-width="1.1" transform="translate(100 100)"><line x1="0" y1="-88" x2="0" y2="-72"/><line x1="0" y1="-88" x2="0" y2="-72" transform="rotate(30)"/><line x1="0" y1="-88" x2="0" y2="-72" transform="rotate(60)"/><line x1="0" y1="-88" x2="0" y2="-72" transform="rotate(90)"/><line x1="0" y1="-88" x2="0" y2="-72" transform="rotate(120)"/><line x1="0" y1="-88" x2="0" y2="-72" transform="rotate(150)"/><polygon points="0,-68 18,-18 68,0 18,18 0,68 -18,18 -68,0 -18,-18" stroke="rgba(232,201,122,0.65)" stroke-width="1.2"/><circle r="58" stroke="rgba(201,168,76,0.35)"/><circle r="52" stroke="rgba(201,168,76,0.22)" stroke-dasharray="3 4"/></g></svg>`
+
   const qrBlock = card.qr_data_url
     ? `<div class="qr-block">
-        <img src="${card.qr_data_url}" alt="${LABEL.qrAlt}" />
+        <div class="qr-ornament">
+          ${qrRays}
+          <img src="${card.qr_data_url}" alt="${LABEL.qrAlt}" />
+        </div>
         <p class="qr-hint">${LABEL.qrHintScan}<br>${LABEL.qrHintSign}</p>
       </div>`
+    : ''
+
+  const constellation = `<svg class="card-constellation" viewBox="0 0 900 650" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="rgba(212,184,116,0.22)" stroke-width="1.2" stroke-linejoin="round"><path d="M70 520 L110 460 L160 490 L130 560 Z M110 460 L145 420 L190 455"/><path d="M40 180 L85 130 L130 165 L95 220 Z M85 130 L120 90"/><path d="M780 90 L830 50 L870 95 L835 145 Z M830 50 L855 20"/><path d="M820 520 L860 470 L900 510 L870 560 Z"/><path d="M200 80 L235 40 L275 70 L245 110 Z"/><path d="M620 560 L660 510 L710 545 L675 595 Z"/></g><g fill="rgba(232,201,122,0.28)"><circle cx="110" cy="460" r="2.2"/><circle cx="830" cy="50" r="2"/><circle cx="660" cy="510" r="1.8"/></g></svg>`
+
+  const heroFade = card.product_image_url
+    ? `<img class="card-hero-fade" src="${escapeHtml(card.product_image_url)}" alt="" />`
     : ''
 
   const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
@@ -375,6 +431,8 @@ ${PRINT_FONT_LINK}
 <style>${ID_CARD_PRINT_CSS}</style></head><body>
 <div class="sheet">
   <article class="card">
+    ${constellation}
+    ${heroFade}
     <header class="card-head">
       <p class="eyebrow">CRYSTAL GRIMOIRE</p>
       <h1 class="title">${LABEL.cardTitle}</h1>

@@ -12,10 +12,11 @@ import {
 } from '../../lib/api/grimoire'
 import { BROWSER_IMAGE_ACCEPT } from '../../lib/browserImage'
 import { crystalSoulCardActivationUrl } from '../../lib/grimoire'
-import { pickEfficacyTags, formatEfficacyTags } from '../../lib/efficacyTags'
-import { isBespokeSoulCardProduct, resolveSoulCardDisplayHeadlines } from '../../lib/grimoireFulfillment'
+import { pickEfficacyTags } from '../../lib/efficacyTags'
+import { isBespokeSoulCardProduct } from '../../lib/grimoireFulfillment'
 import { openFulfillmentIdCardPrint, openFulfillmentQrOnlyPrint } from '../../lib/fulfillmentIdCardPrint'
 import { shareOrDownloadFulfillmentIdCard } from '../../lib/fulfillmentIdCardImage'
+import { CrystalMagicIdCardFace } from '../grimoire/CrystalMagicIdCardFace'
 import { AdminEfficacyTagsPicker } from './AdminEfficacyTagsPicker'
 
 interface OrderSoulCardQrPanelProps {
@@ -29,26 +30,6 @@ function formatBirthDateLabel(isoDate: string | null): string {
   if (parts.length !== 3) return isoDate
   const [y, m, d] = parts
   return `${y} 年 ${Number(m)} 月 ${Number(d)} 日`
-}
-
-function FulfillmentFiveElements({ elements }: { elements: string[] }) {
-  const active = new Set(elements)
-  return (
-    <div className="flex flex-wrap gap-1.5" aria-label="五行">
-      {FIVE_ELEMENTS.map((el: FiveElement) => (
-        <span
-          key={el}
-          className={
-            active.has(el)
-              ? 'inline-flex h-6 w-6 items-center justify-center rounded-full border border-amber-glow/50 bg-amber-glow/15 text-[11px] text-amber-glow'
-              : 'inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 text-[11px] text-white/25'
-          }
-        >
-          {el}
-        </span>
-      ))}
-    </div>
-  )
 }
 
 function FulfillmentIdCardPreview({
@@ -84,7 +65,6 @@ function FulfillmentIdCardPreview({
 }) {
   const bespoke = isBespokeSoulCardProduct(card.product_name)
   const [magicTitle, setMagicTitle] = useState(card.magic_title)
-  const headlines = resolveSoulCardDisplayHeadlines(magicTitle, card.product_name)
   const [elementPrimary, setElementPrimary] = useState(card.element_primary)
   const [magicAffiliation, setMagicAffiliation] = useState(card.magic_affiliation)
   const [efficacyTags, setEfficacyTags] = useState(() => pickEfficacyTags(card.product_tags))
@@ -218,8 +198,22 @@ function FulfillmentIdCardPreview({
   }
 
   return (
-    <div className="fulfillment-id-preview min-w-0 flex-1 rounded-lg border border-violet-400/20 bg-gradient-to-br from-[#1c1610] via-[#221c14] to-[#14100c] p-4">
-      <div className="flex items-start gap-3">
+    <div className="fulfillment-id-preview min-w-0 flex-1 space-y-4 rounded-lg border border-amber-glow/20 bg-black/20 p-4">
+      <CrystalMagicIdCardFace
+        magicTitle={magicTitle}
+        productName={card.product_name}
+        serialNumber={card.serial_number}
+        magicAffiliation={magicAffiliation}
+        elementPrimary={elementPrimary}
+        productTags={efficacyTags}
+        fiveElements={fiveElements}
+        magicBirthDate={birthDate || card.magic_birth_date}
+        productImageUrl={imageUrl}
+        selectedSize={card.selected_size}
+        qrDataUrl={qrDataUrl || null}
+      />
+
+      <div className="flex flex-wrap items-start gap-3">
         <div className="shrink-0">
           <label
             className={`group relative block h-14 w-14 cursor-pointer overflow-hidden rounded border border-amber-glow/30 ${
@@ -263,71 +257,17 @@ function FulfillmentIdCardPreview({
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="fid-eyebrow text-[10px] text-amber-glow/65">實體身分證預覽</p>
-          <p className="fid-title mt-1 text-sm magic-foil-heading">{headlines.primary}</p>
-          {headlines.secondary && (
-            <p className="mt-0.5 text-xs text-white/50">{headlines.secondary}</p>
-          )}
+          <p className="text-[10px] tracking-wider text-amber-glow/65">實體身分證預覽</p>
           {bespoke && (
             <p className="mt-1 text-[10px] leading-relaxed text-amber-glow/75">
               量身訂製 · 請為此手串命名、上傳成品照片，並依客人命盤設定主屬性、魔法系別與功效後再列印
             </p>
           )}
-        </div>
-      </div>
-
-      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-        <div>
-          <dt className="fid-label text-[10px] text-white/35">魔法編號</dt>
-          <dd className="fid-serial mt-0.5 text-[11px] text-amber-glow/85">{card.serial_number}</dd>
-        </div>
-        <div>
-          <dt className="fid-label text-[10px] text-white/35">出生日期</dt>
-          <dd className="mt-0.5 text-white/75">
-            {formatBirthDateLabel(birthDate || card.magic_birth_date)}
-          </dd>
-        </div>
-        <div>
-          <dt className="fid-label text-[10px] text-white/35">魔法系別</dt>
-          <dd className="mt-0.5 text-white/75">{magicAffiliation}</dd>
-        </div>
-        <div>
-          <dt className="fid-label text-[10px] text-white/35">主屬性</dt>
-          <dd className="fid-primary mt-0.5 text-sm magic-foil-text-subtle">{elementPrimary}</dd>
-        </div>
-        <div className="col-span-2">
-          <dt className="fid-label text-[10px] text-white/35">功效類別</dt>
-          <dd className="mt-0.5 text-white/75">{formatEfficacyTags(efficacyTags)}</dd>
-        </div>
-      </dl>
-
-      {fiveElements.length > 0 && (
-        <div className="mt-3">
-          <p className="mb-1.5 text-[10px] tracking-wider text-white/35">五行印記</p>
-          <FulfillmentFiveElements elements={fiveElements} />
-        </div>
-      )}
-
-      {(card.chakra || card.resonance_keyword) && (
-        <p className="mt-2 text-[11px] leading-relaxed text-white/40">
-          {[card.chakra ? `脈輪 · ${card.chakra}` : '', card.resonance_keyword ? `共鳴 · ${card.resonance_keyword}` : '']
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      )}
-
-      {qrDataUrl && (
-        <div className="mt-3 flex items-center gap-3 rounded border border-white/10 bg-black/20 px-3 py-2">
-          <img
-            src={qrDataUrl}
-            alt="簽約 QR"
-            className="h-14 w-14 shrink-0 rounded border border-white/15 bg-white p-0.5"
-          />
-          <p className="text-[10px] leading-relaxed text-white/40">
-            列印身分證時將一併印出此 QR<br />供買家掃描簽署契約
+          <p className="mt-1 text-[10px] text-white/40">
+            出生日期：{formatBirthDateLabel(birthDate || card.magic_birth_date)}
           </p>
         </div>
-      )}
+      </div>
 
       <div className="mt-4 space-y-3 border-t border-white/10 pt-3">
         <p className="text-[10px] tracking-wider text-white/45">

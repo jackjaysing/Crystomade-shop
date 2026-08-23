@@ -14,7 +14,7 @@ const LABEL = {
   chakra: '脈輪',
   resonance: '共鳴',
   qrHint: '掃描簽署契約',
-  footer: '晶刻 Crystomade · 靈魂印記',
+  footer: '晶刻 CRYSTOMADE · 靈魂印記',
   emptyDate: '—',
 } as const
 
@@ -88,6 +88,94 @@ function truncate(
   return `${result}…`
 }
 
+function drawCrystalCluster(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  scale: number
+): void {
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.scale(scale, scale)
+  ctx.strokeStyle = 'rgba(212, 184, 116, 0.22)'
+  ctx.lineWidth = 1.4 / scale
+  ctx.lineJoin = 'round'
+  ctx.beginPath()
+  ctx.moveTo(-28, 22)
+  ctx.lineTo(0, -32)
+  ctx.lineTo(26, 18)
+  ctx.lineTo(8, 36)
+  ctx.lineTo(-18, 34)
+  ctx.closePath()
+  ctx.moveTo(0, -32)
+  ctx.lineTo(14, -8)
+  ctx.lineTo(40, -4)
+  ctx.stroke()
+  ctx.fillStyle = 'rgba(232, 201, 122, 0.28)'
+  ctx.beginPath()
+  ctx.arc(0, -32, 2.2, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+}
+
+function drawConstellation(ctx: CanvasRenderingContext2D, W: number, H: number): void {
+  const spots: Array<[number, number, number]> = [
+    [90, 520, 1.1],
+    [70, 160, 0.9],
+    [820, 90, 1],
+    [860, 540, 0.95],
+    [240, 70, 0.75],
+    [640, 560, 0.85],
+    [500, 50, 0.7],
+    [50, 360, 0.65],
+  ]
+  for (const [x, y, s] of spots) {
+    drawCrystalCluster(ctx, x * (W / 1080), y * (H / 780), s * (W / 1080))
+  }
+}
+
+function drawQrOrnament(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number
+): void {
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.strokeStyle = 'rgba(212, 184, 116, 0.55)'
+  ctx.lineWidth = 1.5
+  for (let i = 0; i < 6; i++) {
+    const a = (i * Math.PI) / 6
+    ctx.beginPath()
+    ctx.moveTo(Math.cos(a) * (radius + 18), Math.sin(a) * (radius + 18))
+    ctx.lineTo(Math.cos(a) * (radius + 36), Math.sin(a) * (radius + 36))
+    ctx.stroke()
+  }
+  ctx.strokeStyle = 'rgba(232, 201, 122, 0.65)'
+  ctx.beginPath()
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4 - Math.PI / 2
+    const r = i % 2 === 0 ? radius + 14 : radius - 8
+    const x = Math.cos(a) * r
+    const y = Math.sin(a) * r
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(201, 168, 76, 0.35)'
+  ctx.beginPath()
+  ctx.arc(0, 0, radius + 6, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.setLineDash([3, 4])
+  ctx.strokeStyle = 'rgba(201, 168, 76, 0.22)'
+  ctx.beginPath()
+  ctx.arc(0, 0, radius, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.setLineDash([])
+  ctx.restore()
+}
+
 /** 產生可分享的身分證 PNG（90×65 比例，高解析度） */
 export async function buildFulfillmentIdCardImageBlob(
   card: FulfillmentIdCardData
@@ -108,6 +196,39 @@ export async function buildFulfillmentIdCardImageBlob(
   bg.addColorStop(1, '#100d09')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
+
+  const glow = ctx.createRadialGradient(W / 2, 0, 20, W / 2, 0, W * 0.55)
+  glow.addColorStop(0, 'rgba(201, 168, 76, 0.14)')
+  glow.addColorStop(1, 'transparent')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, W, H)
+
+  drawConstellation(ctx, W, H)
+
+  const productImg = card.product_image_url
+    ? await loadImage(card.product_image_url, 'anonymous')
+    : null
+
+  // 大氣商品淡影
+  if (productImg) {
+    ctx.save()
+    const fadeW = 520
+    const fadeH = 520
+    const fadeX = W - fadeW - 20
+    const fadeY = 140
+    ctx.globalAlpha = 0.16
+    const scale = Math.max(fadeW / productImg.width, fadeH / productImg.height)
+    const dw = productImg.width * scale
+    const dh = productImg.height * scale
+    ctx.drawImage(
+      productImg,
+      fadeX + (fadeW - dw) / 2,
+      fadeY + (fadeH - dh) / 2,
+      dw,
+      dh
+    )
+    ctx.restore()
+  }
 
   // 外框
   ctx.strokeStyle = 'rgba(201, 168, 76, 0.55)'
@@ -158,9 +279,6 @@ export async function buildFulfillmentIdCardImageBlob(
   const thumbX = 52
   const thumbY = 176
   const thumbSize = 150
-  const productImg = card.product_image_url
-    ? await loadImage(card.product_image_url, 'anonymous')
-    : null
 
   ctx.save()
   roundRect(ctx, thumbX, thumbY, thumbSize, thumbSize, 8)
@@ -288,7 +406,7 @@ export async function buildFulfillmentIdCardImageBlob(
   const active = new Set(card.five_elements)
   FIVE_ELEMENTS.forEach((el: FiveElement, i: number) => {
     const ex = col1 + i * (elemSize + elemGap)
-    const on = active.has(el)
+    const on = active.has(el) || el === card.element_primary
     ctx.beginPath()
     ctx.arc(ex + elemSize / 2, elemY + elemSize / 2, elemSize / 2, 0, Math.PI * 2)
     if (on) {
@@ -329,9 +447,13 @@ export async function buildFulfillmentIdCardImageBlob(
   if (card.qr_data_url) {
     const qrImg = await loadImage(card.qr_data_url)
     if (qrImg) {
-      const qrBoxSize = 240
-      const qrX = W - qrBoxSize - 60
-      const qrY = 200
+      const qrBoxSize = 200
+      const qrX = W - qrBoxSize - 90
+      const qrY = 220
+      const cx = qrX + qrBoxSize / 2
+      const cy = qrY + qrBoxSize / 2
+      drawQrOrnament(ctx, cx, cy, qrBoxSize / 2 + 8)
+
       ctx.fillStyle = '#ffffff'
       roundRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 10)
       ctx.fill()
@@ -339,13 +461,14 @@ export async function buildFulfillmentIdCardImageBlob(
       ctx.lineWidth = 2
       roundRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 10)
       ctx.stroke()
-      const pad = 16
+      const pad = 14
       ctx.drawImage(qrImg, qrX + pad, qrY + pad, qrBoxSize - pad * 2, qrBoxSize - pad * 2)
 
       ctx.font = `500 18px ${SERIF_FONT}`
       ctx.fillStyle = 'rgba(212, 184, 116, 0.75)'
       ctx.textAlign = 'center'
-      ctx.fillText(LABEL.qrHint, qrX + qrBoxSize / 2, qrY + qrBoxSize + 34)
+      ctx.fillText('掃描', cx, qrY + qrBoxSize + 36)
+      ctx.fillText('簽署契約', cx, qrY + qrBoxSize + 58)
       ctx.textAlign = 'left'
     }
   }

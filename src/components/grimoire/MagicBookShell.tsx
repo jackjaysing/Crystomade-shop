@@ -23,7 +23,9 @@ export function MagicBookShell({
       {tier === 'ascendant' && (
         <>
           <div className="magic-book-particles" aria-hidden />
-          <div className="magic-book-crown" aria-hidden>✧</div>
+          <div className="magic-book-crown" aria-hidden>
+            ✧
+          </div>
         </>
       )}
       <div className="magic-book-spine" aria-hidden />
@@ -35,25 +37,32 @@ export function MagicBookShell({
               <span className="magic-foil-ribbon">水晶魔法身分證</span>
             </p>
             {subtitle && (
-              <p className={`magic-book-eyebrow ${!title ? 'magic-foil-heading magic-book-eyebrow--prominent' : ''}`}>
+              <p
+                className={`magic-book-eyebrow ${
+                  !title ? 'magic-foil-heading magic-book-eyebrow--prominent' : ''
+                }`}
+              >
                 {subtitle}
               </p>
             )}
-            {title && <h2 className="magic-book-cover-title magic-foil-heading">{title}</h2>}
-          </header>
-        )}
-        {!title && !subtitle && (
-          <header className="magic-book-cover-header magic-book-cover-header--solo">
-            <p className="magic-id-ribbon">
-              <span className="magic-foil-ribbon">水晶魔法身分證</span>
-            </p>
+            {title && (
+              <h2 className="magic-book-cover-title magic-foil-heading">{title}</h2>
+            )}
           </header>
         )}
         <div className="magic-book-page">{children}</div>
-        <div className="magic-book-corner magic-book-corner-tl" aria-hidden>✦</div>
-        <div className="magic-book-corner magic-book-corner-tr" aria-hidden>✦</div>
-        <div className="magic-book-corner magic-book-corner-bl" aria-hidden>⟡</div>
-        <div className="magic-book-corner magic-book-corner-br" aria-hidden>⟡</div>
+        <div className="magic-book-corner magic-book-corner-tl" aria-hidden>
+          ✦
+        </div>
+        <div className="magic-book-corner magic-book-corner-tr" aria-hidden>
+          ✦
+        </div>
+        <div className="magic-book-corner magic-book-corner-bl" aria-hidden>
+          ⟡
+        </div>
+        <div className="magic-book-corner magic-book-corner-br" aria-hidden>
+          ⟡
+        </div>
       </div>
     </div>
   )

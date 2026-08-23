@@ -58,7 +58,6 @@ export function CrystalMagicBook({
   }
 
   const headlines = resolveSoulCardDisplayHeadlines(card.magic_title, card.product_name)
-  const bookShellTitle = headlines.secondary ?? headlines.primary
 
   return (
     <div className="relative">
@@ -71,14 +70,8 @@ export function CrystalMagicBook({
 
       <MagicBookShell
         tier={card.magic_status}
-        title={phase === 'book' ? bookShellTitle : undefined}
-        subtitle={
-          phase === 'book'
-            ? card.serial_number
-            : phase === 'contract'
-              ? '待簽約'
-              : undefined
-        }
+        title={phase === 'contract' ? headlines.primary : undefined}
+        subtitle={phase === 'contract' ? '待簽約' : undefined}
         className={phase === 'seal' ? 'magic-book-dimmed' : ''}
       >
         {phase === 'contract' && onSignContract && (
