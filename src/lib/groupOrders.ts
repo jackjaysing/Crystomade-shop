@@ -2,6 +2,8 @@ import {
   isPaidProductOrder,
   lineItemKeyFromOrder,
   reconstructLineSubtotals,
+  resolveCheckoutActualPaidNtd,
+  resolveOrderGroupPayableNtd,
   resolveOrderGroupPricing,
 } from './orderGroupPricing'
 import type { BraceletConfig } from './braceletConfig'
@@ -79,6 +81,12 @@ export interface OrderGroup {
   couponDiscountNtd: number
   /** 運費（併入第一筆付費商品列） */
   shippingFeeNtd: number
+  /** 訂單應付合計（訂單列加總） */
+  orderTotalNtd: number
+  /** 實際收款（後台填寫；null 表示未設定） */
+  actualPaidNtd: number | null
+  /** 贈點計算基準 */
+  payableNtd: number
 }
 
 const LEGACY_GROUP_WINDOW_MS = 2 * 60 * 1000
@@ -269,6 +277,9 @@ function buildOrderGroup(id: string, orders: Order[]): OrderGroup {
     pointsDiscountNtd: pricing.pointsDiscountNtd,
     couponDiscountNtd: pricing.couponDiscountNtd,
     shippingFeeNtd: pricing.shippingFeeNtd,
+    orderTotalNtd: sorted.reduce((sum, order) => sum + order.total_amount, 0),
+    actualPaidNtd: resolveCheckoutActualPaidNtd(sorted),
+    payableNtd: resolveOrderGroupPayableNtd(sorted),
   }
 }
 

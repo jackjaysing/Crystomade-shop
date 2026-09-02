@@ -24,6 +24,7 @@ import {
 import { adminProductThumbAlt } from '../../lib/imageAlt'
 import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
+import { OrderActualPaidEditor } from './OrderActualPaidEditor'
 import { OrderBraceletBuildSheet } from './OrderBraceletBuildSheet'
 import { OrderLineStudioPicker } from './OrderLineStudioPicker'
 import { OrderSoulCardQrPanel } from './OrderSoulCardQrPanel'
@@ -384,6 +385,12 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
 
     return (
       <div className="order-admin-actions w-full">
+        <OrderActualPaidEditor
+          group={group}
+          disabled={isCancelled}
+          onSaved={() => void onUpdated({ silent: true })}
+          onToast={setToastMessage}
+        />
         <OrderTrackingNumberEditor
           orderIds={group.orderIds}
           savedTrackingNumber={group.trackingNumber}
@@ -717,10 +724,19 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+              <div className="flex shrink-0 flex-col items-end justify-center gap-1 sm:items-end">
                 <p className="text-lg text-amber-glow">
-                  NT$ {Number(group.totalAmount).toLocaleString()}
+                  {group.actualPaidNtd != null && group.actualPaidNtd >= 0
+                    ? formatAdminNtd(group.actualPaidNtd)
+                    : formatAdminNtd(group.orderTotalNtd)}
                 </p>
+                {group.actualPaidNtd != null &&
+                  group.actualPaidNtd >= 0 &&
+                  group.actualPaidNtd !== group.orderTotalNtd && (
+                    <p className="text-[11px] text-white/40">
+                      訂單 {formatAdminNtd(group.orderTotalNtd)}
+                    </p>
+                  )}
                 <span className="flex items-center gap-1 text-xs text-white/40">
                   {isExpanded ? '收合細項' : '展開細項'}
                   <ChevronDown
@@ -794,7 +810,20 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                       </li>
                     ))}
                     <li className="flex justify-end text-sm font-medium text-amber-glow">
-                      合計 NT$ {Number(group.totalAmount).toLocaleString('zh-TW')}
+                      {group.actualPaidNtd != null && group.actualPaidNtd >= 0
+                        ? `實際收款 ${formatAdminNtd(group.actualPaidNtd)}`
+                        : `合計 ${formatAdminNtd(group.orderTotalNtd)}`}
+                    </li>
+                    {group.actualPaidNtd != null &&
+                      group.actualPaidNtd >= 0 &&
+                      group.actualPaidNtd !== group.orderTotalNtd && (
+                        <li className="flex justify-end text-xs text-white/45">
+                          訂單金額 {formatAdminNtd(group.orderTotalNtd)}
+                        </li>
+                      )}
+                    <li className="flex justify-end text-xs text-white/40">
+                      贈點基準 {formatAdminNtd(group.payableNtd)}（約{' '}
+                      {Math.floor(group.payableNtd / 5)} 點）
                     </li>
                   </ul>
                 )}

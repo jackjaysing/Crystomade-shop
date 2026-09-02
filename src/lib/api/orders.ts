@@ -438,6 +438,42 @@ export async function updateOrderGroupTrackingNumber(
   })
 }
 
+/** 後台：設定實際收款（並在已付款時同步調整消費贈點） */
+export async function updateOrderGroupActualPaid(
+  orderIds: string[],
+  actualPaidNtd: number | null
+): Promise<void> {
+  if (orderIds.length === 0) return
+
+  const { error } = await supabase.rpc('admin_set_checkout_actual_paid_ntd', {
+    p_order_ids: orderIds,
+    p_actual_paid_ntd: actualPaidNtd,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (
+      msg.includes('admin_set_checkout_actual_paid_ntd') ||
+      msg.includes('checkout_actual_paid_ntd')
+    ) {
+      throw new Error(
+        '資料庫尚未啟用實際收款欄位，請在 Supabase SQL Editor 執行 supabase/migration-add-checkout-actual-paid.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  const summary = await orderGroupSummary(orderIds, '設定實際收款：')
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'order',
+    summary:
+      actualPaidNtd != null && actualPaidNtd >= 0
+        ? `${summary} NT$ ${Math.round(actualPaidNtd).toLocaleString('zh-TW')}`
+        : `${summary}（已清除）`,
+  })
+}
+
 /** 後台：更新訂單品項分潤歸屬（同一合併細項可一次更新多列） */
 export async function updateOrderLineStudioLocation(
   orderIds: string[],

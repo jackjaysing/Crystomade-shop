@@ -32,6 +32,24 @@ export function resolveCheckoutCouponDiscount(orders: Order[]): number {
   return 0
 }
 
+export function resolveCheckoutActualPaidNtd(orders: Order[]): number | null {
+  for (const order of orders) {
+    const value = order.checkout_actual_paid_ntd
+    if (value != null && value >= 0) return Number(value)
+  }
+  return null
+}
+
+/** 贈點／經驗計算用金額：有實際收款則用實際收款，否則為付費商品列加總 */
+export function resolveOrderGroupPayableNtd(orders: Order[]): number {
+  const actual = resolveCheckoutActualPaidNtd(orders)
+  if (actual != null) return Math.max(0, Math.round(actual))
+  const paidOrders = orders.filter(isPaidProductOrder)
+  return Math.round(
+    paidOrders.reduce((sum, order) => sum + order.total_amount, 0)
+  )
+}
+
 export function detectShippingFee(
   paidProductTotal: number,
   pointsDiscountNtd: number,
