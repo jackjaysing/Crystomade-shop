@@ -26,6 +26,7 @@ import { DeleteOrderConfirmModal } from './DeleteOrderConfirmModal'
 import { ExportOrdersExcelButton } from './ExportOrdersExcelButton'
 import { OrderActualPaidEditor } from './OrderActualPaidEditor'
 import { OrderBraceletBuildSheet } from './OrderBraceletBuildSheet'
+import { OrderLineActualPaidEditor } from './OrderLineActualPaidEditor'
 import { OrderLineStudioPicker } from './OrderLineStudioPicker'
 import { OrderSoulCardQrPanel } from './OrderSoulCardQrPanel'
 import {
@@ -163,6 +164,11 @@ function OrderGroupProfitPanel({ group }: { group: OrderGroup }) {
           商品尚未填成本，淨利潤等於商品實收
         </p>
       )}
+      {profit.usedActualPaid && (
+        <p className="mt-1 text-[11px] text-emerald-300/70">
+          已依實際收款／品項實收計算利潤與分潤
+        </p>
+      )}
       {[...studioNetProfit].map(([studio, netProfit]) => (
         <p key={studio} className="mt-1 text-[11px] text-white/45">
           {getStudioLocationLabel(studio)} 分潤{' '}
@@ -173,6 +179,22 @@ function OrderGroupProfitPanel({ group }: { group: OrderGroup }) {
           %）
         </p>
       ))}
+      {profit.lines.length > 1 && (
+        <ul className="mt-2 space-y-0.5 border-t border-white/5 pt-2">
+          {profit.lines.map((line) => (
+            <li
+              key={`${line.productId}-${line.productName}`}
+              className="flex justify-between gap-3 text-[11px] text-white/40"
+            >
+              <span className="truncate">{line.productName}</span>
+              <span className="shrink-0">
+                實收 {formatAdminNtd(line.revenue)}
+                {line.studio ? ` · ${getStudioLocationLabel(line.studio)}` : ''}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
       <p
         className={`mt-1.5 text-sm ${
           profit.netProfitAfterShare >= 0 ? 'text-emerald-300' : 'text-red-300'
@@ -790,6 +812,13 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                         orderIds={item.orderIds}
                         value={item.orderStudioLocation}
                         productDefault={item.productStudioLocation}
+                        onSaved={() => void onUpdated({ silent: true })}
+                        onToast={setToastMessage}
+                      />
+                      <OrderLineActualPaidEditor
+                        group={group}
+                        item={item}
+                        disabled={group.status === 'cancelled'}
                         onSaved={() => void onUpdated({ silent: true })}
                         onToast={setToastMessage}
                       />

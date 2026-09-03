@@ -144,6 +144,8 @@ export interface Order {
   coupon_gift_note?: string | null
   /** 同一結帳批次實際收款（後台填寫；贈點依此計算） */
   checkout_actual_paid_ntd?: number | null
+  /** 此訂單列商品實收（不含運費；利潤／分潤用） */
+  line_actual_paid_ntd?: number | null
   /** 關聯查詢時帶入 */
   products?: (Pick<Product, 'name' | 'image_url'> & {
     category?: ProductCategory

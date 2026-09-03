@@ -177,7 +177,7 @@ export function computeRevenueStats(orders: Order[]): RevenueStats {
   for (const group of groups) {
     const createdAt = new Date(group.created_at)
     const monthKey = getOrderGroupMonthKey(group.created_at)
-    const amount = Number(group.totalAmount) || 0
+    const amount = Number(group.payableNtd) || Number(group.totalAmount) || 0
 
     if (countsAsPaidRevenue(group)) {
       totalRevenue += amount

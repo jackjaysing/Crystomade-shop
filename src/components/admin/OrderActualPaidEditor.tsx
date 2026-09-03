@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import { Banknote } from 'lucide-react'
 import { updateOrderGroupActualPaid } from '../../lib/api/orders'
+import { allocateActualPaidToOrderRows } from '../../lib/actualPaidAllocation'
 import type { OrderGroup } from '../../lib/groupOrders'
 
 interface OrderActualPaidEditorProps {
@@ -14,7 +15,7 @@ function formatNtd(amount: number): string {
   return `NT$ ${Math.round(amount).toLocaleString('zh-TW')}`
 }
 
-/** 後台：記錄買家實際付款（消費贈點依此計算） */
+/** 後台：記錄買家實際付款（消費贈點依此計算；並攤到各品項供利潤／分潤） */
 export function OrderActualPaidEditor({
   group,
   disabled,
@@ -52,11 +53,13 @@ export function OrderActualPaidEditor({
 
     setSaving(true)
     try {
-      await updateOrderGroupActualPaid(group.orderIds, parsed)
+      const allocations =
+        parsed != null ? allocateActualPaidToOrderRows(group, parsed) : undefined
+      await updateOrderGroupActualPaid(group.orderIds, parsed, allocations)
       onSaved()
       onToast(
         parsed != null
-          ? `已儲存實際收款 ${formatNtd(parsed)}`
+          ? `已儲存實際收款 ${formatNtd(parsed)}（已攤到各品項）`
           : '已清除實際收款'
       )
     } catch (err) {
@@ -80,12 +83,12 @@ export function OrderActualPaidEditor({
     >
       <label className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-emerald-200/90">
         <Banknote className="h-3.5 w-3.5" strokeWidth={1.5} />
-        實際收款
+        實際收款（整單）
       </label>
       <p className="mt-1 text-[11px] leading-relaxed text-white/45">
-        官網訂單金額為 {formatNtd(group.orderTotalNtd)}。若事後再折扣給買家，請填實際入帳金額；
-        消費贈點將依此計算（約每 NT$5 累 1 點，目前基準約 {expectedPoints} 點）。
-        建議在「標記已付款」前先填寫。
+        官網訂單金額為 {formatNtd(group.orderTotalNtd)}。填入買家真正付的錢後，會依比例攤到各商品（扣運費）供利潤／分潤；
+        贈點也依此計算（約每 NT$5 累 1 點，目前基準約 {expectedPoints} 點）。
+        若折扣只打在某一件，可到下方「品項實收」微調。
       </p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
         <input

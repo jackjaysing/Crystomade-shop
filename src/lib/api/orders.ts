@@ -441,23 +441,38 @@ export async function updateOrderGroupTrackingNumber(
 /** 後台：設定實際收款（並在已付款時同步調整消費贈點） */
 export async function updateOrderGroupActualPaid(
   orderIds: string[],
-  actualPaidNtd: number | null
+  actualPaidNtd: number | null,
+  lineAllocations?: Array<{ orderId: string; amount: number }>
 ): Promise<void> {
   if (orderIds.length === 0) return
 
-  const { error } = await supabase.rpc('admin_set_checkout_actual_paid_ntd', {
+  const payload: {
+    p_order_ids: string[]
+    p_actual_paid_ntd: number | null
+    p_line_allocations?: Array<{ order_id: string; amount: number }>
+  } = {
     p_order_ids: orderIds,
     p_actual_paid_ntd: actualPaidNtd,
-  })
+  }
+
+  if (actualPaidNtd != null && lineAllocations && lineAllocations.length > 0) {
+    payload.p_line_allocations = lineAllocations.map((row) => ({
+      order_id: row.orderId,
+      amount: row.amount,
+    }))
+  }
+
+  const { error } = await supabase.rpc('admin_set_checkout_actual_paid_ntd', payload)
 
   if (error) {
     const msg = formatErrorMessage(error)
     if (
       msg.includes('admin_set_checkout_actual_paid_ntd') ||
-      msg.includes('checkout_actual_paid_ntd')
+      msg.includes('checkout_actual_paid_ntd') ||
+      msg.includes('line_actual_paid_ntd')
     ) {
       throw new Error(
-        '資料庫尚未啟用實際收款欄位，請在 Supabase SQL Editor 執行 supabase/migration-add-checkout-actual-paid.sql'
+        '資料庫尚未啟用品項實收，請在 Supabase SQL Editor 依序執行 supabase/migration-add-checkout-actual-paid.sql 與 supabase/migration-add-line-actual-paid.sql'
       )
     }
     throw new Error(msg)
@@ -471,6 +486,43 @@ export async function updateOrderGroupActualPaid(
       actualPaidNtd != null && actualPaidNtd >= 0
         ? `${summary} NT$ ${Math.round(actualPaidNtd).toLocaleString('zh-TW')}`
         : `${summary}（已清除）`,
+  })
+}
+
+/** 後台：調整某一合併細項的商品實收 */
+export async function updateOrderLineActualPaid(
+  groupOrderIds: string[],
+  lineOrderIds: string[],
+  lineActualPaidNtd: number,
+  shippingFeeNtd: number
+): Promise<void> {
+  if (groupOrderIds.length === 0 || lineOrderIds.length === 0) return
+
+  const { error } = await supabase.rpc('admin_set_line_actual_paid_ntd', {
+    p_order_ids: groupOrderIds,
+    p_line_order_ids: lineOrderIds,
+    p_line_actual_paid_ntd: lineActualPaidNtd,
+    p_shipping_fee_ntd: shippingFeeNtd,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (
+      msg.includes('admin_set_line_actual_paid_ntd') ||
+      msg.includes('line_actual_paid_ntd')
+    ) {
+      throw new Error(
+        '資料庫尚未啟用品項實收，請在 Supabase SQL Editor 執行 supabase/migration-add-line-actual-paid.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  const summary = await orderGroupSummary(groupOrderIds, '調整品項實收：')
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'order',
+    summary: `${summary} NT$ ${Math.round(lineActualPaidNtd).toLocaleString('zh-TW')}`,
   })
 }
 

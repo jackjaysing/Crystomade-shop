@@ -39,6 +39,8 @@ export interface OrderLineItem {
   orderIds: string[]
   /** 單件成本（後台淨利潤用；商品未填成本為 0） */
   unitCost: number
+  /** 品項商品實收合計（不含運費；後台可填） */
+  lineActualPaidNtd: number | null
   /** 有效分潤歸屬（訂單覆寫優先，否則商品預設；供損益／分潤統計） */
   studioLocation: StudioLocation | null
   /** 訂單列上儲存的分潤歸屬；null 表示沿用商品預設（供後台選擇器） */
@@ -141,6 +143,10 @@ function buildLineItems(
         existing.unitCost,
         Math.max(0, Number(order.products?.cost ?? 0) || 0)
       )
+      if (order.line_actual_paid_ntd != null && order.line_actual_paid_ntd >= 0) {
+        existing.lineActualPaidNtd =
+          (existing.lineActualPaidNtd ?? 0) + Number(order.line_actual_paid_ntd)
+      }
       if (existing.orderStudioLocation !== orderStudioLocation) {
         existing.orderStudioLocation = null
       }
@@ -165,6 +171,10 @@ function buildLineItems(
       lineTotal: order.total_amount,
       orderIds: [order.id],
       unitCost: Math.max(0, Number(order.products?.cost ?? 0) || 0),
+      lineActualPaidNtd:
+        order.line_actual_paid_ntd != null && order.line_actual_paid_ntd >= 0
+          ? Number(order.line_actual_paid_ntd)
+          : null,
       studioLocation,
       orderStudioLocation,
       productStudioLocation,
@@ -190,6 +200,22 @@ function buildLineItems(
     const lineSubtotal = lineSubtotals.get(key)
     if (lineSubtotal != null && lineSubtotal > 0) {
       item.lineSubtotal = lineSubtotal
+    }
+
+    const related = orders.filter((order) => lineItemKeyFromOrder(order) === key)
+    const allHaveActual =
+      related.length > 0 &&
+      related.every(
+        (order) =>
+          order.line_actual_paid_ntd != null && order.line_actual_paid_ntd >= 0
+      )
+    if (allHaveActual) {
+      item.lineActualPaidNtd = related.reduce(
+        (sum, order) => sum + Number(order.line_actual_paid_ntd),
+        0
+      )
+    } else {
+      item.lineActualPaidNtd = null
     }
   }
 

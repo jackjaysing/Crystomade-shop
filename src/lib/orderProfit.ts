@@ -1,4 +1,5 @@
 import { calcStudioShareAmount } from '../constants/studioLocations'
+import { resolveLineMerchandiseRevenues } from './actualPaidAllocation'
 import type { OrderGroup } from './groupOrders'
 import type { StudioLocation } from './types'
 
@@ -25,20 +26,25 @@ export interface OrderGroupProfit {
   hasCost: boolean
   /** 毛利率（%） */
   marginPercent: number
+  /** 是否依實際收款／品項實收計算 */
+  usedActualPaid: boolean
   lines: OrderLineProfit[]
 }
 
 /**
- * 單筆結帳的淨利潤：商品實收（已扣點數／優惠券折抵，並剔除運費）減去商品成本。
- * 運費併在第一筆付費商品列內，這裡依各列金額比例扣回。
+ * 單筆結帳的淨利潤：商品實收減去商品成本。
+ * 優先使用品項實收／整單實際收款攤分；否則用訂單列金額並剔除運費。
  */
 export function computeOrderGroupProfit(group: OrderGroup): OrderGroupProfit {
-  const grossTotal = group.lineItems.reduce((sum, item) => sum + item.lineTotal, 0)
-  const shippingFee = group.shippingFeeNtd
+  const revenues = resolveLineMerchandiseRevenues(group)
+  const usedActualPaid =
+    (group.actualPaidNtd != null && group.actualPaidNtd >= 0) ||
+    group.lineItems.some(
+      (item) => item.lineActualPaidNtd != null && item.lineActualPaidNtd >= 0
+    )
 
-  const lines: OrderLineProfit[] = group.lineItems.map((item) => {
-    const ratio = grossTotal > 0 ? item.lineTotal / grossTotal : 0
-    const revenue = item.lineTotal - shippingFee * ratio
+  const lines: OrderLineProfit[] = group.lineItems.map((item, index) => {
+    const revenue = revenues[index] ?? 0
     const cost = item.unitCost * item.quantity
     return {
       productId: item.productId,
@@ -66,6 +72,7 @@ export function computeOrderGroupProfit(group: OrderGroup): OrderGroupProfit {
     netProfitAfterShare: netProfit - shareTotal,
     hasCost: cost > 0,
     marginPercent: revenue > 0 ? Math.round((netProfit / revenue) * 1000) / 10 : 0,
+    usedActualPaid,
     lines,
   }
 }

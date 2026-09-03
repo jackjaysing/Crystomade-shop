@@ -114,6 +114,8 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
       row.checkout_actual_paid_ntd != null
         ? Number(row.checkout_actual_paid_ntd)
         : null,
+    line_actual_paid_ntd:
+      row.line_actual_paid_ntd != null ? Number(row.line_actual_paid_ntd) : null,
     products: resolveOrderProduct(row),
   }
 }
