@@ -156,11 +156,11 @@
   @keyframes owl-letter-unfurl {
     0% {
       opacity: 0;
-      transform: scaleY(0.15) translateY(-24%);
+      transform: translateY(10px) scale(0.97);
     }
     100% {
       opacity: 1;
-      transform: scaleY(1) translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
 
@@ -191,13 +191,7 @@
   }
 
   .owl-letter-unfurl {
-    transform-origin: center top;
-    animation: owl-letter-unfurl 0.55s cubic-bezier(0.22, 0.9, 0.32, 1) both;
-    overflow: visible;
-  }
-
-  .owl-letter-unfurl .owl-parchment {
-    transform-origin: top center;
+    animation: owl-letter-unfurl 0.4s cubic-bezier(0.22, 0.9, 0.32, 1) both;
   }
 
   .owl-parchment {
