@@ -15,6 +15,7 @@ import { isRaffleResultSeen } from '../../lib/raffleResultSeen'
 import type { RaffleWithMeta } from '../../lib/types'
 import { FortuneConsultationFabSlot } from '../fortune-consultation/FortuneConsultationFloatingWidget'
 import { WishBoardFabSlot } from '../wish-board/WishBoardFloatingWidget'
+import { OwlMailFabSlot } from '../owl-mail/OwlMailFabSlot'
 import { RaffleActivityPanel } from './RaffleActivityPanel'
 import { RouletteWheelIcon } from './RouletteWheelIcon'
 
@@ -192,6 +193,8 @@ export function RaffleFloatingWidget() {
         <WishBoardFabSlot />
 
         <FortuneConsultationFabSlot />
+
+        <OwlMailFabSlot />
       </div>
 
       <RaffleActivityPanel

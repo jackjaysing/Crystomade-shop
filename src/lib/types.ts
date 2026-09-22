@@ -192,6 +192,34 @@ export interface AdminGuestCustomer {
   total_spent: number
 }
 
+/** 貓頭鷹信件（後台 → 會員） */
+export interface MemberOwlMessage {
+  id: string
+  batch_id: string
+  recipient_user_id: string
+  subject: string
+  body: string
+  sent_by_admin_name: string
+  is_broadcast: boolean
+  read_at: string | null
+  created_at: string
+}
+
+/** 後台：貓頭鷹信件寄送批次摘要 */
+export interface AdminOwlMessageBatch {
+  batch_id: string
+  subject: string
+  body: string
+  sent_by_admin_name: string
+  is_broadcast: boolean
+  recipient_count: number
+  read_count: number
+  /** 會員已從自己信件匣刪除的筆數（後台仍保留） */
+  member_deleted_count: number
+  created_at: string
+  sample_recipient_name: string | null
+}
+
 /** 點數變動紀錄 */
 export interface PointsHistoryEntry {
   id: string

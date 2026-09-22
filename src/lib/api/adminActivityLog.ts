@@ -23,6 +23,7 @@ export type AdminActivityEntityType =
   | 'raffle'
   | 'wish_message'
   | 'fortune_consultation'
+  | 'member_message'
   | 'admin_session'
 
 export interface AdminActivityLog {

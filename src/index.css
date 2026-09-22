@@ -79,6 +79,175 @@
   .raffle-fab-new-badge {
     animation: raffle-new-badge-pulse 1.2s ease-in-out infinite;
   }
+
+  /* —— 貓頭鷹信件：滿版飛入 —— */
+  @keyframes owl-arrival-overlay-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes owl-arrival-overlay-out {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes owl-arrival-fly-in {
+    0% {
+      opacity: 0.35;
+      transform: translate3d(0, 6vh, 0) scale(0.08);
+      filter: blur(1.5px);
+    }
+    55% {
+      opacity: 1;
+      transform: translate3d(0, -1vh, 0) scale(0.72);
+      filter: blur(0);
+    }
+    82% {
+      transform: translate3d(0, 0.5vh, 0) scale(1.04);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes owl-arrival-fly-away {
+    0% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(0, -8vh, 0) scale(1.35);
+      filter: blur(2px);
+    }
+  }
+
+  @keyframes owl-arrival-hover {
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-10px) scale(1.015);
+    }
+  }
+
+  @keyframes owl-arrival-caption-in {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes owl-letter-unfurl {
+    0% {
+      opacity: 0;
+      transform: scaleY(0.15) translateY(-24%);
+    }
+    100% {
+      opacity: 1;
+      transform: scaleY(1) translateY(0);
+    }
+  }
+
+  .owl-arrival-enter {
+    animation: owl-arrival-overlay-in 0.35s ease-out both;
+  }
+
+  .owl-arrival-enter .owl-arrival-stage {
+    animation: owl-arrival-fly-in 2.6s cubic-bezier(0.16, 0.84, 0.22, 1) both;
+  }
+
+  .owl-arrival-enter .owl-arrival-caption {
+    opacity: 0;
+    animation: owl-arrival-caption-in 0.55s ease-out 1.7s both;
+  }
+
+  .owl-arrival-hold .owl-arrival-stage {
+    animation: owl-arrival-hover 3.2s ease-in-out infinite;
+  }
+
+  .owl-arrival-exit {
+    animation: owl-arrival-overlay-out 0.7s ease-in both;
+    pointer-events: none;
+  }
+
+  .owl-arrival-exit .owl-arrival-stage {
+    animation: owl-arrival-fly-away 0.7s ease-in both;
+  }
+
+  .owl-letter-unfurl {
+    transform-origin: top center;
+    animation: owl-letter-unfurl 0.55s cubic-bezier(0.22, 0.9, 0.32, 1) both;
+  }
+
+  .owl-parchment {
+    background:
+      radial-gradient(ellipse at 18% 0%, rgba(255, 252, 240, 0.9), transparent 50%),
+      radial-gradient(ellipse at 85% 100%, rgba(180, 140, 90, 0.18), transparent 45%),
+      linear-gradient(168deg, #f6ebd4 0%, #ead4a8 48%, #dfc290 100%);
+    box-shadow:
+      0 24px 48px rgba(0, 0, 0, 0.45),
+      inset 0 0 0 1px rgba(139, 105, 69, 0.4),
+      inset 0 0 48px rgba(139, 105, 69, 0.14);
+  }
+
+  /* 真實信紙：橫線 + 左側紅邊距線 */
+  .owl-letter-sheet {
+    --owl-line: 1.85rem;
+    position: relative;
+    padding: 0.15rem 0.15rem 0.15rem 1.1rem;
+    background-image:
+      linear-gradient(
+        to bottom,
+        transparent calc(var(--owl-line) - 1px),
+        rgba(138, 107, 69, 0.28) calc(var(--owl-line) - 1px),
+        rgba(138, 107, 69, 0.28) var(--owl-line),
+        transparent var(--owl-line)
+      );
+    background-size: 100% var(--owl-line);
+    background-position: 0 0.05rem;
+    border-left: 2px solid rgba(176, 74, 58, 0.45);
+    box-shadow: inset 1px 0 0 rgba(176, 74, 58, 0.12);
+  }
+
+  .owl-letter-body {
+    margin: 0;
+    font-family: 'LXGW WenKai TC', 'Noto Serif TC', 'Microsoft JhengHei', serif;
+    font-size: 1.12rem;
+    font-weight: 400;
+    line-height: var(--owl-line);
+    color: #2c2418;
+    white-space: pre-wrap;
+    word-break: break-word;
+    letter-spacing: 0.04em;
+    /* 鋼筆落墨的輕微暈染 */
+    text-shadow: 0.3px 0.4px 0 rgba(44, 36, 24, 0.18);
+  }
+
+  .owl-letter-title {
+    font-family: 'LXGW WenKai TC', 'Noto Serif TC', 'Microsoft JhengHei', serif;
+    letter-spacing: 0.06em;
+    text-shadow: 0.3px 0.4px 0 rgba(44, 36, 24, 0.12);
+  }
+
+  .owl-mail-badge {
+    animation: raffle-new-badge-pulse 1.2s ease-in-out infinite;
+  }
 }
 
 @layer components {

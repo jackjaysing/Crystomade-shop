@@ -17,6 +17,7 @@ import { ProductListAdmin } from '../components/admin/ProductListAdmin'
 import { FortuneConsultationAdmin } from '../components/admin/FortuneConsultationAdmin'
 import { WishBoardAdmin } from '../components/admin/WishBoardAdmin'
 import { BraceletBeadAdmin } from '../components/admin/BraceletBeadAdmin'
+import { MemberMessageAdmin } from '../components/admin/MemberMessageAdmin'
 import { useOrders } from '../hooks/useOrders'
 import { useBanners } from '../hooks/useBanners'
 import { usePageViewStats } from '../hooks/usePageViewStats'
@@ -51,6 +52,7 @@ type AdminTab =
   | 'academy'
   | 'wish_board'
   | 'fortune_consultation'
+  | 'owl_mail'
   | 'analytics'
   | 'logs'
 
@@ -65,6 +67,7 @@ const ALL_ADMIN_TABS: { id: AdminTab; label: string; superOnly?: boolean }[] = [
   { id: 'academy', label: '晶研所' },
   { id: 'wish_board', label: '許願留言' },
   { id: 'fortune_consultation', label: '命理諮詢' },
+  { id: 'owl_mail', label: '貓頭鷹信件' },
   { id: 'analytics', label: '瀏覽統計' },
   { id: 'revenue', label: '收入統計', superOnly: true },
   { id: 'logs', label: '後台日誌', superOnly: true },
@@ -121,6 +124,7 @@ export function AdminPage() {
   const [customerReloadSignal, setCustomerReloadSignal] = useState(0)
   const [wishReloadSignal, setWishReloadSignal] = useState(0)
   const [fortuneReloadSignal, setFortuneReloadSignal] = useState(0)
+  const [mailToast, setMailToast] = useState<string | null>(null)
   const needsProductAnalytics = authed && activeTab === 'products'
   const needsPageAnalytics = authed && activeTab === 'analytics'
   const {
@@ -490,6 +494,19 @@ export function AdminPage() {
           </section>
         )}
 
+        {activeTab === 'owl_mail' && (
+          <section>
+            <h2 className="mb-1 text-lg tracking-wide text-white/80">貓頭鷹信件</h2>
+            <p className="mb-4 text-sm text-white/45">
+              寄文字給指定會員或全體會員；對方登入後可在左下角「信件」卷軸隨時重看。
+            </p>
+            <MemberMessageAdmin
+              enabled={authed}
+              onToast={(msg) => setMailToast(msg)}
+            />
+          </section>
+        )}
+
         {activeTab === 'analytics' && (
           <PageViewStats
             stats={pageViewStats}
@@ -523,6 +540,11 @@ export function AdminPage() {
       </div>
 
       <Toast message={alertToast} onDismiss={dismissToast} durationMs={4500} />
+      <Toast
+        message={mailToast}
+        onDismiss={() => setMailToast(null)}
+        durationMs={3500}
+      />
 
       <ScrollToTopFab ariaLabel="回到後台頂部" title="回到後台頂部" />
 
