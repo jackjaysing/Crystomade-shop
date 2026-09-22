@@ -191,8 +191,13 @@
   }
 
   .owl-letter-unfurl {
-    transform-origin: top center;
+    transform-origin: center top;
     animation: owl-letter-unfurl 0.55s cubic-bezier(0.22, 0.9, 0.32, 1) both;
+    overflow: visible;
+  }
+
+  .owl-letter-unfurl .owl-parchment {
+    transform-origin: top center;
   }
 
   .owl-parchment {
