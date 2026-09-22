@@ -140,29 +140,24 @@ $$;
 
 -- ------------------------------------------------------------
 -- 後台：寄送紀錄（依批次彙總）
--- 回傳欄位若曾變更，需先 DROP 所有 overload 再 CREATE
 -- ------------------------------------------------------------
-DO $$
+DO $drop$
 DECLARE
-  r RECORD;
+  sig text;
 BEGIN
-  FOR r IN
-    SELECT pg_get_function_identity_arguments(p.oid) AS args
+  FOR sig IN
+    SELECT p.oid::regprocedure::text
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public'
       AND p.proname = 'admin_list_member_message_batches'
   LOOP
-    EXECUTE format(
-      'DROP FUNCTION IF EXISTS public.admin_list_member_message_batches(%s)',
-      r.args
-    );
+    EXECUTE 'DROP FUNCTION IF EXISTS ' || sig || ' CASCADE';
   END LOOP;
-END $$;
+END
+$drop$;
 
-CREATE OR REPLACE FUNCTION admin_list_member_message_batches(
-  p_limit INTEGER DEFAULT 50
-)
+CREATE FUNCTION public.admin_list_member_message_batches(p_limit INTEGER DEFAULT 50)
 RETURNS TABLE (
   batch_id UUID,
   subject TEXT,
@@ -178,7 +173,7 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 BEGIN
   RETURN QUERY
   SELECT
@@ -204,19 +199,38 @@ BEGIN
   ORDER BY min(m.created_at) DESC
   LIMIT GREATEST(1, LEAST(COALESCE(p_limit, 50), 200));
 END;
-$$;
+$fn$;
 
 -- ------------------------------------------------------------
 -- 會員：未讀列表（含已讀近期，最多 20）
+-- SETOF member_messages 會隨欄位變動，需先 DROP
 -- ------------------------------------------------------------
-CREATE OR REPLACE FUNCTION member_list_owl_messages(
-  p_limit INTEGER DEFAULT 20
-)
+DO $drop$
+DECLARE
+  sig text;
+BEGIN
+  FOR sig IN
+    SELECT p.oid::regprocedure::text
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname IN (
+        'member_list_owl_messages',
+        'member_unread_owl_message_count',
+        'member_mark_owl_message_read'
+      )
+  LOOP
+    EXECUTE 'DROP FUNCTION IF EXISTS ' || sig || ' CASCADE';
+  END LOOP;
+END
+$drop$;
+
+CREATE FUNCTION public.member_list_owl_messages(p_limit INTEGER DEFAULT 20)
 RETURNS SETOF member_messages
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION '請先登入';
@@ -232,14 +246,14 @@ BEGIN
     created_at DESC
   LIMIT GREATEST(1, LEAST(COALESCE(p_limit, 20), 50));
 END;
-$$;
+$fn$;
 
-CREATE OR REPLACE FUNCTION member_unread_owl_message_count()
+CREATE FUNCTION public.member_unread_owl_message_count()
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 DECLARE
   v_count INTEGER;
 BEGIN
@@ -255,14 +269,14 @@ BEGIN
 
   RETURN COALESCE(v_count, 0);
 END;
-$$;
+$fn$;
 
-CREATE OR REPLACE FUNCTION member_mark_owl_message_read(p_message_id UUID)
+CREATE FUNCTION public.member_mark_owl_message_read(p_message_id UUID)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION '請先登入';
@@ -276,11 +290,11 @@ BEGIN
   WHERE id = p_message_id
     AND recipient_user_id = auth.uid();
 END;
-$$;
+$fn$;
 
-GRANT EXECUTE ON FUNCTION admin_send_member_message(UUID, TEXT, TEXT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_send_member_message_to_all(TEXT, TEXT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_list_member_message_batches(INTEGER) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION member_list_owl_messages(INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION member_unread_owl_message_count() TO authenticated;
-GRANT EXECUTE ON FUNCTION member_mark_owl_message_read(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_send_member_message(UUID, TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_send_member_message_to_all(TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_list_member_message_batches(INTEGER) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.member_list_owl_messages(INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.member_unread_owl_message_count() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.member_mark_owl_message_read(UUID) TO authenticated;

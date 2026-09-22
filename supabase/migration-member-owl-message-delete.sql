@@ -1,6 +1,6 @@
 -- ============================================================
--- 會員刪除信件 = 僅從會員端隱藏（軟刪除），後台寄送紀錄仍保留
--- 需已執行 migration-member-owl-messages.sql
+-- 貓頭鷹信件：軟刪除（會員端隱藏）— 可重複執行
+-- 用 oid 強制 DROP，避免 42P13 cannot change return type
 -- ============================================================
 
 ALTER TABLE member_messages
@@ -13,15 +13,13 @@ CREATE INDEX IF NOT EXISTS idx_member_messages_recipient_visible
   ON member_messages (recipient_user_id, created_at DESC)
   WHERE member_deleted_at IS NULL;
 
--- 強制刪除同名函式（含舊回傳型別），避免 ERROR 42P13
-DO $$
+-- 依 oid 強制刪除（比照 DROP FUNCTION name(args) 更可靠）
+DO $drop$
 DECLARE
-  r RECORD;
+  sig text;
 BEGIN
-  FOR r IN
-    SELECT n.nspname AS schema_name,
-           p.proname AS func_name,
-           pg_get_function_identity_arguments(p.oid) AS args
+  FOR sig IN
+    SELECT p.oid::regprocedure::text
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public'
@@ -32,22 +30,17 @@ BEGIN
         'member_delete_owl_message'
       )
   LOOP
-    EXECUTE format(
-      'DROP FUNCTION IF EXISTS %I.%I(%s)',
-      r.schema_name,
-      r.func_name,
-      r.args
-    );
+    EXECUTE 'DROP FUNCTION IF EXISTS ' || sig;
   END LOOP;
-END $$;
+END
+$drop$;
 
--- 會員：軟刪除（僅標記，不刪資料列）
-CREATE FUNCTION member_delete_owl_message(p_message_id UUID)
+CREATE FUNCTION public.member_delete_owl_message(p_message_id UUID)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 DECLARE
   v_updated INTEGER;
 BEGIN
@@ -69,17 +62,14 @@ BEGIN
     RAISE EXCEPTION '找不到此信件，或已從信件匣移除';
   END IF;
 END;
-$$;
+$fn$;
 
--- 會員列表：排除自己已刪除的
-CREATE FUNCTION member_list_owl_messages(
-  p_limit INTEGER DEFAULT 20
-)
+CREATE FUNCTION public.member_list_owl_messages(p_limit INTEGER DEFAULT 20)
 RETURNS SETOF member_messages
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION '請先登入';
@@ -95,14 +85,14 @@ BEGIN
     created_at DESC
   LIMIT GREATEST(1, LEAST(COALESCE(p_limit, 20), 50));
 END;
-$$;
+$fn$;
 
-CREATE FUNCTION member_unread_owl_message_count()
+CREATE FUNCTION public.member_unread_owl_message_count()
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 DECLARE
   v_count INTEGER;
 BEGIN
@@ -118,12 +108,9 @@ BEGIN
 
   RETURN COALESCE(v_count, 0);
 END;
-$$;
+$fn$;
 
--- 後台批次摘要：含「會員已刪除」筆數
-CREATE FUNCTION admin_list_member_message_batches(
-  p_limit INTEGER DEFAULT 50
-)
+CREATE FUNCTION public.admin_list_member_message_batches(p_limit INTEGER DEFAULT 50)
 RETURNS TABLE (
   batch_id UUID,
   subject TEXT,
@@ -139,7 +126,7 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 BEGIN
   RETURN QUERY
   SELECT
@@ -165,9 +152,9 @@ BEGIN
   ORDER BY min(m.created_at) DESC
   LIMIT GREATEST(1, LEAST(COALESCE(p_limit, 50), 200));
 END;
-$$;
+$fn$;
 
-GRANT EXECUTE ON FUNCTION member_delete_owl_message(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION member_list_owl_messages(INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION member_unread_owl_message_count() TO authenticated;
-GRANT EXECUTE ON FUNCTION admin_list_member_message_batches(INTEGER) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.member_delete_owl_message(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.member_list_owl_messages(INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.member_unread_owl_message_count() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_list_member_message_batches(INTEGER) TO anon, authenticated;
