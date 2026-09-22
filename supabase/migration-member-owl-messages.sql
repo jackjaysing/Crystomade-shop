@@ -12,8 +12,13 @@ CREATE TABLE IF NOT EXISTS member_messages (
   sent_by_admin_name TEXT NOT NULL DEFAULT '',
   is_broadcast BOOLEAN NOT NULL DEFAULT false,
   read_at TIMESTAMPTZ,
+  member_deleted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- 相容舊庫：若先前已建表但沒有此欄位
+ALTER TABLE member_messages
+  ADD COLUMN IF NOT EXISTS member_deleted_at TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_member_messages_recipient_created
   ON member_messages (recipient_user_id, created_at DESC);
@@ -25,7 +30,13 @@ CREATE INDEX IF NOT EXISTS idx_member_messages_recipient_unread
 CREATE INDEX IF NOT EXISTS idx_member_messages_batch
   ON member_messages (batch_id, created_at DESC);
 
+CREATE INDEX IF NOT EXISTS idx_member_messages_recipient_visible
+  ON member_messages (recipient_user_id, created_at DESC)
+  WHERE member_deleted_at IS NULL;
+
 COMMENT ON TABLE member_messages IS '後台寄給會員的貓頭鷹信件（前台動畫＋開信）';
+COMMENT ON COLUMN member_messages.member_deleted_at IS
+  '會員從信件匣刪除的時間；非空表示會員端不再顯示，後台仍保留';
 
 ALTER TABLE member_messages ENABLE ROW LEVEL SECURITY;
 
@@ -129,7 +140,10 @@ $$;
 
 -- ------------------------------------------------------------
 -- 後台：寄送紀錄（依批次彙總）
+-- 回傳欄位若曾變更，需先 DROP 再 CREATE
 -- ------------------------------------------------------------
+DROP FUNCTION IF EXISTS admin_list_member_message_batches(INTEGER);
+
 CREATE OR REPLACE FUNCTION admin_list_member_message_batches(
   p_limit INTEGER DEFAULT 50
 )
@@ -141,6 +155,7 @@ RETURNS TABLE (
   is_broadcast BOOLEAN,
   recipient_count INTEGER,
   read_count INTEGER,
+  member_deleted_count INTEGER,
   created_at TIMESTAMPTZ,
   sample_recipient_name TEXT
 )
@@ -158,6 +173,7 @@ BEGIN
     bool_or(m.is_broadcast) AS is_broadcast,
     count(*)::INTEGER AS recipient_count,
     count(*) FILTER (WHERE m.read_at IS NOT NULL)::INTEGER AS read_count,
+    count(*) FILTER (WHERE m.member_deleted_at IS NOT NULL)::INTEGER AS member_deleted_count,
     min(m.created_at) AS created_at,
     (
       SELECT mp.real_name
@@ -194,6 +210,7 @@ BEGIN
   SELECT *
   FROM member_messages
   WHERE recipient_user_id = auth.uid()
+    AND member_deleted_at IS NULL
   ORDER BY
     (read_at IS NULL) DESC,
     created_at DESC
@@ -217,7 +234,8 @@ BEGIN
   SELECT count(*)::INTEGER INTO v_count
   FROM member_messages
   WHERE recipient_user_id = auth.uid()
-    AND read_at IS NULL;
+    AND read_at IS NULL
+    AND member_deleted_at IS NULL;
 
   RETURN COALESCE(v_count, 0);
 END;
