@@ -72,7 +72,7 @@ export async function adminSendOwlMessageToMember(input: {
   void recordAdminActivity({
     action: 'create',
     entityType: 'member_message',
-    entityId: data != null ? String(data) : null,
+    entityId: data != null ? String(data) : undefined,
     entityLabel: input.recipientLabel ?? input.userId,
     summary: `貓頭鷹信件 → ${input.recipientLabel ?? '會員'}：${input.subject.trim() || '（無主旨）'}`,
   })
@@ -121,8 +121,8 @@ export async function adminListOwlMessageBatches(
     throw migrationHint(msg) ?? new Error(msg)
   }
 
-  return (data ?? []).map((row) =>
-    normalizeBatch(row as Record<string, unknown>)
+  return ((data ?? []) as Record<string, unknown>[]).map((row) =>
+    normalizeBatch(row)
   )
 }
 
@@ -139,8 +139,8 @@ export async function fetchMemberOwlMessages(
     throw migrationHint(msg) ?? new Error(msg)
   }
 
-  return (data ?? []).map((row) =>
-    normalizeMessage(row as Record<string, unknown>)
+  return ((data ?? []) as Record<string, unknown>[]).map((row) =>
+    normalizeMessage(row)
   )
 }
 

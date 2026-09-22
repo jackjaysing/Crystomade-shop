@@ -263,7 +263,7 @@ export function OwlMailFabSlot() {
 
       {showArrival && (
         <OwlCourierArrival
-          phase={flyPhase === 'off' ? 'idle' : flyPhase}
+          phase={flyPhase}
           unreadCount={unreadCount}
           onOpen={openInbox}
           onDismiss={dismissArrival}
