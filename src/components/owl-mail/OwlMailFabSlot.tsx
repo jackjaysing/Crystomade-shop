@@ -284,6 +284,7 @@ export function OwlMailFabSlot() {
           message={openMessage}
           onClose={() => {
             setOpenId(null)
+            setInboxOpen(true)
             void reload()
           }}
           onBackToInbox={() => {
