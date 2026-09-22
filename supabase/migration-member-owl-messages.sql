@@ -140,9 +140,25 @@ $$;
 
 -- ------------------------------------------------------------
 -- 後台：寄送紀錄（依批次彙總）
--- 回傳欄位若曾變更，需先 DROP 再 CREATE
+-- 回傳欄位若曾變更，需先 DROP 所有 overload 再 CREATE
 -- ------------------------------------------------------------
-DROP FUNCTION IF EXISTS admin_list_member_message_batches(INTEGER);
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT pg_get_function_identity_arguments(p.oid) AS args
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = 'admin_list_member_message_batches'
+  LOOP
+    EXECUTE format(
+      'DROP FUNCTION IF EXISTS public.admin_list_member_message_batches(%s)',
+      r.args
+    );
+  END LOOP;
+END $$;
 
 CREATE OR REPLACE FUNCTION admin_list_member_message_batches(
   p_limit INTEGER DEFAULT 50

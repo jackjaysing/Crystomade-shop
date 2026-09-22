@@ -1,7 +1,6 @@
 -- ============================================================
 -- 會員刪除信件 = 僅從會員端隱藏（軟刪除），後台寄送紀錄仍保留
 -- 需已執行 migration-member-owl-messages.sql
--- （可覆蓋先前「硬刪除」版 member_delete_owl_message）
 -- ============================================================
 
 ALTER TABLE member_messages
@@ -14,8 +13,36 @@ CREATE INDEX IF NOT EXISTS idx_member_messages_recipient_visible
   ON member_messages (recipient_user_id, created_at DESC)
   WHERE member_deleted_at IS NULL;
 
+-- 強制刪除同名函式（含舊回傳型別），避免 ERROR 42P13
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT n.nspname AS schema_name,
+           p.proname AS func_name,
+           pg_get_function_identity_arguments(p.oid) AS args
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname IN (
+        'admin_list_member_message_batches',
+        'member_list_owl_messages',
+        'member_unread_owl_message_count',
+        'member_delete_owl_message'
+      )
+  LOOP
+    EXECUTE format(
+      'DROP FUNCTION IF EXISTS %I.%I(%s)',
+      r.schema_name,
+      r.func_name,
+      r.args
+    );
+  END LOOP;
+END $$;
+
 -- 會員：軟刪除（僅標記，不刪資料列）
-CREATE OR REPLACE FUNCTION member_delete_owl_message(p_message_id UUID)
+CREATE FUNCTION member_delete_owl_message(p_message_id UUID)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -45,7 +72,7 @@ END;
 $$;
 
 -- 會員列表：排除自己已刪除的
-CREATE OR REPLACE FUNCTION member_list_owl_messages(
+CREATE FUNCTION member_list_owl_messages(
   p_limit INTEGER DEFAULT 20
 )
 RETURNS SETOF member_messages
@@ -70,7 +97,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION member_unread_owl_message_count()
+CREATE FUNCTION member_unread_owl_message_count()
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -93,11 +120,8 @@ BEGIN
 END;
 $$;
 
--- 後台批次摘要：含「會員已刪除」筆數（資料仍在）
--- 回傳欄位有變，需先 DROP 再 CREATE
-DROP FUNCTION IF EXISTS admin_list_member_message_batches(INTEGER);
-
-CREATE OR REPLACE FUNCTION admin_list_member_message_batches(
+-- 後台批次摘要：含「會員已刪除」筆數
+CREATE FUNCTION admin_list_member_message_batches(
   p_limit INTEGER DEFAULT 50
 )
 RETURNS TABLE (
