@@ -17,10 +17,17 @@ import {
   RAFFLE_GIFT_REQUIRES_BASE_MESSAGE,
 } from '../lib/cartCheckoutRules'
 import { CVS_BRANDS } from '../constants/cvs'
-import { FREE_SHIPPING_THRESHOLD } from '../constants/shipping'
+import {
+  COURIER_CVS_BRAND,
+  COURIER_FREE_SHIPPING_THRESHOLD,
+} from '../constants/shipping'
 import { CheckoutMagicianShipping } from '../components/checkout/CheckoutMagicianShipping'
 import { fetchMemberMagicianShippingQuota } from '../lib/api/grimoireMagicianShipping'
-import { calcProductSubtotal } from '../lib/cartShipping'
+import {
+  calcProductSubtotal,
+  cartRequiresCourier,
+  getFreeShippingThresholdForCart,
+} from '../lib/cartShipping'
 import {
   calcShippingFeeWithMagicianPerk,
   canOfferMagicianShipping,
@@ -148,13 +155,39 @@ export function CheckoutPage() {
       }),
     [checkoutItems, magicianQuota?.remaining, magicianShippingApplied]
   )
+  const requiresCourier = useMemo(
+    () => cartRequiresCourier(checkoutItems),
+    [checkoutItems]
+  )
   const productSubtotalForShipping = useMemo(
     () => calcProductSubtotal(checkoutItems),
     [checkoutItems]
   )
+  const freeShippingThreshold = useMemo(
+    () => getFreeShippingThresholdForCart(checkoutItems),
+    [checkoutItems]
+  )
   const freeShippingByThreshold =
     productSubtotalForShipping > 0 &&
-    productSubtotalForShipping >= FREE_SHIPPING_THRESHOLD
+    productSubtotalForShipping >= freeShippingThreshold
+
+  useEffect(() => {
+    if (!requiresCourier) return
+    setForm((prev) =>
+      prev.cvs_brand === COURIER_CVS_BRAND
+        ? prev
+        : { ...prev, cvs_brand: COURIER_CVS_BRAND, cvs_store: '' }
+    )
+  }, [requiresCourier])
+
+  useEffect(() => {
+    if (requiresCourier) return
+    setForm((prev) =>
+      prev.cvs_brand === COURIER_CVS_BRAND
+        ? { ...prev, cvs_brand: '7-11', cvs_store: '' }
+        : prev
+    )
+  }, [requiresCourier])
 
   if (items.length === 0 && !showSuccess) {
     return <Navigate to="/products" replace />
@@ -225,7 +258,7 @@ export function CheckoutPage() {
       return
     }
 
-    const validationError = validateOrderForm(form)
+    const validationError = validateOrderForm(form, { requiresCourier })
     if (validationError) {
       setMessage({ type: 'err', text: validationError })
       return
@@ -251,6 +284,19 @@ export function CheckoutPage() {
         throw new Error('部分商品剛被搶先收藏，已無可結帳品項，請返回購物車確認。')
       }
 
+      const latestRequiresCourier = cartRequiresCourier(latest.checkoutItems)
+      const submitForm = latestRequiresCourier
+        ? { ...form, cvs_brand: COURIER_CVS_BRAND }
+        : form.cvs_brand === COURIER_CVS_BRAND
+          ? { ...form, cvs_brand: '7-11' as const }
+          : form
+      const submitValidation = validateOrderForm(submitForm, {
+        requiresCourier: latestRequiresCourier,
+      })
+      if (submitValidation) {
+        throw new Error(submitValidation)
+      }
+
       const submitOffered = canOfferMagicianShipping(latest.checkoutItems, magicianQuota)
       const submitApplied =
         submitOffered &&
@@ -263,7 +309,7 @@ export function CheckoutPage() {
 
       const createdOrders = await createOrdersFromCart(
         latest.checkoutItems,
-        form,
+        submitForm,
         latestShippingFee,
         user.id,
         clampedPointsToUse,
@@ -456,10 +502,11 @@ export function CheckoutPage() {
               <span>
                 運費
                 {productSubtotalForShipping > 0 &&
-                  productSubtotalForShipping < FREE_SHIPPING_THRESHOLD &&
+                  productSubtotalForShipping < freeShippingThreshold &&
                   !magicianShippingApplied && (
                   <span className="ml-1 text-xs text-white/30">
-                    （未滿 {FREE_SHIPPING_THRESHOLD} 元）
+                    （{requiresCourier ? '宅配' : '超商'}未滿{' '}
+                    {freeShippingThreshold.toLocaleString()} 元）
                   </span>
                 )}
               </span>
@@ -547,12 +594,24 @@ export function CheckoutPage() {
           <CheckoutMemberSection />
 
           <GlassPanel className="p-6 sm:p-8">
-            <p className="text-xs tracking-widest text-white/40">填寫取件資訊（超商宅配）</p>
+            <p className="text-xs tracking-widest text-white/40">
+              {requiresCourier ? '填寫宅配收件資訊' : '填寫取件資訊（超商）'}
+            </p>
+
+            {requiresCourier && (
+              <p className="mt-3 rounded-lg border border-amber-glow/30 bg-amber-glow/10 px-3 py-2.5 text-sm leading-relaxed text-amber-glow/95">
+                購買商品超過超商規格，須走宅配。請提供收件人姓名、電話及收件地址。
+                <span className="mt-1 block text-xs text-white/45">
+                  宅配運費 NT$120，滿 NT$
+                  {COURIER_FREE_SHIPPING_THRESHOLD.toLocaleString()} 免運
+                </span>
+              </p>
+            )}
 
             <div className="mt-4 space-y-4">
               <input
                 required
-                placeholder="姓名 *"
+                placeholder={requiresCourier ? '收件人姓名 *' : '姓名 *'}
                 value={form.buyer_name}
                 onChange={(e) => setForm({ ...form, buyer_name: e.target.value })}
                 className="input-field"
@@ -568,47 +627,71 @@ export function CheckoutPage() {
               <input
                 required
                 type="tel"
-                placeholder="聯絡電話 *"
+                placeholder={requiresCourier ? '收件人電話 *' : '聯絡電話 *'}
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="input-field"
               />
 
-              <div>
-                <p className="mb-2 text-xs text-white/50">收件超商 *</p>
-                <div className="flex flex-wrap gap-2">
-                  {CVS_BRANDS.map((brand) => (
-                    <label
-                      key={brand.id}
-                      className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
-                        form.cvs_brand === brand.id
-                          ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
-                          : 'border-white/10 text-white/50'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="cvs_brand"
-                        className="sr-only"
-                        checked={form.cvs_brand === brand.id}
-                        onChange={() => setForm({ ...form, cvs_brand: brand.id })}
-                      />
-                      {brand.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
+              {requiresCourier ? (
+                <>
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="收件地址（含縣市、區、路街巷弄號樓）*"
+                    value={form.cvs_store}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        cvs_brand: COURIER_CVS_BRAND,
+                        cvs_store: e.target.value,
+                      })
+                    }
+                    className="input-field min-h-[96px] resize-y"
+                  />
+                  <p className="text-xs text-white/35">
+                    例：台北市大安區信義路四段 1 號 3 樓
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="mb-2 text-xs text-white/50">收件超商 *</p>
+                    <div className="flex flex-wrap gap-2">
+                      {CVS_BRANDS.map((brand) => (
+                        <button
+                          key={brand.id}
+                          type="button"
+                          onClick={() =>
+                            setForm({ ...form, cvs_brand: brand.id })
+                          }
+                          aria-pressed={form.cvs_brand === brand.id}
+                          className={`rounded-full border px-4 py-2 text-sm transition ${
+                            form.cvs_brand === brand.id
+                              ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
+                              : 'border-white/10 text-white/50'
+                          }`}
+                        >
+                          {brand.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              <input
-                required
-                placeholder="收件門市（店名或店號）*"
-                value={form.cvs_store}
-                onChange={(e) => setForm({ ...form, cvs_store: e.target.value })}
-                className="input-field"
-              />
-              <p className="text-xs text-white/35">
-                例：7-11 信義門市、全家 南京復興店，或超商地圖上的店號
-              </p>
+                  <input
+                    required
+                    placeholder="收件門市（店名或店號）*"
+                    value={form.cvs_store}
+                    onChange={(e) =>
+                      setForm({ ...form, cvs_store: e.target.value })
+                    }
+                    className="input-field"
+                  />
+                  <p className="text-xs text-white/35">
+                    例：7-11 信義門市、全家 南京復興店，或超商地圖上的店號
+                  </p>
+                </>
+              )}
             </div>
 
             {message && (

@@ -72,6 +72,9 @@ function formatOrderCreatedAt(iso: string): string {
 }
 
 function formatCvsPickup(group: OrderGroup): string {
+  if (group.cvs_brand === '宅配') {
+    return `宅配 · ${group.cvs_store}`.trim()
+  }
   return `${group.cvs_brand} ${group.cvs_store}`.trim()
 }
 
@@ -178,7 +181,7 @@ export async function downloadOrdersExcel(groups: OrderGroup[]): Promise<void> {
     { header: '下單時間', key: 'createdAt', width: 20 },
     { header: '顧客姓名', key: 'buyerName', width: 12 },
     { header: '聯絡電話', key: 'phone', width: 14 },
-    { header: '收件門市', key: 'cvsStore', width: 22 },
+    { header: '收件門市／地址', key: 'cvsStore', width: 28 },
     { header: LINE_ITEM_HEADER, key: 'lineItem', width: 20 },
     { header: ITEM_COUNT_HEADER, key: 'itemCount', width: 14 },
     { header: '應付總額', key: 'totalAmount', width: 12 },

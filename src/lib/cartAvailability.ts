@@ -38,13 +38,27 @@ export function resolveCartItems(
     }
 
     const product = productsById.get(item.productId)
-    const currentStock =
-      product && !isProductSoldOut(product) ? product.stock : 0
+    const variant =
+      item.variantId && product
+        ? product.variants.find((entry) => entry.id === item.variantId)
+        : null
+    const currentStock = variant
+      ? Math.max(0, variant.stock)
+      : product && !isProductSoldOut(product)
+        ? product.stock
+        : 0
     const checkoutQuantity = Math.min(item.quantity, currentStock)
     const snatchedQuantity = item.quantity - checkoutQuantity
 
     return {
-      item,
+      item: {
+        ...item,
+        requiresCourier: Boolean(
+          variant?.requires_courier ??
+            product?.requires_courier ??
+            item.requiresCourier
+        ),
+      },
       currentStock,
       checkoutQuantity,
       isFullySnatched: checkoutQuantity === 0,

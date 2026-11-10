@@ -32,6 +32,7 @@ export function normalizeProductVariant(
     price: Number.isFinite(price) ? price : 0,
     stock: Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0,
     sort_order: Number(row.sort_order ?? 0) || 0,
+    requires_courier: Boolean(row.requires_courier),
     created_at: String(row.created_at ?? ''),
   }
 }
@@ -109,6 +110,7 @@ export function normalizeProduct(row: Record<string, unknown>): Product {
     deleted_at: row.deleted_at != null ? String(row.deleted_at) : null,
     is_hot: Boolean(row.is_hot),
     in_campaign: Boolean(row.in_campaign),
+    requires_courier: Boolean(row.requires_courier),
     is_quick_add: Boolean(row.is_quick_add),
     is_studio_available: Boolean(row.is_studio_available),
     is_private_custom: Boolean(row.is_private_custom),

@@ -46,7 +46,9 @@ function resolveOrderProduct(
 export function normalizeOrder(row: Record<string, unknown>): Order {
   const brand = String(row.cvs_brand ?? '')
   const cvsBrand =
-    brand === '7-11' || brand === '全家' ? brand : ('7-11' as Order['cvs_brand'])
+    brand === '7-11' || brand === '全家' || brand === '宅配'
+      ? brand
+      : ('7-11' as Order['cvs_brand'])
 
   return {
     id: String(row.id ?? ''),
@@ -121,9 +123,16 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
 }
 
 /** 表單驗證 */
-export function validateOrderForm(form: OrderFormData): string | null {
-  if (!form.buyer_name.trim()) return '請填寫姓名'
+export function validateOrderForm(
+  form: OrderFormData,
+  options?: { requiresCourier?: boolean }
+): string | null {
+  if (!form.buyer_name.trim()) return '請填寫收件人姓名'
   if (!form.phone.trim()) return '請填寫聯絡電話'
+  if (options?.requiresCourier || form.cvs_brand === '宅配') {
+    if (!form.cvs_store.trim()) return '請填寫收件地址'
+    return null
+  }
   if (!form.cvs_brand) return '請選擇收件超商'
   if (!form.cvs_store.trim()) return '請填寫收件門市'
   return null

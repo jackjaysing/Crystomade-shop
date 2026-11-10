@@ -1,6 +1,9 @@
 import type { CartItem } from './types'
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from '../constants/shipping'
-import { calcProductSubtotal, calcShippingFeeForCart } from './cartShipping'
+import {
+  calcProductSubtotal,
+  calcShippingFeeForCart,
+  getFreeShippingThresholdForCart,
+} from './cartShipping'
 
 export interface MagicianShippingQuota {
   eligible: boolean
@@ -41,8 +44,9 @@ export function canOfferMagicianShipping(
 ): boolean {
   if (!quota?.eligible || quota.remaining <= 0) return false
   const subtotal = calcProductSubtotal(items)
-  if (subtotal <= 0 || subtotal >= FREE_SHIPPING_THRESHOLD) return false
-  return baseShippingFeeForCart(items) === SHIPPING_FEE
+  const threshold = getFreeShippingThresholdForCart(items)
+  if (subtotal <= 0 || subtotal >= threshold) return false
+  return baseShippingFeeForCart(items) > 0
 }
 
 export function magicianShippingPeriodLabel(periodKey: string | null): string {

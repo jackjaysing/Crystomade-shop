@@ -728,8 +728,12 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                         {group.phone}
                       </p>
                       <p className="text-sm text-white/90">
-                        <span className="text-white/50">超商 · </span>
-                        {group.cvs_brand} · {group.cvs_store}
+                        <span className="text-white/50">
+                          {group.cvs_brand === '宅配' ? '宅配 · ' : '超商 · '}
+                        </span>
+                        {group.cvs_brand === '宅配'
+                          ? group.cvs_store
+                          : `${group.cvs_brand} · ${group.cvs_store}`}
                       </p>
                       {group.line_name?.trim() && (
                         <p className="text-sm text-white/90">

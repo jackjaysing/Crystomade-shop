@@ -45,6 +45,7 @@ export async function syncProductVariants(
       price: Math.max(0, Number(v.price) || 0),
       stock: Math.max(0, Math.floor(Number(v.stock) || 0)),
       sort_order: index,
+      requires_courier: Boolean(v.requires_courier),
     }))
     .filter((v) => v.name.length > 0)
 
@@ -89,10 +90,28 @@ export async function syncProductVariants(
           price: variant.price,
           stock: variant.stock,
           sort_order: variant.sort_order,
+          requires_courier: variant.requires_courier,
         })
         .eq('id', variant.id)
         .eq('product_id', productId)
-      if (error) throw new Error(formatErrorMessage(error))
+      if (error) {
+        const msg = formatErrorMessage(error)
+        if (/requires_courier|42703|column/i.test(msg)) {
+          const { error: retryError } = await supabase
+            .from('product_variants')
+            .update({
+              name: variant.name,
+              price: variant.price,
+              stock: variant.stock,
+              sort_order: variant.sort_order,
+            })
+            .eq('id', variant.id)
+            .eq('product_id', productId)
+          if (retryError) throw new Error(formatErrorMessage(retryError))
+        } else {
+          throw new Error(msg)
+        }
+      }
     } else {
       const { error } = await supabase.from('product_variants').insert({
         product_id: productId,
@@ -100,8 +119,25 @@ export async function syncProductVariants(
         price: variant.price,
         stock: variant.stock,
         sort_order: variant.sort_order,
+        requires_courier: variant.requires_courier,
       })
-      if (error) throw new Error(formatErrorMessage(error))
+      if (error) {
+        const msg = formatErrorMessage(error)
+        if (/requires_courier|42703|column/i.test(msg)) {
+          const { error: retryError } = await supabase
+            .from('product_variants')
+            .insert({
+              product_id: productId,
+              name: variant.name,
+              price: variant.price,
+              stock: variant.stock,
+              sort_order: variant.sort_order,
+            })
+          if (retryError) throw new Error(formatErrorMessage(retryError))
+        } else {
+          throw new Error(msg)
+        }
+      }
     }
   }
 
@@ -152,7 +188,7 @@ const PRODUCTS_CACHE_MS = 60_000
 let storefrontProductsCache: { data: Product[]; at: number } | null = null
 
 function isMissingOptionalProductColumn(message: string): boolean {
-  return /is_studio_available|is_private_custom|studio_location|in_campaign|42703|column/i.test(
+  return /is_studio_available|is_private_custom|studio_location|in_campaign|requires_courier|42703|column/i.test(
     message
   )
 }
@@ -414,6 +450,7 @@ export async function createProduct(
     status: 'available' as const,
     is_hot: form.is_hot,
     in_campaign: form.in_campaign,
+    requires_courier: form.requires_courier,
     is_quick_add: form.is_quick_add,
     is_studio_available: form.is_studio_available,
     is_private_custom: form.is_private_custom,
@@ -435,6 +472,7 @@ export async function createProduct(
         is_private_custom: _omitPrivate,
         studio_location: _omitStudioLocation,
         in_campaign: _omitCampaign,
+        requires_courier: _omitCourier,
         ...fallbackPayload
       } = payload
       const retry = await supabase
@@ -530,6 +568,7 @@ export async function updateProduct(
     status,
     is_hot: form.is_hot,
     in_campaign: form.in_campaign,
+    requires_courier: form.requires_courier,
     is_quick_add: form.is_quick_add,
     is_studio_available: form.is_studio_available,
     is_private_custom: form.is_private_custom,
@@ -551,6 +590,7 @@ export async function updateProduct(
         is_private_custom: _omitPrivate,
         studio_location: _omitStudioLocation,
         in_campaign: _omitCampaign,
+        requires_courier: _omitCourier,
         ...fallbackPayload
       } = payload
       const retry = await supabase

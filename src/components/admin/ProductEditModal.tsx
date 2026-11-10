@@ -58,9 +58,11 @@ function toEditForm(product: Product): ProductEditData {
       price: v.price,
       stock: v.stock,
       sort_order: v.sort_order,
+      requires_courier: v.requires_courier,
     })),
     is_hot: product.is_hot,
     in_campaign: product.in_campaign,
+    requires_courier: product.requires_courier,
     is_quick_add: product.is_quick_add,
     is_studio_available: product.is_studio_available,
     is_private_custom: product.is_private_custom,
@@ -386,6 +388,18 @@ export function ProductEditModal({
               className="rounded border-white/20 bg-void"
             />
             顯示於活動（前台第一區「活動」專區）
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={form.requires_courier}
+              onChange={(e) =>
+                setForm({ ...form, requires_courier: e.target.checked })
+              }
+              className="rounded border-white/20 bg-void"
+            />
+            須走宅配（無規格時套用；有規格請在各規格列勾選）
           </label>
 
           <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">

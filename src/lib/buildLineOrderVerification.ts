@@ -11,8 +11,11 @@ export interface LineOrderVerificationOptions {
   bankTransferInfo?: string
 }
 
-/** 超商收件一行描述 */
+/** 超商／宅配收件一行描述 */
 export function formatCvsPickupLine(group: OrderGroup): string {
+  if (group.cvs_brand === '宅配') {
+    return `宅配 · ${group.cvs_store}`.trim()
+  }
   return `${group.cvs_brand} ${group.cvs_store}`.trim()
 }
 
@@ -39,7 +42,11 @@ export function buildLineOrderVerificationMessage(
     formatNumberedField(1, '訂單編號', orderId),
     formatNumberedField(2, '收件姓名', group.buyer_name),
     formatNumberedField(3, '聯絡電話', group.phone),
-    formatNumberedField(4, '收件門市', formatCvsPickupLine(group)),
+    formatNumberedField(
+      4,
+      group.cvs_brand === '宅配' ? '收件地址' : '收件門市',
+      formatCvsPickupLine(group)
+    ),
     ...formatNumberedItemSection(5, '預訂明細', group.lineItems, group),
     formatNumberedField(6, '應付總額', `NT$ ${grandTotal}`),
     '',

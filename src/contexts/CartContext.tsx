@@ -120,6 +120,7 @@ function normalizeStoredItem(raw: CartItem): CartItem | null {
       raw.memberCouponId != null ? String(raw.memberCouponId) : undefined,
     giftDescription:
       raw.giftDescription != null ? String(raw.giftDescription) : undefined,
+    requiresCourier: Boolean(raw.requiresCourier),
   }
 }
 
@@ -179,6 +180,9 @@ function productToCartItem(
     variantName: variant?.name ?? null,
     braceletConfig,
     maxStock,
+    requiresCourier: Boolean(
+      variant?.requires_courier ?? product.requires_courier
+    ),
   }
 }
 

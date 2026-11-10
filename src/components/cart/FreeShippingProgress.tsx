@@ -9,6 +9,10 @@ import {
 interface FreeShippingProgressProps {
   subtotal: number
   className?: string
+  /** 免運門檻（超商 600／宅配 1500） */
+  threshold?: number
+  /** 運送方式說明 */
+  shippingModeLabel?: string
   /** 未達免運時：前往前台繼續選購 */
   onShopMore?: () => void
 }
@@ -17,11 +21,13 @@ interface FreeShippingProgressProps {
 export function FreeShippingProgress({
   subtotal,
   className = '',
+  threshold = FREE_SHIPPING_THRESHOLD,
+  shippingModeLabel,
   onShopMore,
 }: FreeShippingProgressProps) {
-  const progress = getFreeShippingProgressPercent(subtotal)
-  const qualified = hasFreeShipping(subtotal)
-  const remaining = getAmountToFreeShipping(subtotal)
+  const progress = getFreeShippingProgressPercent(subtotal, threshold)
+  const qualified = hasFreeShipping(subtotal, threshold)
+  const remaining = getAmountToFreeShipping(subtotal, threshold)
 
   return (
     <div
@@ -49,7 +55,8 @@ export function FreeShippingProgress({
               {qualified ? '已達免運門檻' : '湊免運進度'}
             </p>
             <p className="mt-0.5 text-xs text-white/45">
-              滿 NT$ {FREE_SHIPPING_THRESHOLD.toLocaleString()} 免運
+              滿 NT$ {threshold.toLocaleString()} 免運
+              {shippingModeLabel ? `（${shippingModeLabel}）` : ''}
             </p>
           </div>
         </div>
@@ -83,10 +90,10 @@ export function FreeShippingProgress({
 
       <div className="mt-2.5 flex items-center justify-between gap-2 text-xs tabular-nums">
         <span className="text-white/40">
-          NT$ {Math.min(subtotal, FREE_SHIPPING_THRESHOLD).toLocaleString()}
+          NT$ {Math.min(subtotal, threshold).toLocaleString()}
         </span>
         <span className="text-white/35">
-          NT$ {FREE_SHIPPING_THRESHOLD.toLocaleString()}
+          NT$ {threshold.toLocaleString()}
         </span>
       </div>
 
@@ -100,19 +107,21 @@ export function FreeShippingProgress({
               NT$ {remaining.toLocaleString()}
             </span>{' '}
             即可免運
+            {onShopMore && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  onClick={onShopMore}
+                  className="text-amber-glow/90 underline-offset-2 hover:underline"
+                >
+                  繼續選購
+                </button>
+              </>
+            )}
           </>
         )}
       </p>
-
-      {!qualified && onShopMore && (
-        <button
-          type="button"
-          onClick={onShopMore}
-          className="mt-3 w-full rounded-lg border border-amber-glow/45 bg-amber-glow/15 py-2.5 text-sm tracking-wide text-amber-glow transition hover:border-amber-glow/70 hover:bg-amber-glow/25"
-        >
-          去湊單
-        </button>
-      )}
     </div>
   )
 }

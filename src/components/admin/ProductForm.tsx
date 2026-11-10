@@ -45,6 +45,7 @@ const initialForm: ProductFormData = {
   variants: [],
   is_hot: false,
   in_campaign: false,
+  requires_courier: false,
   is_quick_add: false,
   is_studio_available: false,
   is_private_custom: false,
@@ -306,6 +307,18 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
             className="rounded border-white/20 bg-void"
           />
           顯示於活動（前台第一區「活動」專區）
+        </label>
+
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+          <input
+            type="checkbox"
+            checked={form.requires_courier}
+            onChange={(e) =>
+              setForm({ ...form, requires_courier: e.target.checked })
+            }
+            className="rounded border-white/20 bg-void"
+          />
+          須走宅配（無規格時套用；有規格請在各規格列勾選）
         </label>
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">

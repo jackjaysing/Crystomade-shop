@@ -12,7 +12,7 @@ export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
 export type OrderPaymentStatus = 'unpaid' | 'paid' | 'partial'
 
 /** 超商品牌 */
-export type CvsBrand = '7-11' | '全家'
+export type CvsBrand = '7-11' | '全家' | '宅配'
 
 /** 商品品類 */
 export type ProductCategory = '手串' | '配飾' | '擺件' | '礦石'
@@ -32,6 +32,8 @@ export interface ProductVariant {
   price: number
   stock: number
   sort_order: number
+  /** 此規格不可超商，須走宅配 */
+  requires_courier: boolean
   created_at: string
 }
 
@@ -42,6 +44,8 @@ export interface ProductVariantInput {
   price: number
   stock: number
   sort_order: number
+  /** 此規格不可超商，須走宅配 */
+  requires_courier: boolean
 }
 
 /** 商品 */
@@ -80,6 +84,8 @@ export interface Product {
   is_hot: boolean
   /** 顯示於前台「活動」專區（仍保留原品類） */
   in_campaign: boolean
+  /** 不可超商取件，須走宅配 */
+  requires_courier: boolean
   /** 購物車快捷加購推薦 */
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */
@@ -263,6 +269,8 @@ export interface CartItem {
   braceletConfig?: BraceletConfig | null
   /** 加入當下可用庫存上限 */
   maxStock: number
+  /** 此品項不可超商，須走宅配 */
+  requiresCourier?: boolean
 }
 
 /** 點數商城商品 */
@@ -460,6 +468,8 @@ export interface ProductFormData {
   is_hot: boolean
   /** 顯示於前台「活動」專區 */
   in_campaign: boolean
+  /** 不可超商取件，須走宅配 */
+  requires_courier: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */
@@ -578,6 +588,8 @@ export interface ProductEditData {
   is_hot: boolean
   /** 顯示於前台「活動」專區 */
   in_campaign: boolean
+  /** 不可超商取件，須走宅配 */
+  requires_courier: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */

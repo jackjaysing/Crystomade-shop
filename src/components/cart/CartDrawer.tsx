@@ -6,7 +6,11 @@ import { FreeShippingProgress } from './FreeShippingProgress'
 import { CartItemSizeEditor } from './CartItemSizeEditor'
 import { CartPointShopSection } from './CartPointShopSection'
 import { CartQuickAddSection } from './CartQuickAddSection'
-import { FREE_SHIPPING_THRESHOLD } from '../../constants/shipping'
+import {
+  COURIER_FREE_SHIPPING_THRESHOLD,
+  FREE_SHIPPING_THRESHOLD,
+} from '../../constants/shipping'
+import { cartRequiresCourier } from '../../lib/cartShipping'
 import { isPointRedemptionItem, isRaffleGiftItem } from '../../lib/cartItemKinds'
 import {
   cartHasRaffleGiftBase,
@@ -35,6 +39,7 @@ export function CartDrawer() {
 
   const {
     resolvedItems,
+    checkoutItems,
     checkoutItemCount,
     subtotal,
     shippingFee,
@@ -43,6 +48,10 @@ export function CartDrawer() {
     loading,
     refresh,
   } = useCartAvailability({ enabled: isOpen })
+  const requiresCourier = cartRequiresCourier(checkoutItems)
+  const freeShippingThreshold = requiresCourier
+    ? COURIER_FREE_SHIPPING_THRESHOLD
+    : FREE_SHIPPING_THRESHOLD
 
   const {
     products: quickAddProducts,
@@ -281,6 +290,8 @@ export function CartDrawer() {
             {showFreeShippingProgress && (
               <FreeShippingProgress
                 subtotal={subtotal}
+                threshold={freeShippingThreshold}
+                shippingModeLabel={requiresCourier ? '宅配' : '超商'}
                 onShopMore={() => {
                   closeCart()
                   navigate('/products')
@@ -315,7 +326,7 @@ export function CartDrawer() {
               <div className="flex justify-between text-white/60">
                 <span>運費</span>
                 <span>
-                  {shippingFee === 0 && subtotal >= FREE_SHIPPING_THRESHOLD ? (
+                  {shippingFee === 0 && subtotal >= freeShippingThreshold ? (
                     <span className="text-emerald-400">免運</span>
                   ) : shippingFee === 0 ? (
                     '—'
