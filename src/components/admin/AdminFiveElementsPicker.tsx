@@ -6,7 +6,7 @@ interface AdminFiveElementsPickerProps {
   onChange: (elements: FiveElement[]) => void
 }
 
-/** 後台：五行多選 */
+/** 後台：五行多選（button 避免 sr-only radio/checkbox 造成捲動跳動） */
 export function AdminFiveElementsPicker({
   value,
   onChange,
@@ -22,22 +22,19 @@ export function AdminFiveElementsPicker({
       <p className="mb-2 text-xs text-white/50">五行（可多選）</p>
       <div className="flex flex-wrap gap-2">
         {FIVE_ELEMENTS.map((el) => (
-          <label
+          <button
             key={el}
-            className={`flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border px-3 text-sm transition ${
+            type="button"
+            onClick={() => toggle(el)}
+            aria-pressed={value.includes(el)}
+            className={`flex h-10 min-w-10 items-center justify-center rounded-full border px-3 text-sm transition ${
               value.includes(el)
                 ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                 : 'border-white/10 text-white/50'
             }`}
           >
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={value.includes(el)}
-              onChange={() => toggle(el)}
-            />
             {el}
-          </label>
+          </button>
         ))}
       </div>
     </div>

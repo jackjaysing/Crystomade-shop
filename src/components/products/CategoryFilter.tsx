@@ -1,16 +1,32 @@
-import { PRODUCT_CATEGORIES } from '../../constants/categories'
-import type { ProductCategory } from '../../lib/types'
+import {
+  CAMPAIGN_SECTION_ID,
+  PRODUCT_CATEGORIES,
+  type StorefrontSectionId,
+} from '../../constants/categories'
 
 interface CategoryFilterProps {
-  activeCategory: ProductCategory | null
-  onSelect: (category: ProductCategory) => void
+  activeCategory: StorefrontSectionId | null
+  onSelect: (category: StorefrontSectionId) => void
+  /** 有活動商品時才顯示「活動」導覽 */
+  showCampaign?: boolean
 }
 
-/** 品類導覽：點擊捲動至對應橫向商品列 */
-export function CategoryFilter({ activeCategory, onSelect }: CategoryFilterProps) {
+/** 品類導覽：點擊捲動至對應橫向商品列（活動置頂） */
+export function CategoryFilter({
+  activeCategory,
+  onSelect,
+  showCampaign = false,
+}: CategoryFilterProps) {
+  const items: { id: StorefrontSectionId; label: string }[] = [
+    ...(showCampaign
+      ? [{ id: CAMPAIGN_SECTION_ID, label: CAMPAIGN_SECTION_ID }]
+      : []),
+    ...PRODUCT_CATEGORIES,
+  ]
+
   return (
     <div className="flex flex-nowrap items-center justify-start gap-2">
-      {PRODUCT_CATEGORIES.map((cat) => (
+      {items.map((cat) => (
         <button
           key={cat.id}
           type="button"

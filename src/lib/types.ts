@@ -78,6 +78,8 @@ export interface Product {
   deleted_at?: string | null
   /** 後台標記熱門商品 */
   is_hot: boolean
+  /** 顯示於前台「活動」專區（仍保留原品類） */
+  in_campaign: boolean
   /** 購物車快捷加購推薦 */
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */
@@ -313,6 +315,10 @@ export interface Coupon {
   is_active: boolean
   /** 發放後有效天數；null 表示不限 */
   valid_days: number | null
+  /** 新會員註冊完成自動發放 */
+  auto_issue_on_register: boolean
+  /** 結帳達門檻時預設自動選用 */
+  auto_apply_at_checkout: boolean
   created_at: string
   updated_at: string
 }
@@ -327,6 +333,10 @@ export interface CouponFormData {
   gift_description: string | null
   is_active: boolean
   valid_days: number | null
+  /** 新會員註冊完成自動發放 */
+  auto_issue_on_register: boolean
+  /** 結帳達門檻時預設自動選用 */
+  auto_apply_at_checkout: boolean
 }
 
 /** 後台：可兌換入購物車的禮物券範本 */
@@ -448,6 +458,8 @@ export interface ProductFormData {
   variants: ProductVariantInput[]
   /** 標記為熱門商品 */
   is_hot: boolean
+  /** 顯示於前台「活動」專區 */
+  in_campaign: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */
@@ -564,6 +576,8 @@ export interface ProductEditData {
   variants: ProductVariantInput[]
   /** 標記為熱門商品 */
   is_hot: boolean
+  /** 顯示於前台「活動」專區 */
+  in_campaign: boolean
   /** 推薦加購（購物車快捷區） */
   is_quick_add: boolean
   /** 是否同步於實體工作室販售中 */

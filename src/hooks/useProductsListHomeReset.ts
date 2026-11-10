@@ -8,10 +8,11 @@ import {
 import { clearProductsListSession } from '../lib/productsListSession'
 import type { ProductSortMode } from '../lib/sortProducts'
 import type { ProductSubcategory } from '../constants/productSubcategories'
-import type { BraceletStyle, ProductCategory } from '../lib/types'
+import type { StorefrontSectionId } from '../constants/categories'
+import type { BraceletStyle } from '../lib/types'
 
 interface UseProductsListHomeResetOptions {
-  setActiveCategory: (value: ProductCategory | null) => void
+  setActiveCategory: (value: StorefrontSectionId | null) => void
   setActiveBraceletStyle: (value: BraceletStyle | null) => void
   setActiveAccessorySubcategory: (value: ProductSubcategory | null) => void
   setActiveOrnamentSubcategory: (value: ProductSubcategory | null) => void

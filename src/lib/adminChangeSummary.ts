@@ -357,6 +357,19 @@ export function buildCouponUpdateSummary(
     formatAdminBool(data.is_active, '啟用', '停用')
   )
 
+  pushTextChange(
+    changes,
+    '註冊自動發放',
+    formatAdminBool(before.auto_issue_on_register, '是', '否'),
+    formatAdminBool(data.auto_issue_on_register, '是', '否')
+  )
+  pushTextChange(
+    changes,
+    '結帳自動套用',
+    formatAdminBool(before.auto_apply_at_checkout, '是', '否'),
+    formatAdminBool(data.auto_apply_at_checkout, '是', '否')
+  )
+
   const beforeDays = before.valid_days ?? 0
   const afterDays = data.valid_days && data.valid_days > 0 ? data.valid_days : 0
   pushNumberChange(changes, '有效天數', beforeDays, afterDays, (value) =>

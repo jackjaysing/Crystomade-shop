@@ -1,15 +1,19 @@
 import type { ProductSortMode } from './sortProducts'
 import type { ProductSubcategory } from '../constants/productSubcategories'
-import type { BraceletStyle, ProductCategory } from './types'
+import {
+  CAMPAIGN_SECTION_ID,
+  type StorefrontSectionId,
+} from '../constants/categories'
+import type { BraceletStyle } from './types'
 
-export type CarouselScrollLeft = Partial<Record<ProductCategory, number>>
+export type CarouselScrollLeft = Partial<Record<StorefrontSectionId, number>>
 
 export interface ProductsListSessionState {
   /** 從商品詳情返回典藏時才還原畫面 */
   restoreOnNextProductsVisit: boolean
   scrollY: number
   carouselScrollLeft: CarouselScrollLeft
-  activeCategory: ProductCategory | null
+  activeCategory: StorefrontSectionId | null
   activeBraceletStyle: BraceletStyle | null
   activeAccessorySubcategory: ProductSubcategory | null
   activeOrnamentSubcategory: ProductSubcategory | null
@@ -75,11 +79,17 @@ export function loadProductsListSession(): ProductsListSessionState | null {
 }
 
 function normalizeCarouselScrollLeft(
-  value: Partial<Record<ProductCategory, number>> | undefined
+  value: Partial<Record<StorefrontSectionId, number>> | undefined
 ): CarouselScrollLeft {
   if (!value || typeof value !== 'object') return {}
 
-  const categories: ProductCategory[] = ['手串', '配飾', '擺件', '礦石']
+  const categories: StorefrontSectionId[] = [
+    CAMPAIGN_SECTION_ID,
+    '手串',
+    '配飾',
+    '擺件',
+    '礦石',
+  ]
   const result: CarouselScrollLeft = {}
 
   for (const category of categories) {

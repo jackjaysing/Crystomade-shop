@@ -44,6 +44,7 @@ const initialForm: ProductFormData = {
   stock: 1,
   variants: [],
   is_hot: false,
+  in_campaign: false,
   is_quick_add: false,
   is_studio_available: false,
   is_private_custom: false,
@@ -298,6 +299,18 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
         <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
           <input
             type="checkbox"
+            checked={form.in_campaign}
+            onChange={(e) =>
+              setForm({ ...form, in_campaign: e.target.checked })
+            }
+            className="rounded border-white/20 bg-void"
+          />
+          顯示於活動（前台第一區「活動」專區）
+        </label>
+
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+          <input
+            type="checkbox"
             checked={form.is_quick_add}
             onChange={(e) =>
               setForm({ ...form, is_quick_add: e.target.checked })
@@ -353,34 +366,30 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
           <p className="mb-2 text-xs text-white/50">品類</p>
           <div className="flex flex-wrap gap-2">
             {PRODUCT_CATEGORIES.map((cat) => (
-              <label
+              <button
                 key={cat.id}
-                className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                type="button"
+                onClick={() => {
+                  const category = cat.id as ProductCategory
+                  setForm({
+                    ...form,
+                    category,
+                    bracelet_style:
+                      category === '手串'
+                        ? form.bracelet_style ?? DEFAULT_BRACELET_STYLE
+                        : null,
+                    subcategory: defaultSubcategoryForCategory(category),
+                  })
+                }}
+                aria-pressed={form.category === cat.id}
+                className={`rounded-full border px-4 py-2 text-sm transition ${
                   form.category === cat.id
                     ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                     : 'border-white/10 text-white/50'
                 }`}
               >
-                <input
-                  type="radio"
-                  name="category"
-                  className="sr-only"
-                  checked={form.category === cat.id}
-                  onChange={() => {
-                    const category = cat.id as ProductCategory
-                    setForm({
-                      ...form,
-                      category,
-                      bracelet_style:
-                        category === '手串'
-                          ? form.bracelet_style ?? DEFAULT_BRACELET_STYLE
-                          : null,
-                      subcategory: defaultSubcategoryForCategory(category),
-                    })
-                  }}
-                />
                 {cat.label}
-              </label>
+              </button>
             ))}
           </div>
         </div>
@@ -390,28 +399,24 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
             <p className="mb-2 text-xs text-white/50">手串分類</p>
             <div className="flex flex-wrap gap-2">
               {BRACELET_STYLES.map((style) => (
-                <label
+                <button
                   key={style.id}
-                  className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      bracelet_style: style.id as BraceletStyle,
+                    })
+                  }
+                  aria-pressed={form.bracelet_style === style.id}
+                  className={`rounded-full border px-4 py-2 text-sm transition ${
                     form.bracelet_style === style.id
                       ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                       : 'border-white/10 text-white/50'
                   }`}
                 >
-                  <input
-                    type="radio"
-                    name="bracelet_style"
-                    className="sr-only"
-                    checked={form.bracelet_style === style.id}
-                    onChange={() =>
-                      setForm({
-                        ...form,
-                        bracelet_style: style.id as BraceletStyle,
-                      })
-                    }
-                  />
                   {style.label}
-                </label>
+                </button>
               ))}
             </div>
           </div>
@@ -432,22 +437,19 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
           <p className="mb-2 text-xs text-white/50">功效標籤</p>
           <div className="flex flex-wrap gap-2">
             {ALL_PRODUCT_TAGS.map((tag) => (
-              <label
+              <button
                 key={tag}
-                className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                type="button"
+                onClick={() => toggleTag(tag)}
+                aria-pressed={form.tags.includes(tag)}
+                className={`rounded-full border px-4 py-2 text-sm transition ${
                   form.tags.includes(tag)
                     ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                     : 'border-white/10 text-white/50'
                 }`}
               >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={form.tags.includes(tag)}
-                  onChange={() => toggleTag(tag)}
-                />
                 {tag}
-              </label>
+              </button>
             ))}
           </div>
         </div>
@@ -456,26 +458,23 @@ export function ProductForm({ open, onClose, onCreated }: ProductFormProps) {
           <p className="mb-2 text-xs text-white/50">水晶色</p>
           <div className="flex flex-wrap gap-2">
             {CRYSTAL_COLOR_FILTERS.map((color) => (
-              <label
+              <button
                 key={color.id}
-                className={`flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
+                type="button"
+                onClick={() => toggleTag(color.label)}
+                aria-pressed={form.tags.includes(color.label)}
+                className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
                   form.tags.includes(color.label)
                     ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                     : 'border-white/10 text-white/50'
                 }`}
               >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={form.tags.includes(color.label)}
-                  onChange={() => toggleTag(color.label)}
-                />
                 <span
                   className="h-3.5 w-3.5 shrink-0 rounded-full"
                   style={{ backgroundColor: color.hex }}
                 />
                 {color.label}
-              </label>
+              </button>
             ))}
           </div>
         </div>

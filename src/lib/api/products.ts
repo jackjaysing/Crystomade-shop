@@ -152,7 +152,7 @@ const PRODUCTS_CACHE_MS = 60_000
 let storefrontProductsCache: { data: Product[]; at: number } | null = null
 
 function isMissingOptionalProductColumn(message: string): boolean {
-  return /is_studio_available|is_private_custom|studio_location|42703|column/i.test(
+  return /is_studio_available|is_private_custom|studio_location|in_campaign|42703|column/i.test(
     message
   )
 }
@@ -413,6 +413,7 @@ export async function createProduct(
     stock,
     status: 'available' as const,
     is_hot: form.is_hot,
+    in_campaign: form.in_campaign,
     is_quick_add: form.is_quick_add,
     is_studio_available: form.is_studio_available,
     is_private_custom: form.is_private_custom,
@@ -433,6 +434,7 @@ export async function createProduct(
         is_studio_available: _omitStudio,
         is_private_custom: _omitPrivate,
         studio_location: _omitStudioLocation,
+        in_campaign: _omitCampaign,
         ...fallbackPayload
       } = payload
       const retry = await supabase
@@ -527,6 +529,7 @@ export async function updateProduct(
     stock,
     status,
     is_hot: form.is_hot,
+    in_campaign: form.in_campaign,
     is_quick_add: form.is_quick_add,
     is_studio_available: form.is_studio_available,
     is_private_custom: form.is_private_custom,
@@ -547,6 +550,7 @@ export async function updateProduct(
         is_studio_available: _omitStudio,
         is_private_custom: _omitPrivate,
         studio_location: _omitStudioLocation,
+        in_campaign: _omitCampaign,
         ...fallbackPayload
       } = payload
       const retry = await supabase

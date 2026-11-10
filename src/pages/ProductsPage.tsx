@@ -7,7 +7,7 @@ import { loadPendingProductsListRestore } from '../lib/productsListSession'
 
 import { TAG_FILTERS } from '../constants/tags'
 
-import { PRODUCT_CATEGORIES } from '../constants/categories'
+import { CAMPAIGN_SECTION_ID, PRODUCT_CATEGORIES, type StorefrontSectionId } from '../constants/categories'
 import {
   ACCESSORY_SUBCATEGORIES,
   MINERAL_SUBCATEGORIES,
@@ -95,7 +95,7 @@ export function ProductsPage() {
 
   const [initialSession] = useState(() => loadPendingProductsListRestore())
 
-  const [activeCategory, setActiveCategory] = useState<ProductCategory | null>(
+  const [activeCategory, setActiveCategory] = useState<StorefrontSectionId | null>(
 
     initialSession?.activeCategory ?? null
 
@@ -155,7 +155,7 @@ export function ProductsPage() {
 
 
 
-  const scrollToCategory = (category: ProductCategory) => {
+  const scrollToCategory = (category: StorefrontSectionId) => {
 
     setActiveCategory(category)
 
@@ -338,6 +338,16 @@ export function ProductsPage() {
 
 
 
+  const campaignProducts = useMemo(
+
+    () => filteredProducts.filter((product) => product.in_campaign),
+
+    [filteredProducts]
+
+  )
+
+
+
   const categoriesToShow = useMemo(
 
     () =>
@@ -354,7 +364,19 @@ export function ProductsPage() {
 
 
 
-  const visibleCategories = categoriesToShow
+  const visibleCategories = useMemo(
+
+    () =>
+
+      campaignProducts.length > 0
+
+        ? [CAMPAIGN_SECTION_ID, ...categoriesToShow]
+
+        : categoriesToShow,
+
+    [campaignProducts.length, categoriesToShow]
+
+  )
 
 
 
@@ -501,6 +523,8 @@ export function ProductsPage() {
               activeCategory={activeCategory}
 
               onSelect={scrollToCategory}
+
+              showCampaign={campaignProducts.length > 0}
 
             />
 
@@ -720,6 +744,8 @@ export function ProductsPage() {
         {!loading && !error && hasAnyProducts && (
 
           <CategoryProductSections
+
+            campaignProducts={campaignProducts}
 
             productsByCategory={productsByCategory}
 

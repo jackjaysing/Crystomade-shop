@@ -16,7 +16,11 @@ import {
 } from 'react'
 
 import { getBraceletStyleLabel } from '../../constants/braceletStyles'
-import { getCategoryLabel } from '../../constants/categories'
+import {
+  CAMPAIGN_SECTION_ID,
+  getStorefrontSectionLabel,
+  type StorefrontSectionId,
+} from '../../constants/categories'
 import {
   getSubcategoriesForCategory,
   getSubcategoryLabel,
@@ -33,7 +37,7 @@ import { ProductCard } from './ProductCard'
 
 
 interface CategoryProductRowProps {
-  category: ProductCategory
+  category: StorefrontSectionId
   products: Product[]
   activeBraceletStyle?: BraceletStyle | null
   onBraceletStyleSelect?: (style: BraceletStyle | null) => void
@@ -250,7 +254,10 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
     },
     ref
   ) {
-    const subcategoryOptions = getSubcategoriesForCategory(category)
+    const subcategoryOptions =
+      category === CAMPAIGN_SECTION_ID
+        ? null
+        : getSubcategoriesForCategory(category as ProductCategory)
 
     const sectionRef = useRef<HTMLElement | null>(null)
 
@@ -621,14 +628,14 @@ export const CategoryProductRow = forwardRef<HTMLElement, CategoryProductRowProp
 
         className="scroll-mt-[calc(var(--site-header-height)+12rem)]"
 
-        aria-label={`${getCategoryLabel(category)}商品`}
+        aria-label={`${getStorefrontSectionLabel(category)}商品`}
 
       >
 
         <div className="mb-4 flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
           <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
             <h2 className="font-display text-2xl text-white md:text-3xl">
-              {getCategoryLabel(category)}
+              {getStorefrontSectionLabel(category)}
             </h2>
             {category === '手串' && onBraceletStyleSelect && (
               <div className="max-w-full overflow-x-auto no-scrollbar">

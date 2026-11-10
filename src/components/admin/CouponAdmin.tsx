@@ -31,6 +31,8 @@ const emptyForm: CouponFormData = {
   gift_description: null,
   is_active: true,
   valid_days: 30,
+  auto_issue_on_register: false,
+  auto_apply_at_checkout: false,
 }
 
 interface CouponAdminProps {
@@ -96,6 +98,8 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
       gift_description: c.gift_description,
       is_active: c.is_active,
       valid_days: c.valid_days,
+      auto_issue_on_register: c.auto_issue_on_register,
+      auto_apply_at_checkout: c.auto_apply_at_checkout,
     })
   }
 
@@ -365,6 +369,34 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
             啟用（可發放與使用）
           </label>
 
+          <label className="flex items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={form.auto_issue_on_register}
+              onChange={(e) =>
+                setForm({ ...form, auto_issue_on_register: e.target.checked })
+              }
+              className="rounded border-white/20"
+            />
+            新會員註冊自動發放
+          </label>
+
+          <label className="flex items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={form.auto_apply_at_checkout}
+              onChange={(e) =>
+                setForm({ ...form, auto_apply_at_checkout: e.target.checked })
+              }
+              className="rounded border-white/20"
+            />
+            結帳達門檻自動套用（預選；會員仍可改）
+          </label>
+
+          <p className="text-[11px] leading-relaxed text-white/35">
+            舊客請按「一鍵全發」補發；之後新註冊客若有勾選「註冊自動發放」會自動入帳。
+          </p>
+
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
@@ -435,6 +467,8 @@ export function CouponAdmin({ enabled = true }: CouponAdminProps) {
                       {c.valid_days
                         ? ` · 發放後 ${c.valid_days} 天內有效`
                         : ' · 效期不限'}
+                      {c.auto_issue_on_register ? ' · 註冊自動發' : ''}
+                      {c.auto_apply_at_checkout ? ' · 結帳自動套用' : ''}
                       {` · 已發 ${issueCounts.get(c.id) ?? 0} 張`}
                     </p>
                   </div>

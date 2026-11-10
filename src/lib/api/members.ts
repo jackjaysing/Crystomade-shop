@@ -8,6 +8,7 @@ import {
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
 import type { MemberProfile, Order, PointsHistoryEntry } from '../types'
+import { issueAutoRegisterCouponsToMember } from './coupons'
 import {
   memberRegisterMetadata,
   validateMemberLogin,
@@ -72,6 +73,13 @@ export async function signUpMember(input: MemberRegisterInput): Promise<User> {
   if (!data.user) throw new Error('註冊失敗，請稍後再試')
 
   await ensureMemberProfile(data.user, input)
+
+  try {
+    await issueAutoRegisterCouponsToMember(data.user.id)
+  } catch {
+    /* 自動發券失敗不阻擋註冊 */
+  }
+
   return data.user
 }
 

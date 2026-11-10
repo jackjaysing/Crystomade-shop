@@ -2,13 +2,13 @@ import { STUDIO_LOCATIONS } from '../../constants/studioLocations'
 import type { StudioLocation } from '../../lib/types'
 
 interface AdminProductStudioPickerProps {
-  /** radio 群組名稱前綴（同頁多份表單時避免衝突） */
+  /** 同頁多份表單時避免 key 衝突 */
   name: string
   value: StudioLocation | null
   onChange: (studio: StudioLocation | null) => void
 }
 
-/** 後台：商品分潤歸屬單選（供分潤統計） */
+/** 後台：商品分潤歸屬單選（button 避免捲動跳動） */
 export function AdminProductStudioPicker({
   name,
   value,
@@ -25,25 +25,21 @@ export function AdminProductStudioPicker({
   return (
     <div>
       <p className="mb-2 text-xs text-white/50">分潤歸屬</p>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={`${name}-studio-location`}>
         {options.map((option) => (
-          <label
+          <button
             key={option.id ?? 'none'}
-            className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+            type="button"
+            onClick={() => onChange(option.id)}
+            aria-pressed={value === option.id}
+            className={`rounded-full border px-4 py-2 text-sm transition ${
               value === option.id
                 ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                 : 'border-white/10 text-white/50'
             }`}
           >
-            <input
-              type="radio"
-              name={`${name}-studio-location`}
-              className="sr-only"
-              checked={value === option.id}
-              onChange={() => onChange(option.id)}
-            />
             {option.label}
-          </label>
+          </button>
         ))}
       </div>
       <p className="mt-1.5 text-[11px] text-white/35">

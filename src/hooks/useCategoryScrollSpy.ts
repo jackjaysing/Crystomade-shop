@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react'
-import type { ProductCategory } from '../lib/types'
+import type { StorefrontSectionId } from '../constants/categories'
 
 interface UseCategoryScrollSpyOptions {
   enabled: boolean
-  visibleCategories: ProductCategory[]
-  onActiveChange: (category: ProductCategory) => void
+  visibleCategories: StorefrontSectionId[]
+  onActiveChange: (category: StorefrontSectionId) => void
 }
 
 function getActivationTop(): number {
@@ -21,12 +21,12 @@ function getActivationTop(): number {
 
 /** 捲動至品類區塊時，同步更新上方品類篩選 */
 export function useCategoryScrollSpy(
-  sectionRefs: RefObject<Record<ProductCategory, HTMLElement | null>>,
+  sectionRefs: RefObject<Record<StorefrontSectionId, HTMLElement | null>>,
   { enabled, visibleCategories, onActiveChange }: UseCategoryScrollSpyOptions
 ) {
   const suppressRef = useRef(false)
   const suppressTimerRef = useRef<number | null>(null)
-  const lastActiveRef = useRef<ProductCategory | null>(null)
+  const lastActiveRef = useRef<StorefrontSectionId | null>(null)
   const onActiveChangeRef = useRef(onActiveChange)
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function useCategoryScrollSpy(
       if (suppressRef.current) return
 
       const activationTop = getActivationTop()
-      let current: ProductCategory | null = null
+      let current: StorefrontSectionId | null = null
 
       for (const category of visibleCategories) {
         const section = sectionRefs.current[category]

@@ -10,7 +10,7 @@ interface AdminProductSubcategoryPickerProps {
   onChange: (subcategory: ProductSubcategory) => void
 }
 
-/** 後台：配飾／擺件／礦石細項單選 */
+/** 後台：配飾／擺件／礦石細項單選（button 避免捲動跳動） */
 export function AdminProductSubcategoryPicker({
   category,
   value,
@@ -26,23 +26,19 @@ export function AdminProductSubcategoryPicker({
       </p>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
-          <label
+          <button
             key={option.id}
-            className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+            type="button"
+            onClick={() => onChange(option.id)}
+            aria-pressed={value === option.id}
+            className={`rounded-full border px-4 py-2 text-sm transition ${
               value === option.id
                 ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                 : 'border-white/10 text-white/50'
             }`}
           >
-            <input
-              type="radio"
-              name={`subcategory-${category}`}
-              className="sr-only"
-              checked={value === option.id}
-              onChange={() => onChange(option.id)}
-            />
             {option.label}
-          </label>
+          </button>
         ))}
       </div>
     </div>

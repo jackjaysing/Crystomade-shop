@@ -35,6 +35,8 @@ function normalizeCoupon(row: Record<string, unknown>): Coupon {
       row.source_raffle_id != null ? String(row.source_raffle_id) : null,
     is_active: Boolean(row.is_active),
     valid_days: row.valid_days != null ? Number(row.valid_days) : null,
+    auto_issue_on_register: Boolean(row.auto_issue_on_register),
+    auto_apply_at_checkout: Boolean(row.auto_apply_at_checkout),
     created_at: String(row.created_at ?? ''),
     updated_at: String(row.updated_at ?? ''),
   }
@@ -67,6 +69,8 @@ function couponInsertPayload(data: CouponFormData) {
       data.coupon_type === 'gift' ? data.gift_description?.trim() || null : null,
     is_active: data.is_active,
     valid_days: data.valid_days && data.valid_days > 0 ? data.valid_days : null,
+    auto_issue_on_register: data.auto_issue_on_register,
+    auto_apply_at_checkout: data.auto_apply_at_checkout,
     redeem_mode: 'checkout' as const,
     updated_at: new Date().toISOString(),
   }
@@ -91,6 +95,9 @@ function giftCouponInsertPayload(data: GiftCouponFormData) {
 }
 
 function migrationHint(msg: string): string | null {
+  if (/auto_issue_on_register|auto_apply_at_checkout|issue_auto_register_coupons/i.test(msg)) {
+    return '請在 Supabase SQL Editor 執行 supabase/migration-add-coupon-auto-apply.sql'
+  }
   if (/coupons|member_coupons|42P01|42703/i.test(msg)) {
     return '請在 Supabase SQL Editor 執行 supabase/migration-add-coupons.sql'
   }
@@ -343,6 +350,27 @@ export async function issueCouponToAllMembers(
     summary: `一鍵發放優惠券「${title}」給 ${count} 位會員`,
   })
   return count
+}
+
+/** 新會員註冊後：發放所有「註冊自動發放」優惠券 */
+export async function issueAutoRegisterCouponsToMember(
+  userId: string
+): Promise<number> {
+  const { data, error } = await supabase.rpc('issue_auto_register_coupons', {
+    p_user_id: userId,
+  })
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    const hint = migrationHint(msg)
+    if (hint || /issue_auto_register_coupons|function/i.test(msg)) {
+      // 尚未執行 migration 時不阻擋註冊
+      return 0
+    }
+    throw new Error(msg)
+  }
+
+  return typeof data === 'number' ? data : Number(data) || 0
 }
 
 /** 會員：可用優惠券（含範本） */

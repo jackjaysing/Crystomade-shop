@@ -51,6 +51,30 @@ export function calcCouponDiscount(
   return null
 }
 
+/** 結帳自動套用：選折抵金額最大的啟用券（不含禮物券） */
+export function pickBestAutoApplyCoupon(
+  productSubtotal: number,
+  coupons: MemberCouponWithDefinition[]
+): string | null {
+  let bestId: string | null = null
+  let bestDiscount = -1
+
+  for (const memberCoupon of coupons) {
+    if (!memberCoupon.coupon.auto_apply_at_checkout) continue
+    if (memberCoupon.coupon.coupon_type === 'gift') continue
+
+    const preview = calcCouponDiscount(productSubtotal, memberCoupon)
+    if (!preview || preview.discountNtd <= 0) continue
+
+    if (preview.discountNtd > bestDiscount) {
+      bestDiscount = preview.discountNtd
+      bestId = memberCoupon.id
+    }
+  }
+
+  return bestId
+}
+
 export function formatCouponRuleSummary(coupon: Coupon): string {
   const min = coupon.min_purchase_amount
   const minLabel =

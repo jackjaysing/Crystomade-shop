@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchMemberAvailableCoupons } from '../../lib/api/coupons'
 import {
   calcCouponDiscount,
   formatCouponRuleSummary,
+  pickBestAutoApplyCoupon,
 } from '../../lib/couponCalculation'
 import { getMemberCouponTypeLabel } from '../../constants/coupons'
 import type { MemberCouponWithDefinition } from '../../lib/types'
@@ -15,7 +16,7 @@ interface CheckoutCouponSelectProps {
   onSelect: (id: string | null) => void
 }
 
-/** 結帳：選擇會員優惠券 */
+/** 結帳：選擇會員優惠券（支援自動套用預選） */
 export function CheckoutCouponSelect({
   userId,
   productSubtotal,
@@ -24,10 +25,17 @@ export function CheckoutCouponSelect({
 }: CheckoutCouponSelectProps) {
   const [coupons, setCoupons] = useState<MemberCouponWithDefinition[]>([])
   const [loading, setLoading] = useState(true)
+  const manualSelectRef = useRef(false)
+  const onSelectRef = useRef(onSelect)
+
+  useEffect(() => {
+    onSelectRef.current = onSelect
+  }, [onSelect])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
+    manualSelectRef.current = false
     void fetchMemberAvailableCoupons(userId)
       .then((rows) => {
         if (!cancelled) setCoupons(rows)
@@ -39,6 +47,20 @@ export function CheckoutCouponSelect({
       cancelled = true
     }
   }, [userId])
+
+  useEffect(() => {
+    if (loading || manualSelectRef.current) return
+
+    const bestId = pickBestAutoApplyCoupon(productSubtotal, coupons)
+    if (bestId !== selectedId) {
+      onSelectRef.current(bestId)
+    }
+  }, [loading, coupons, productSubtotal, selectedId])
+
+  const handleSelect = (id: string | null) => {
+    manualSelectRef.current = true
+    onSelect(id)
+  }
 
   if (loading) {
     return (
@@ -59,6 +81,8 @@ export function CheckoutCouponSelect({
       <p className="text-xs tracking-widest text-white/50">優惠券</p>
       <p className="mt-0.5 text-xs text-white/35">
         不含抽獎禮物券（請至會員中心「我的禮物券」）
+        {coupons.some((c) => c.coupon.auto_apply_at_checkout) &&
+          ' · 達門檻時會自動預選最佳折價券'}
       </p>
       <ul className="mt-3 space-y-2">
         <li>
@@ -68,7 +92,7 @@ export function CheckoutCouponSelect({
               name="checkout-coupon"
               className="mt-1"
               checked={selectedId === null}
-              onChange={() => onSelect(null)}
+              onChange={() => handleSelect(null)}
             />
             <span className="text-sm text-white/60">不使用優惠券</span>
           </label>
@@ -93,11 +117,16 @@ export function CheckoutCouponSelect({
                   className="mt-1"
                   disabled={!eligible}
                   checked={selectedId === mc.id}
-                  onChange={() => onSelect(mc.id)}
+                  onChange={() => handleSelect(mc.id)}
                 />
                 <span className="min-w-0">
                   <span className="block text-sm text-white/90">
                     {mc.coupon.title}
+                    {mc.coupon.auto_apply_at_checkout && (
+                      <span className="ml-2 text-[10px] text-amber-glow/70">
+                        自動套用
+                      </span>
+                    )}
                   </span>
                   <span className="mt-0.5 block text-xs text-amber-glow/80">
                     {getMemberCouponTypeLabel(mc.coupon)} ·{' '}

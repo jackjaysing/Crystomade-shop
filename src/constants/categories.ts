@@ -2,6 +2,12 @@ import type { Product, ProductCategory } from '../lib/types'
 import { getBraceletStyleLabel } from './braceletStyles'
 import { getSubcategoryLabel } from './productSubcategories'
 
+/** 前台虛擬專區：活動（由 in_campaign 驅動，非 DB 品類） */
+export const CAMPAIGN_SECTION_ID = '活動' as const
+
+/** 前台橫向區塊／品類導覽 id */
+export type StorefrontSectionId = ProductCategory | typeof CAMPAIGN_SECTION_ID
+
 /** 商品品類選項 */
 export interface CategoryOption {
   id: ProductCategory
@@ -19,6 +25,12 @@ export const PRODUCT_CATEGORIES: CategoryOption[] = [
 /** 品類顯示標籤 */
 export function getCategoryLabel(category: ProductCategory): string {
   return PRODUCT_CATEGORIES.find((c) => c.id === category)?.label ?? category
+}
+
+/** 前台區塊標題（含活動專區） */
+export function getStorefrontSectionLabel(sectionId: StorefrontSectionId): string {
+  if (sectionId === CAMPAIGN_SECTION_ID) return CAMPAIGN_SECTION_ID
+  return getCategoryLabel(sectionId)
 }
 
 /** 前台／後台品類標籤（手串含款式；配飾／擺件／礦石含細項） */

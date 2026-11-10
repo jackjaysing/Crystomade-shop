@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  CAMPAIGN_SECTION_ID,
   getProductCategoryLabel,
   PRODUCT_CATEGORIES,
 } from '../../constants/categories'
@@ -19,10 +20,11 @@ import { useAdminSession } from '../../hooks/useAdminSession'
 import { GlassPanel } from '../ui/GlassPanel'
 import { HotProductBadge } from '../products/HotProductBadge'
 
-type AdminCategoryFilter = 'all' | ProductCategory
+type AdminCategoryFilter = 'all' | typeof CAMPAIGN_SECTION_ID | ProductCategory
 
 const ADMIN_CATEGORY_FILTERS: { id: AdminCategoryFilter; label: string }[] = [
   { id: 'all', label: '全部' },
+  { id: CAMPAIGN_SECTION_ID, label: CAMPAIGN_SECTION_ID },
   ...PRODUCT_CATEGORIES.map((cat) => ({ id: cat.id, label: cat.label })),
 ]
 
@@ -70,12 +72,20 @@ export function ProductListAdmin({
     return grouped
   }, [products])
 
+  const campaignProducts = useMemo(
+    () => sortProducts(products.filter((product) => product.in_campaign)),
+    [products]
+  )
+
   const visibleProducts = useMemo(() => {
     if (activeFilter === 'all') {
       return sortProducts(products)
     }
+    if (activeFilter === CAMPAIGN_SECTION_ID) {
+      return campaignProducts
+    }
     return productsByCategory[activeFilter]
-  }, [activeFilter, products, productsByCategory])
+  }, [activeFilter, products, productsByCategory, campaignProducts])
 
   const handleMarkSold = async (id: string) => {
     if (!confirm('確定將此商品標記為已售出？')) return
@@ -131,6 +141,11 @@ export function ProductListAdmin({
             {p.name}
           </p>
           {p.is_hot && <HotProductBadge variant="inline" />}
+          {p.in_campaign && (
+            <span className="rounded-full border border-amber-glow/40 bg-amber-glow/10 px-2 py-0.5 text-[10px] tracking-wide text-amber-glow">
+              活動
+            </span>
+          )}
         </div>
         <p className="text-sm text-amber-glow">
           {(() => {
@@ -277,7 +292,7 @@ export function ProductListAdmin({
     <GlassPanel className="p-6">
       <h3 className="font-display text-xl text-amber-glow">現有商品</h3>
       <p className="mt-1 text-xs text-white/40">
-        切換品類檢視 · 各品類內熱門置頂 · 熱門／一般商品皆可上移／下移
+        切換品類／活動檢視 · 各品類內熱門置頂 · 熱門／一般商品皆可上移／下移
       </p>
       {viewStatsError && (
         <p className="mt-2 text-xs text-amber-glow/80">
@@ -294,7 +309,9 @@ export function ProductListAdmin({
           const count =
             filter.id === 'all'
               ? products.length
-              : productsByCategory[filter.id].length
+              : filter.id === CAMPAIGN_SECTION_ID
+                ? campaignProducts.length
+                : productsByCategory[filter.id].length
 
           return (
             <button
@@ -315,7 +332,11 @@ export function ProductListAdmin({
       </div>
 
       {visibleProducts.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-white/40">此品類尚無商品</p>
+        <p className="mt-6 text-center text-sm text-white/40">
+          {activeFilter === CAMPAIGN_SECTION_ID
+            ? '目前沒有標記為活動的商品'
+            : '此品類尚無商品'}
+        </p>
       ) : (
         <ul className="mt-4 divide-y divide-white/5">
           {visibleProducts.map((p) =>

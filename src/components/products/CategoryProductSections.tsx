@@ -1,12 +1,17 @@
 import { useRef, type RefObject } from 'react'
+import {
+  CAMPAIGN_SECTION_ID,
+  type StorefrontSectionId,
+} from '../../constants/categories'
 import type { ProductSubcategory } from '../../constants/productSubcategories'
 import type { BraceletStyle, Product, ProductCategory } from '../../lib/types'
 import { CategoryProductRow } from './CategoryProductRow'
 
 interface CategoryProductSectionsProps {
+  campaignProducts: Product[]
   productsByCategory: Record<ProductCategory, Product[]>
   categoriesToShow: ProductCategory[]
-  sectionRefs: RefObject<Record<ProductCategory, HTMLElement | null>>
+  sectionRefs: RefObject<Record<StorefrontSectionId, HTMLElement | null>>
   activeBraceletStyle?: BraceletStyle | null
   onBraceletStyleSelect?: (style: BraceletStyle | null) => void
   activeAccessorySubcategory?: ProductSubcategory | null
@@ -41,8 +46,9 @@ function getSubcategorySelectHandler(
   return undefined
 }
 
-/** 典藏：手串／配飾／擺件／礦石分欄橫向卷軸 */
+/** 典藏：活動置頂，其後手串／配飾／擺件／礦石分欄橫向卷軸 */
 export function CategoryProductSections({
+  campaignProducts,
   productsByCategory,
   categoriesToShow,
   sectionRefs,
@@ -57,6 +63,15 @@ export function CategoryProductSections({
 }: CategoryProductSectionsProps) {
   return (
     <div className="space-y-12 md:space-y-16">
+      {campaignProducts.length > 0 && (
+        <CategoryProductRow
+          ref={(node) => {
+            sectionRefs.current[CAMPAIGN_SECTION_ID] = node
+          }}
+          category={CAMPAIGN_SECTION_ID}
+          products={campaignProducts}
+        />
+      )}
       {categoriesToShow.map((categoryId) => (
         <CategoryProductRow
           key={categoryId}
@@ -85,9 +100,10 @@ export function CategoryProductSections({
   )
 }
 
-/** 品類區塊 ref 容器 */
+/** 品類區塊 ref 容器（含活動專區） */
 export function useCategorySectionRefs() {
-  return useRef<Record<ProductCategory, HTMLElement | null>>({
+  return useRef<Record<StorefrontSectionId, HTMLElement | null>>({
+    [CAMPAIGN_SECTION_ID]: null,
     手串: null,
     配飾: null,
     擺件: null,

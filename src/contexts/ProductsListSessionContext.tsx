@@ -14,7 +14,7 @@ import {
   type CarouselScrollLeft,
   type ProductsListSessionState,
 } from '../lib/productsListSession'
-import type { ProductCategory } from '../lib/types'
+import type { StorefrontSectionId } from '../constants/categories'
 
 type ProductsListSnapshot = Omit<
   ProductsListSessionState,
@@ -28,8 +28,8 @@ interface CarouselControl {
 
 interface ProductsListSessionContextValue {
   saveBeforeProductOpen: () => void
-  registerCarousel: (category: ProductCategory, control: CarouselControl) => void
-  unregisterCarousel: (category: ProductCategory) => void
+  registerCarousel: (category: StorefrontSectionId, control: CarouselControl) => void
+  unregisterCarousel: (category: StorefrontSectionId) => void
   restorePendingCarousels: () => number
   resetAllCarousels: () => void
 }
@@ -46,7 +46,7 @@ const CAROUSEL_RESTORE_DELAYS_MS = [0, 50, 150, 300, 600, 1000, 1600]
 const CAROUSEL_RESET_DELAYS_MS = [0, 50, 150, 300, 600, 1000]
 
 function readCarouselSnapshot(
-  registry: Map<ProductCategory, CarouselControl>
+  registry: Map<StorefrontSectionId, CarouselControl>
 ): CarouselScrollLeft {
   const snapshot: CarouselScrollLeft = {}
 
@@ -58,7 +58,7 @@ function readCarouselSnapshot(
 }
 
 function tryRestoreCarouselCategory(
-  category: ProductCategory,
+  category: StorefrontSectionId,
   control: CarouselControl,
   pending: CarouselScrollLeft
 ): boolean {
@@ -81,11 +81,11 @@ export function ProductsListSessionProvider({
   getSnapshot,
   children,
 }: ProductsListSessionProviderProps) {
-  const carouselRegistryRef = useRef(new Map<ProductCategory, CarouselControl>())
+  const carouselRegistryRef = useRef(new Map<StorefrontSectionId, CarouselControl>())
   const pendingCarouselRestoreRef = useRef(
     loadPendingProductsListRestore()?.carouselScrollLeft ?? {}
   )
-  const carouselRestoreTimersRef = useRef(new Map<ProductCategory, number[]>())
+  const carouselRestoreTimersRef = useRef(new Map<StorefrontSectionId, number[]>())
   const carouselResetTimersRef = useRef<number[]>([])
 
   const clearAllCarouselRestoreTimers = useCallback(() => {
@@ -96,7 +96,7 @@ export function ProductsListSessionProvider({
     }
   }, [])
 
-  const clearCarouselRestoreTimers = useCallback((category: ProductCategory) => {
+  const clearCarouselRestoreTimers = useCallback((category: StorefrontSectionId) => {
     const timers = carouselRestoreTimersRef.current.get(category)
     if (!timers) return
     timers.forEach((timer) => clearTimeout(timer))
@@ -104,7 +104,7 @@ export function ProductsListSessionProvider({
   }, [])
 
   const scheduleCarouselRestore = useCallback(
-    (category: ProductCategory, control: CarouselControl) => {
+    (category: StorefrontSectionId, control: CarouselControl) => {
       clearCarouselRestoreTimers(category)
 
       const timers = CAROUSEL_RESTORE_DELAYS_MS.map((delay) =>
@@ -136,7 +136,7 @@ export function ProductsListSessionProvider({
 
     for (const category of Object.keys(pendingCarouselRestoreRef.current)) {
       if (
-        !carouselRegistryRef.current.has(category as ProductCategory)
+        !carouselRegistryRef.current.has(category as StorefrontSectionId)
       ) {
         remaining += 1
       }
@@ -146,7 +146,7 @@ export function ProductsListSessionProvider({
   }, [])
 
   const registerCarousel = useCallback(
-    (category: ProductCategory, control: CarouselControl) => {
+    (category: StorefrontSectionId, control: CarouselControl) => {
       carouselRegistryRef.current.set(category, control)
       scheduleCarouselRestore(category, control)
     },
@@ -154,7 +154,7 @@ export function ProductsListSessionProvider({
   )
 
   const unregisterCarousel = useCallback(
-    (category: ProductCategory) => {
+    (category: StorefrontSectionId) => {
       carouselRegistryRef.current.delete(category)
       clearCarouselRestoreTimers(category)
     },
@@ -218,7 +218,7 @@ export function useSaveProductsListSession(): () => void {
 
 /** 註冊品類橫向捲軸，供返回列表時還原位置 */
 export function useRegisterProductsCarousel(
-  category: ProductCategory,
+  category: StorefrontSectionId,
   trackRef: RefObject<HTMLDivElement | null>
 ) {
   const context = useContext(ProductsListSessionContext)

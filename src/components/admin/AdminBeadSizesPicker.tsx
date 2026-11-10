@@ -10,7 +10,7 @@ interface AdminBeadSizesPickerProps {
   onChange: (sizes: BeadSizeCategory[]) => void
 }
 
-/** 後台：珠材咪數複選 */
+/** 後台：珠材咪數複選（button 避免捲動跳動） */
 export function AdminBeadSizesPicker({ value, onChange }: AdminBeadSizesPickerProps) {
   const toggle = (size: BeadSizeCategory) => {
     onChange(
@@ -23,22 +23,19 @@ export function AdminBeadSizesPicker({ value, onChange }: AdminBeadSizesPickerPr
       <p className="mb-2 text-sm text-white/60">咪數（可複選）</p>
       <div className="flex flex-wrap gap-2">
         {BEAD_SIZE_CATEGORIES.map((size) => (
-          <label
+          <button
             key={size}
-            className={`flex min-h-10 cursor-pointer items-center justify-center rounded-full border px-3 text-sm transition ${
+            type="button"
+            onClick={() => toggle(size)}
+            aria-pressed={value.includes(size)}
+            className={`flex min-h-10 items-center justify-center rounded-full border px-3 text-sm transition ${
               value.includes(size)
                 ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
                 : 'border-white/10 text-white/50'
             }`}
           >
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={value.includes(size)}
-              onChange={() => toggle(size)}
-            />
             {BEAD_SIZE_LABELS[size]}
-          </label>
+          </button>
         ))}
       </div>
       {value.length > 0 && (
