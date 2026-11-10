@@ -1,5 +1,10 @@
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from '../constants/shipping'
-import type { Order } from './types'
+import {
+  COURIER_FREE_SHIPPING_THRESHOLD,
+  COURIER_SHIPPING_FEE,
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FEE,
+} from '../constants/shipping'
+import type { CvsBrand, Order } from './types'
 
 export function isPaidProductOrder(order: Order): boolean {
   if (order.is_point_redemption) return false
@@ -53,11 +58,20 @@ export function resolveOrderGroupPayableNtd(orders: Order[]): number {
 export function detectShippingFee(
   paidProductTotal: number,
   pointsDiscountNtd: number,
-  couponDiscountNtd: number
+  couponDiscountNtd: number,
+  cvsBrand?: CvsBrand | null
 ): number {
+  const isCourier = cvsBrand === '宅配'
+  const standardFee = isCourier ? COURIER_SHIPPING_FEE : SHIPPING_FEE
+  const threshold = isCourier
+    ? COURIER_FREE_SHIPPING_THRESHOLD
+    : FREE_SHIPPING_THRESHOLD
+  const feeOptions = isCourier
+    ? [0, COURIER_SHIPPING_FEE]
+    : [0, SHIPPING_FEE, COURIER_SHIPPING_FEE]
   const candidates: number[] = []
 
-  for (const shippingFee of [0, SHIPPING_FEE]) {
+  for (const shippingFee of feeOptions) {
     const subtotalBeforePoints =
       paidProductTotal - shippingFee + pointsDiscountNtd + couponDiscountNtd
     if (
@@ -72,12 +86,12 @@ export function detectShippingFee(
   if (candidates.length === 1) return candidates[0]
 
   const impliedProductSubtotal =
-    paidProductTotal - SHIPPING_FEE + pointsDiscountNtd + couponDiscountNtd
+    paidProductTotal - standardFee + pointsDiscountNtd + couponDiscountNtd
   if (
-    candidates.includes(SHIPPING_FEE) &&
-    impliedProductSubtotal < FREE_SHIPPING_THRESHOLD
+    candidates.includes(standardFee) &&
+    impliedProductSubtotal < threshold
   ) {
-    return SHIPPING_FEE
+    return standardFee
   }
 
   return 0
@@ -158,7 +172,8 @@ export function resolveOrderGroupPricing(orders: Order[]): {
   const shippingFeeNtd = detectShippingFee(
     paidProductTotal,
     pointsDiscountNtd,
-    couponDiscountNtd
+    couponDiscountNtd,
+    orders[0]?.cvs_brand
   )
 
   return {

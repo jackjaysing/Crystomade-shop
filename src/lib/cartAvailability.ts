@@ -40,13 +40,16 @@ export function resolveCartItems(
     const product = productsById.get(item.productId)
     const variant =
       item.variantId && product
-        ? product.variants.find((entry) => entry.id === item.variantId)
+        ? product.variants.find((entry) => entry.id === item.variantId) ?? null
         : null
-    const currentStock = variant
-      ? Math.max(0, variant.stock)
-      : product && !isProductSoldOut(product)
-        ? product.stock
-        : 0
+    const currentStock =
+      item.variantId
+        ? variant
+          ? Math.max(0, variant.stock)
+          : 0
+        : product && !isProductSoldOut(product)
+          ? product.stock
+          : 0
     const checkoutQuantity = Math.min(item.quantity, currentStock)
     const snatchedQuantity = item.quantity - checkoutQuantity
 

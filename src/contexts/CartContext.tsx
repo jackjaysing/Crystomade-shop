@@ -254,6 +254,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 maxStock,
                 variantId: variant?.id ?? null,
                 variantName: variant?.name ?? null,
+                requiresCourier: Boolean(
+                  variant?.requires_courier ?? product.requires_courier
+                ),
                 quantity: nextQty,
               }
             : item
