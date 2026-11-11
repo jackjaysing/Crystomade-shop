@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { detectShippingFee } from './orderGroupPricing'
+import {
+  detectShippingFee,
+  pickDiscountAbsorberKey,
+  reconstructPaidLineSubtotals,
+} from './orderGroupPricing'
 
 describe('detectShippingFee', () => {
   it('keeps free courier shipping when coupon was applied after checkout', () => {
@@ -25,5 +29,43 @@ describe('detectShippingFee', () => {
   it('keeps charged cvs shipping under free threshold', () => {
     // S=500, F=60, C=50 → paid totals sum to 510
     expect(detectShippingFee(510, 0, 50, '7-11')).toBe(60)
+  })
+})
+
+describe('reconstructPaidLineSubtotals', () => {
+  it('recovers catalog prices when coupon hit a non-first line (CM261111003)', () => {
+    // 標價 1080 + 13800 + 1111；點數 10；9 折券 1600 扣在紫晶洞（非排序第一）
+    const lines = [
+      { key: 'basin', lineTotalAfterDiscount: 1079.32 },
+      { key: 'geode', lineTotalAfterDiscount: 12191.37 },
+      { key: 'bag', lineTotalAfterDiscount: 1110.31 },
+    ]
+    const hints = new Map([
+      ['basin', 1080],
+      ['geode', 13800],
+      ['bag', 1111],
+    ])
+
+    expect(pickDiscountAbsorberKey(lines, 10, 1600, 0, hints)).toBe('geode')
+
+    const subtotals = reconstructPaidLineSubtotals(lines, 10, 1600, 0, hints)
+    expect(subtotals.get('basin')).toBe(1080)
+    expect(subtotals.get('geode')).toBe(13800)
+    expect(subtotals.get('bag')).toBe(1111)
+  })
+
+  it('still works when coupon hit the first line', () => {
+    const lines = [
+      { key: 'a', lineTotalAfterDiscount: 400 },
+      { key: 'b', lineTotalAfterDiscount: 500 },
+    ]
+    const hints = new Map([
+      ['a', 500],
+      ['b', 500],
+    ])
+    expect(pickDiscountAbsorberKey(lines, 0, 100, 0, hints)).toBe('a')
+    const subtotals = reconstructPaidLineSubtotals(lines, 0, 100, 0, hints)
+    expect(subtotals.get('a')).toBe(500)
+    expect(subtotals.get('b')).toBe(500)
   })
 })

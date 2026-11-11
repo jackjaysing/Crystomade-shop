@@ -137,6 +137,59 @@ interface LinePricingEntry {
   isFirstPaidLine: boolean
 }
 
+/**
+ * 若有標價提示（list_unit_price 或商品現價），選重建結果最接近提示的吸收列。
+ * 無提示時退回第一列（舊行為）。
+ */
+export function pickDiscountAbsorberKey(
+  lineEntries: Array<{ key: string; lineTotalAfterDiscount: number }>,
+  pointsDiscountNtd: number,
+  couponDiscountNtd: number,
+  shippingFeeNtd: number,
+  listPriceHints?: Map<string, number>
+): string | null {
+  if (lineEntries.length === 0) return null
+  if (couponDiscountNtd <= 0 && shippingFeeNtd <= 0) {
+    return lineEntries[0]?.key ?? null
+  }
+  if (!listPriceHints || listPriceHints.size === 0) {
+    return lineEntries[0]?.key ?? null
+  }
+
+  let bestKey = lineEntries[0].key
+  let bestError = Number.POSITIVE_INFINITY
+
+  for (const candidate of lineEntries) {
+    const tagged: LinePricingEntry[] = lineEntries.map((entry) => ({
+      ...entry,
+      isFirstPaidLine: entry.key === candidate.key,
+    }))
+    const subtotalMap = reconstructLineSubtotals(
+      tagged,
+      pointsDiscountNtd,
+      couponDiscountNtd,
+      shippingFeeNtd
+    )
+
+    let error = 0
+    let compared = 0
+    for (const entry of lineEntries) {
+      const hint = listPriceHints.get(entry.key)
+      if (hint == null) continue
+      compared += 1
+      error += Math.abs((subtotalMap.get(entry.key) ?? 0) - hint)
+    }
+    if (compared === 0) continue
+
+    if (error < bestError - 1e-6) {
+      bestError = error
+      bestKey = candidate.key
+    }
+  }
+
+  return bestKey
+}
+
 export function reconstructLineSubtotals(
   lineEntries: LinePricingEntry[],
   pointsDiscountNtd: number,
@@ -185,6 +238,33 @@ export function reconstructLineSubtotals(
   }
 
   return result
+}
+
+/** 重建各列折抵前小計；有標價提示時用來對齊優惠券吸收列 */
+export function reconstructPaidLineSubtotals(
+  lineEntries: Array<{ key: string; lineTotalAfterDiscount: number }>,
+  pointsDiscountNtd: number,
+  couponDiscountNtd: number,
+  shippingFeeNtd: number,
+  listPriceHints?: Map<string, number>
+): Map<string, number> {
+  const absorberKey = pickDiscountAbsorberKey(
+    lineEntries,
+    pointsDiscountNtd,
+    couponDiscountNtd,
+    shippingFeeNtd,
+    listPriceHints
+  )
+  const tagged: LinePricingEntry[] = lineEntries.map((entry) => ({
+    ...entry,
+    isFirstPaidLine: entry.key === absorberKey,
+  }))
+  return reconstructLineSubtotals(
+    tagged,
+    pointsDiscountNtd,
+    couponDiscountNtd,
+    shippingFeeNtd
+  )
 }
 
 export function resolveOrderGroupPricing(orders: Order[]): {

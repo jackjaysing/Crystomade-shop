@@ -152,6 +152,8 @@ export interface Order {
   coupon_gift_note?: string | null
   /** 結帳當下運費（整筆 checkout 通常寫在第一筆） */
   checkout_shipping_fee?: number | null
+  /** 結帳當下商品標價（未扣點數／券／未加運費） */
+  list_unit_price?: number | null
   /** 同一結帳批次實際收款（後台填寫；贈點依此計算） */
   checkout_actual_paid_ntd?: number | null
   /** 此訂單列商品實收（不含運費；利潤／分潤用） */

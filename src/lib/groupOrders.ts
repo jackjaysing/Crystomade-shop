@@ -1,7 +1,7 @@
 import {
   isPaidProductOrder,
   lineItemKeyFromOrder,
-  reconstructLineSubtotals,
+  reconstructPaidLineSubtotals,
   resolveCheckoutActualPaidNtd,
   resolveOrderGroupPayableNtd,
   resolveOrderGroupPricing,
@@ -108,20 +108,12 @@ function buildLineItems(
   pricing: Pick<OrderGroup, 'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd'>
 ): OrderLineItem[] {
   const map = new Map<string, OrderLineItem>()
-  const paidOrders = orders
-    .filter(isPaidProductOrder)
-    .sort(
-      (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    )
-  const firstPaidLineKey = paidOrders[0]
-    ? lineItemKeyFromOrder(paidOrders[0])
-    : null
   const pricingEntries: Array<{
     key: string
     lineTotalAfterDiscount: number
-    isFirstPaidLine: boolean
   }> = []
+  const listPriceByKey = new Map<string, number>()
+  const listPriceCompleteByKey = new Map<string, boolean>()
 
   for (const order of orders) {
     const key = lineItemKeyFromOrder(order)
@@ -134,6 +126,10 @@ function buildLineItems(
     const productStudioLocation = order.products?.studio_location ?? null
     const orderStudioLocation = order.studio_location ?? null
     const studioLocation = resolveOrderStudioLocation(order)
+    const listUnitPrice =
+      order.list_unit_price != null && order.list_unit_price >= 0
+        ? Number(order.list_unit_price)
+        : null
     const existing = map.get(key)
     if (existing) {
       existing.quantity += 1
@@ -156,6 +152,13 @@ function buildLineItems(
       const pricingEntry = pricingEntries.find((entry) => entry.key === key)
       if (pricingEntry) {
         pricingEntry.lineTotalAfterDiscount += order.total_amount
+      }
+      if (isPaidProductOrder(order)) {
+        if (listUnitPrice != null) {
+          listPriceByKey.set(key, (listPriceByKey.get(key) ?? 0) + listUnitPrice)
+        } else {
+          listPriceCompleteByKey.set(key, false)
+        }
       }
       continue
     }
@@ -184,17 +187,29 @@ function buildLineItems(
       pricingEntries.push({
         key,
         lineTotalAfterDiscount: order.total_amount,
-        isFirstPaidLine: key === firstPaidLineKey,
       })
+      if (listUnitPrice != null) {
+        listPriceByKey.set(key, listUnitPrice)
+        listPriceCompleteByKey.set(key, true)
+      } else {
+        listPriceCompleteByKey.set(key, false)
+      }
     }
   }
 
-  const lineSubtotals = reconstructLineSubtotals(
-    pricingEntries,
-    pricing.pointsDiscountNtd,
-    pricing.couponDiscountNtd,
-    pricing.shippingFeeNtd
-  )
+  const allListPricesKnown =
+    pricingEntries.length > 0 &&
+    pricingEntries.every((entry) => listPriceCompleteByKey.get(entry.key) === true)
+
+  const lineSubtotals = allListPricesKnown
+    ? listPriceByKey
+    : reconstructPaidLineSubtotals(
+        pricingEntries,
+        pricing.pointsDiscountNtd,
+        pricing.couponDiscountNtd,
+        pricing.shippingFeeNtd,
+        listPriceByKey.size > 0 ? listPriceByKey : undefined
+      )
 
   for (const [key, item] of map) {
     const lineSubtotal = lineSubtotals.get(key)

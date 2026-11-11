@@ -116,6 +116,8 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
       row.checkout_shipping_fee != null
         ? Number(row.checkout_shipping_fee)
         : null,
+    list_unit_price:
+      row.list_unit_price != null ? Number(row.list_unit_price) : null,
     checkout_actual_paid_ntd:
       row.checkout_actual_paid_ntd != null
         ? Number(row.checkout_actual_paid_ntd)
