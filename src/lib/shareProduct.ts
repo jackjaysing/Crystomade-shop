@@ -1,4 +1,3 @@
-import { SITE_NAME } from '../constants/siteMeta'
 import { incrementProductShare } from './api/analytics'
 import { copyToClipboard } from './copyToClipboard'
 import { productDetailPath } from './productSlug'
@@ -18,13 +17,11 @@ export function getProductShareUrl(product: Pick<Product, 'id' | 'name'>): strin
   return url.toString()
 }
 
-/** 分享文案（LINE、複製連結用） */
+/** 分享文案（LINE、複製連結用）：僅商品名稱 */
 export function getProductShareText(
   product: Pick<Product, 'name' | 'description'>
 ): string {
-  const snippet = product.description.trim().slice(0, 80)
-  const intro = snippet ? `【${product.name}】${snippet}…` : `【${product.name}】`
-  return `${intro}\n${SITE_NAME}`
+  return product.name.trim()
 }
 
 function recordProductShare(productId: string) {
@@ -42,7 +39,7 @@ function recordProductShare(productId: string) {
 export async function shareProduct(product: Product): Promise<ProductShareResult> {
   const url = getProductShareUrl(product)
   const text = getProductShareText(product)
-  const title = `${product.name}｜${SITE_NAME}`
+  const title = text
 
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
     try {
