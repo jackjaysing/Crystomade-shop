@@ -85,16 +85,46 @@ export function detectShippingFee(
   if (candidates.length === 0) return 0
   if (candidates.length === 1) return candidates[0]
 
-  const impliedProductSubtotal =
-    paidProductTotal - standardFee + pointsDiscountNtd + couponDiscountNtd
+  // paid + points + coupon = 商品小計 + 運費（優惠券／點數會對消）
+  const merchandisePlusShipping =
+    paidProductTotal + pointsDiscountNtd + couponDiscountNtd
+  const productIfCharged = merchandisePlusShipping - standardFee
+
+  // 免運後再扣券時，0 與標準運費常同時成立；優先採免運，避免核對明細灌入假運費。
+  // （剛好未滿免運＋有運費＋有券的舊單可能誤判；新單改讀 checkout_shipping_fee）
+  if (candidates.includes(0) && merchandisePlusShipping >= threshold) {
+    return 0
+  }
+
   if (
     candidates.includes(standardFee) &&
-    impliedProductSubtotal < threshold
+    productIfCharged >= 0 &&
+    productIfCharged < threshold
   ) {
     return standardFee
   }
 
-  return 0
+  return candidates.includes(0) ? 0 : standardFee
+}
+
+/** 優先讀結帳寫入的運費；舊單才反推 */
+export function resolveCheckoutShippingFee(
+  orders: Order[],
+  paidProductTotal: number,
+  pointsDiscountNtd: number,
+  couponDiscountNtd: number
+): number {
+  for (const order of orders) {
+    if (order.checkout_shipping_fee != null && order.checkout_shipping_fee >= 0) {
+      return Number(order.checkout_shipping_fee)
+    }
+  }
+  return detectShippingFee(
+    paidProductTotal,
+    pointsDiscountNtd,
+    couponDiscountNtd,
+    orders[0]?.cvs_brand
+  )
 }
 
 export function formatNtdInteger(amount: number): string {
@@ -169,11 +199,11 @@ export function resolveOrderGroupPricing(orders: Order[]): {
   )
   const pointsDiscountNtd = resolveCheckoutPointsDiscount(orders)
   const couponDiscountNtd = resolveCheckoutCouponDiscount(orders)
-  const shippingFeeNtd = detectShippingFee(
+  const shippingFeeNtd = resolveCheckoutShippingFee(
+    orders,
     paidProductTotal,
     pointsDiscountNtd,
-    couponDiscountNtd,
-    orders[0]?.cvs_brand
+    couponDiscountNtd
   )
 
   return {

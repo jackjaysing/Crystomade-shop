@@ -112,6 +112,10 @@ export function normalizeOrder(row: Record<string, unknown>): Order {
         : null,
     coupon_gift_note:
       row.coupon_gift_note != null ? String(row.coupon_gift_note) : null,
+    checkout_shipping_fee:
+      row.checkout_shipping_fee != null
+        ? Number(row.checkout_shipping_fee)
+        : null,
     checkout_actual_paid_ntd:
       row.checkout_actual_paid_ntd != null
         ? Number(row.checkout_actual_paid_ntd)
