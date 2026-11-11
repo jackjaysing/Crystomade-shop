@@ -28,17 +28,6 @@
   ],
   "rewrites": [
     {
-      "source": "/products/:slug*",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(?i).*(facebookexternalhit|Facebot|meta-externalagent|Instagram|Twitterbot|LinkedInBot|Pinterest|Slackbot|Discordbot|WhatsApp|TelegramBot|Linespider|SkypeUriPreview|Iframely|Embedly|redditbot|Applebot|vkShare|Viber).*"
-        }
-      ],
-      "destination": "/api/product-og?slug=:slug*"
-    },
-    {
       "source": "/((?!api(?:/|$)|.*\\.).*)",
       "destination": "/index.html"
     }

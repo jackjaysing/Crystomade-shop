@@ -167,7 +167,10 @@ export default async function handler(request: Request): Promise<Response> {
   const description =
     truncateText(product.description || '') ||
     '晶刻 Crystomade 天然水晶商品，五行平衡、水晶手串客製與能量水晶選品。'
-  const imageUrl = absoluteImage(product.image_url, origin)
+  const hasCover = Boolean(String(product.image_url || '').trim())
+  const imageUrl = hasCover
+    ? `${origin}/api/product-cover?id=${encodeURIComponent(product.id)}&v=2`
+    : absoluteImage(null, origin)
 
   return new Response(
     buildOgHtml({

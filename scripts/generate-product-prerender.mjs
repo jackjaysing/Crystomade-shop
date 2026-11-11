@@ -46,7 +46,11 @@ function buildProductHtml({ product, siteUrl, assets }) {
     '晶刻 Crystomade 天然水晶商品，五行平衡、水晶手串客製與能量水晶選品。'
   const price = calcSalePrice(Number(product.price), product.discount_zhe)
   const imageUrl = String(product.image_url || '').trim()
-  const absoluteImage = resolveImageSrc(imageUrl, siteUrl)
+  const directImage = resolveImageSrc(imageUrl, siteUrl)
+  // OG 用同網域代理，降低 LINE 擋站外圖機率
+  const absoluteImage = imageUrl
+    ? `${siteUrl}/api/product-cover?id=${encodeURIComponent(product.id)}&v=2`
+    : directImage
   const availability = isSoldOut(product) ? 'OutOfStock' : 'InStock'
 
   const jsonLd = {
@@ -54,7 +58,7 @@ function buildProductHtml({ product, siteUrl, assets }) {
     '@type': 'Product',
     name: product.name,
     description: truncateText(product.description, 500) || undefined,
-    image: imageUrl ? [absoluteImage] : undefined,
+    image: imageUrl ? [directImage] : undefined,
     sku: product.id,
     url: pageUrl,
     brand: { '@type': 'Brand', name: SITE_NAME },
@@ -76,7 +80,7 @@ function buildProductHtml({ product, siteUrl, assets }) {
     .join('\n    ')
 
   const imgTag = imageUrl
-    ? `<img src="${escapeHtml(absoluteImage)}" alt="${escapeHtml(product.name)}" style="max-width:100%;border-radius:0.75rem;margin-bottom:1rem" />`
+    ? `<img src="${escapeHtml(directImage)}" alt="${escapeHtml(product.name)}" style="max-width:100%;border-radius:0.75rem;margin-bottom:1rem" />`
     : ''
 
   return `<!doctype html>

@@ -1,8 +1,6 @@
 /**
- * Vercel Edge Middleware：社群／LINE 爬蟲讀商品頁時回傳含首圖的 OG HTML。
- * 一般瀏覽器不受影響，仍走 SPA／預渲染頁。
- *
- * 解決「新上架商品尚未預渲染 → 分享只顯示官網圖」的問題。
+ * 商品詳情頁：確保 HTML 內 og:image 為該商品首圖（同網域代理）。
+ * 對所有造訪生效，不靠 User-Agent，避免 LINE 快取／誤判。
  */
 
 export const config = {
@@ -11,10 +9,6 @@ export const config = {
 
 const SITE_NAME = '晶刻 Crystomade'
 const DEFAULT_OG_PATH = '/og-share-square.jpg?v=2'
-
-/** LINE、FB、iMessage、WhatsApp、Discord 等預覽爬蟲 */
-const SOCIAL_BOT_RE =
-  /facebookexternalhit|Facebot|meta-externalagent|Instagram|Twitterbot|LinkedInBot|Pinterest|Slackbot|Discordbot|WhatsApp|TelegramBot|Linespider|\bLine\b|SkypeUriPreview|Iframely|Embedly|redditbot|Applebot|vkShare|Quora Link Preview|Viber|P-Twitter|Googlebot-Image/i
 
 const UUID_RE =
   /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
@@ -48,18 +42,6 @@ function parseProductIdFromPath(pathname: string): string | null {
   }
 }
 
-function absoluteImage(
-  imageUrl: string | null | undefined,
-  origin: string
-): string {
-  const trimmed = String(imageUrl || '').trim()
-  if (!trimmed) return `${origin}${DEFAULT_OG_PATH}`
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return trimmed
-  }
-  return `${origin}${trimmed.startsWith('/') ? trimmed : `/${trimmed}`}`
-}
-
 function resolveSupabaseConfig(): { url: string; key: string } | null {
   const url = (
     process.env.VITE_SUPABASE_URL ||
@@ -74,49 +56,109 @@ function resolveSupabaseConfig(): { url: string; key: string } | null {
   return { url, key }
 }
 
-function buildOgHtml(input: {
-  title: string
-  description: string
-  pageUrl: string
-  imageUrl: string
-  productName: string
-}): string {
-  const { title, description, pageUrl, imageUrl, productName } = input
-  return `<!doctype html>
-<html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${escapeHtml(title)}</title>
-    <meta name="description" content="${escapeHtml(description)}" />
-    <link rel="canonical" href="${escapeHtml(pageUrl)}" />
-    <meta property="og:type" content="product" />
-    <meta property="og:site_name" content="${SITE_NAME}" />
-    <meta property="og:locale" content="zh_TW" />
-    <meta property="og:title" content="${escapeHtml(title)}" />
-    <meta property="og:description" content="${escapeHtml(description)}" />
-    <meta property="og:url" content="${escapeHtml(pageUrl)}" />
-    <meta property="og:image" content="${escapeHtml(imageUrl)}" />
-    <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
-    <meta property="og:image:alt" content="${escapeHtml(`${productName}天然水晶商品照片`)}" />
-    <link rel="image_src" href="${escapeHtml(imageUrl)}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${escapeHtml(title)}" />
-    <meta name="twitter:description" content="${escapeHtml(description)}" />
-    <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
-  </head>
-  <body>
-    <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(productName)}" />
-    <h1>${escapeHtml(productName)}</h1>
-    <p>${escapeHtml(description)}</p>
-    <p><a href="${escapeHtml(pageUrl)}">${SITE_NAME}</a></p>
-  </body>
-</html>`
+function replaceMetaByProperty(
+  html: string,
+  property: string,
+  content: string
+): string {
+  const safe = escapeHtml(content)
+  const rePropertyFirst = new RegExp(
+    `(<meta\\s+[^>]*property=["']${property}["'][^>]*content=["'])[^"']*(["'][^>]*>)`,
+    'i'
+  )
+  if (rePropertyFirst.test(html)) {
+    return html.replace(rePropertyFirst, `$1${safe}$2`)
+  }
+  const reContentFirst = new RegExp(
+    `(<meta\\s+[^>]*content=["'])[^"']*(["'][^>]*property=["']${property}["'][^>]*>)`,
+    'i'
+  )
+  if (reContentFirst.test(html)) {
+    return html.replace(reContentFirst, `$1${safe}$2`)
+  }
+  return html.replace(
+    /<\/head>/i,
+    `    <meta property="${property}" content="${safe}" />\n  </head>`
+  )
+}
+
+function replaceMetaByName(html: string, name: string, content: string): string {
+  const safe = escapeHtml(content)
+  const reNameFirst = new RegExp(
+    `(<meta\\s+[^>]*name=["']${name}["'][^>]*content=["'])[^"']*(["'][^>]*>)`,
+    'i'
+  )
+  if (reNameFirst.test(html)) {
+    return html.replace(reNameFirst, `$1${safe}$2`)
+  }
+  const reContentFirst = new RegExp(
+    `(<meta\\s+[^>]*content=["'])[^"']*(["'][^>]*name=["']${name}["'][^>]*>)`,
+    'i'
+  )
+  if (reContentFirst.test(html)) {
+    return html.replace(reContentFirst, `$1${safe}$2`)
+  }
+  return html.replace(
+    /<\/head>/i,
+    `    <meta name="${name}" content="${safe}" />\n  </head>`
+  )
+}
+
+function injectProductMeta(
+  html: string,
+  meta: {
+    title: string
+    description: string
+    pageUrl: string
+    imageUrl: string
+    productName: string
+  }
+): string {
+  let next = html
+  next = next.replace(
+    /<title>[^<]*<\/title>/i,
+    `<title>${escapeHtml(meta.title)}</title>`
+  )
+  next = replaceMetaByName(next, 'description', meta.description)
+  next = replaceMetaByProperty(next, 'og:type', 'product')
+  next = replaceMetaByProperty(next, 'og:site_name', SITE_NAME)
+  next = replaceMetaByProperty(next, 'og:title', meta.title)
+  next = replaceMetaByProperty(next, 'og:description', meta.description)
+  next = replaceMetaByProperty(next, 'og:url', meta.pageUrl)
+  next = replaceMetaByProperty(next, 'og:image', meta.imageUrl)
+  next = replaceMetaByProperty(next, 'og:image:secure_url', meta.imageUrl)
+  next = replaceMetaByProperty(
+    next,
+    'og:image:alt',
+    `${meta.productName}天然水晶商品照片`
+  )
+  next = replaceMetaByName(next, 'twitter:card', 'summary_large_image')
+  next = replaceMetaByName(next, 'twitter:title', meta.title)
+  next = replaceMetaByName(next, 'twitter:description', meta.description)
+  next = replaceMetaByName(next, 'twitter:image', meta.imageUrl)
+
+  const imageSrcRe =
+    /(<link\s+[^>]*rel=["']image_src["'][^>]*href=["'])[^"']*(["'][^>]*>)/i
+  if (imageSrcRe.test(next)) {
+    next = next.replace(imageSrcRe, `$1${escapeHtml(meta.imageUrl)}$2`)
+  } else {
+    next = next.replace(
+      /<\/head>/i,
+      `    <link rel="image_src" href="${escapeHtml(meta.imageUrl)}" />\n  </head>`
+    )
+  }
+
+  const canonicalRe =
+    /(<link\s+[^>]*rel=["']canonical["'][^>]*href=["'])[^"']*(["'][^>]*>)/i
+  if (canonicalRe.test(next)) {
+    next = next.replace(canonicalRe, `$1${escapeHtml(meta.pageUrl)}$2`)
+  }
+
+  return next
 }
 
 export default async function middleware(request: Request) {
-  const ua = request.headers.get('user-agent') || ''
-  if (!SOCIAL_BOT_RE.test(ua)) return
+  if (request.method !== 'GET' && request.method !== 'HEAD') return
 
   const url = new URL(request.url)
   const productId = parseProductIdFromPath(url.pathname)
@@ -132,16 +174,24 @@ export default async function middleware(request: Request) {
     apiUrl.searchParams.set('select', 'id,name,description,image_url')
     apiUrl.searchParams.set('limit', '1')
 
-    const response = await fetch(apiUrl.toString(), {
-      headers: {
-        apikey: supabase.key,
-        Authorization: `Bearer ${supabase.key}`,
-        Accept: 'application/json',
-      },
-    })
-    if (!response.ok) return
+    const slugSegment = url.pathname.split('/').filter(Boolean)[1]
+    const prerenderPath = `/products/${slugSegment}/index.html`
 
-    const rows = (await response.json()) as Array<{
+    const [productRes, prerenderRes, indexRes] = await Promise.all([
+      fetch(apiUrl.toString(), {
+        headers: {
+          apikey: supabase.key,
+          Authorization: `Bearer ${supabase.key}`,
+          Accept: 'application/json',
+        },
+      }),
+      fetch(new URL(prerenderPath, url.origin)),
+      fetch(new URL('/index.html', url.origin)),
+    ])
+
+    if (!productRes.ok) return
+
+    const rows = (await productRes.json()) as Array<{
       id: string
       name: string
       description: string | null
@@ -150,31 +200,40 @@ export default async function middleware(request: Request) {
     const product = rows[0]
     if (!product?.name) return
 
+    const baseHtml =
+      prerenderRes.ok
+        ? await prerenderRes.text()
+        : indexRes.ok
+          ? await indexRes.text()
+          : ''
+    if (!baseHtml) return
+
     const origin = url.origin
     const pageUrl = `${origin}${url.pathname}`
     const title = `${product.name}｜${SITE_NAME}`
     const description =
       truncateText(product.description || '') ||
       '晶刻 Crystomade 天然水晶商品，五行平衡、水晶手串客製與能量水晶選品。'
-    const imageUrl = absoluteImage(product.image_url, origin)
+    const hasCover = Boolean(String(product.image_url || '').trim())
+    const imageUrl = hasCover
+      ? `${origin}/api/product-cover?id=${encodeURIComponent(product.id)}&v=2`
+      : `${origin}${DEFAULT_OG_PATH}`
 
-    return new Response(
-      buildOgHtml({
-        title,
-        description,
-        pageUrl,
-        imageUrl,
-        productName: product.name,
-      }),
-      {
-        status: 200,
-        headers: {
-          'content-type': 'text/html; charset=utf-8',
-          'cache-control':
-            'public, s-maxage=60, stale-while-revalidate=86400',
-        },
-      }
-    )
+    const injected = injectProductMeta(baseHtml, {
+      title,
+      description,
+      pageUrl,
+      imageUrl,
+      productName: product.name,
+    })
+
+    return new Response(injected, {
+      status: 200,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'public, s-maxage=60, stale-while-revalidate=600',
+      },
+    })
   } catch {
     return
   }

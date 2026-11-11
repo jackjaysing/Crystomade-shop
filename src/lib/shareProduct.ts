@@ -11,9 +11,11 @@ const recentProductShares = new Map<string, number>()
 
 export type ProductShareResult = 'shared' | 'copied' | 'cancelled' | 'failed'
 
-/** 商品詳情頁完整分享網址 */
+/** 商品詳情頁完整分享網址（帶 og 參數逼 LINE 重抓預覽，避免舊快取官網圖） */
 export function getProductShareUrl(product: Pick<Product, 'id' | 'name'>): string {
-  return absoluteUrl(productDetailPath(product))
+  const url = new URL(absoluteUrl(productDetailPath(product)))
+  url.searchParams.set('og', '2')
+  return url.toString()
 }
 
 /** 分享文案（LINE、複製連結用） */
