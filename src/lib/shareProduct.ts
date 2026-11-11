@@ -1,6 +1,6 @@
 import { incrementProductShare } from './api/analytics'
 import { copyToClipboard } from './copyToClipboard'
-import { productDetailPath } from './productSlug'
+import { productSharePath } from './productSlug'
 import { isSupabaseConfigured } from './supabase'
 import { absoluteUrl } from './siteMeta'
 import type { Product } from './types'
@@ -10,9 +10,9 @@ const recentProductShares = new Map<string, number>()
 
 export type ProductShareResult = 'shared' | 'copied' | 'cancelled' | 'failed'
 
-/** 商品詳情頁完整分享網址（帶 og 參數逼 LINE 重抓預覽，避免舊快取官網圖） */
+/** 商品分享網址：用 UUID 短連結，避免複製中文路徑時編碼壞掉 */
 export function getProductShareUrl(product: Pick<Product, 'id' | 'name'>): string {
-  const url = new URL(absoluteUrl(productDetailPath(product)))
+  const url = new URL(absoluteUrl(productSharePath(product)))
   url.searchParams.set('og', '2')
   return url.toString()
 }

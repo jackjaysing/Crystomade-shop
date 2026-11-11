@@ -1,7 +1,10 @@
 import type { Product } from './types'
 
 const UUID_PATTERN =
-  /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
+  /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+
+const UUID_ONLY_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** 商品名稱轉 URL 片段（保留中文，移除不適合路徑的字元） */
 export function slugifyProductName(name: string): string {
@@ -23,17 +26,47 @@ export function productDetailPath(product: Pick<Product, 'id' | 'name'>): string
   return `/products/${encodeURIComponent(productSlug(product))}`
 }
 
+/** 分享用短路徑（僅 UUID，複製網址較不易壞掉） */
+export function productSharePath(product: Pick<Product, 'id'>): string {
+  return `/products/${product.id}`
+}
+
 /** 五行平衡手串客戶配置頁路徑 */
 export function productConfigurePath(product: Pick<Product, 'id' | 'name'>): string {
   return `${productDetailPath(product)}/configure`
 }
 
-/** 從路由 slug 解析商品 UUID */
+function safeDecodeURIComponent(value: string): string {
+  let current = value.trim()
+  for (let i = 0; i < 2; i += 1) {
+    try {
+      const decoded = decodeURIComponent(current)
+      if (decoded === current) break
+      current = decoded
+    } catch {
+      break
+    }
+  }
+  return current
+}
+
+/** 從路由 slug 解析商品 UUID；解析不到則回傳空字串 */
 export function parseProductIdFromSlug(slug: string): string {
-  const decoded = decodeURIComponent(slug.trim())
-  const match = decoded.match(UUID_PATTERN)
-  if (match) return match[1]
-  return decoded
+  const raw = slug.trim()
+  if (!raw) return ''
+
+  if (UUID_ONLY_PATTERN.test(raw)) return raw
+
+  const decoded = safeDecodeURIComponent(raw)
+  if (UUID_ONLY_PATTERN.test(decoded)) return decoded
+
+  const fromDecoded = decoded.match(UUID_PATTERN)
+  if (fromDecoded) return fromDecoded[1]
+
+  const fromRaw = raw.match(UUID_PATTERN)
+  if (fromRaw) return fromRaw[1]
+
+  return ''
 }
 
 /** 在已載入列表中依 slug 找商品 */
@@ -42,5 +75,6 @@ export function findProductBySlug(
   slug: string
 ): Product | undefined {
   const id = parseProductIdFromSlug(slug)
+  if (!id) return undefined
   return products.find((product) => product.id === id)
 }

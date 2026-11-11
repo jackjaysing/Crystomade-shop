@@ -1,6 +1,6 @@
 /**
- * 商品詳情頁：確保 HTML 內 og:image 為該商品首圖（同網域代理）。
- * 對所有造訪生效，不靠 User-Agent，避免 LINE 快取／誤判。
+ * 商品詳情頁：把 SPA index.html 的 OG 改成商品首圖。
+ * 一律回傳 SPA 殼（不用預渲染 HTML），避免手機直接開啟／複製網址時壞掉。
  */
 
 export const config = {
@@ -11,7 +11,7 @@ const SITE_NAME = '晶刻 Crystomade'
 const DEFAULT_OG_PATH = '/og-share-square.jpg?v=2'
 
 const UUID_RE =
-  /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
+  /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
 
 function escapeHtml(value: string): string {
   return value
@@ -33,13 +33,15 @@ function truncateText(text: string, max = 160): string {
 function parseProductIdFromPath(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean)
   if (parts[0] !== 'products' || !parts[1]) return null
+  const raw = parts[1].trim()
+  let decoded = raw
   try {
-    const decoded = decodeURIComponent(parts[1].trim())
-    const match = decoded.match(UUID_RE)
-    return match ? match[1] : null
+    decoded = decodeURIComponent(raw)
   } catch {
-    return null
+    /* keep raw */
   }
+  const match = decoded.match(UUID_RE) || raw.match(UUID_RE)
+  return match ? match[1] : null
 }
 
 function resolveSupabaseConfig(): { url: string; key: string } | null {
@@ -174,10 +176,7 @@ export default async function middleware(request: Request) {
     apiUrl.searchParams.set('select', 'id,name,description,image_url')
     apiUrl.searchParams.set('limit', '1')
 
-    const slugSegment = url.pathname.split('/').filter(Boolean)[1]
-    const prerenderPath = `/products/${slugSegment}/index.html`
-
-    const [productRes, prerenderRes, indexRes] = await Promise.all([
+    const [productRes, indexRes] = await Promise.all([
       fetch(apiUrl.toString(), {
         headers: {
           apikey: supabase.key,
@@ -185,11 +184,10 @@ export default async function middleware(request: Request) {
           Accept: 'application/json',
         },
       }),
-      fetch(new URL(prerenderPath, url.origin)),
       fetch(new URL('/index.html', url.origin)),
     ])
 
-    if (!productRes.ok) return
+    if (!productRes.ok || !indexRes.ok) return
 
     const rows = (await productRes.json()) as Array<{
       id: string
@@ -200,13 +198,8 @@ export default async function middleware(request: Request) {
     const product = rows[0]
     if (!product?.name) return
 
-    const baseHtml =
-      prerenderRes.ok
-        ? await prerenderRes.text()
-        : indexRes.ok
-          ? await indexRes.text()
-          : ''
-    if (!baseHtml) return
+    const baseHtml = await indexRes.text()
+    if (!baseHtml.includes('id="root"')) return
 
     const origin = url.origin
     const pageUrl = `${origin}${url.pathname}`

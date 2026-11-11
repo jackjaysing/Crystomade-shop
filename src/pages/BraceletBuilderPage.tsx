@@ -41,7 +41,14 @@ export function BraceletBuilderPage() {
     setNotBespoke(false)
     setProduct(null)
 
-    void fetchProductById(parseProductIdFromSlug(slug))
+    const productId = parseProductIdFromSlug(slug)
+    if (!productId) {
+      setNotFound(true)
+      setLoading(false)
+      return
+    }
+
+    void fetchProductById(productId)
       .then((data) => {
         if (cancelled) return
         if (!data) {
@@ -57,7 +64,12 @@ export function BraceletBuilderPage() {
       })
       .catch((e) => {
         if (cancelled) return
-        setError(formatErrorMessage(e))
+        const message = formatErrorMessage(e)
+        if (/uuid|invalid input|22P02|not find|找不到/i.test(message)) {
+          setNotFound(true)
+          return
+        }
+        setError(message)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

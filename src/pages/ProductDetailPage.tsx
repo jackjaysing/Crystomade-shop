@@ -43,6 +43,11 @@ export function ProductDetailPage() {
     setProduct(null)
 
     const productId = parseProductIdFromSlug(slug)
+    if (!productId) {
+      setNotFound(true)
+      setLoading(false)
+      return
+    }
 
     void fetchProductById(productId)
       .then((data) => {
@@ -55,7 +60,13 @@ export function ProductDetailPage() {
       })
       .catch((e) => {
         if (cancelled) return
-        setError(formatErrorMessage(e))
+        const message = formatErrorMessage(e)
+        // 複製網址編碼異常時常見 invalid uuid，改顯示找不到而非維修中
+        if (/uuid|invalid input|22P02|not find|找不到/i.test(message)) {
+          setNotFound(true)
+          return
+        }
+        setError(message)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
