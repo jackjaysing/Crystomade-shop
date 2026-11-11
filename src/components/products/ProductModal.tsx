@@ -17,8 +17,9 @@ import { ProductPriceDisplay } from './ProductPriceDisplay'
 import { BraceletSizePicker } from './BraceletSizePicker'
 import { GlassPanel } from '../ui/GlassPanel'
 import { MetalDivider } from '../ui/MetalDivider'
-import { applyDefaultSiteMeta, applyProductSiteMeta } from '../../lib/siteMeta'
+import { getProductImages } from '../../lib/productImages'
 import { productDetailPath } from '../../lib/productSlug'
+import { applyDefaultSiteMeta, applyProductSiteMeta } from '../../lib/siteMeta'
 
 interface ProductModalProps {
   product: Product | null
@@ -44,7 +45,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     applyProductSiteMeta({
       name: product.name,
       description: product.description,
-      imageUrl: product.image_url,
+      imageUrl: getProductImages(product)[0] || product.image_url,
       pathname: productDetailPath(product),
     })
 

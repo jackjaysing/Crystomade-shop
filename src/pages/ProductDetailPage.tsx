@@ -7,6 +7,7 @@ import {
   productDetailPath,
   productSlug,
 } from '../lib/productSlug'
+import { getProductImages } from '../lib/productImages'
 import { applyProductSiteMeta } from '../lib/siteMeta'
 import type { Product } from '../lib/types'
 import { ProductDetailView } from '../components/products/ProductDetailView'
@@ -71,7 +72,7 @@ export function ProductDetailPage() {
     applyProductSiteMeta({
       name: product.name,
       description: product.description,
-      imageUrl: product.image_url,
+      imageUrl: getProductImages(product)[0] || product.image_url,
       pathname: productDetailPath(product),
     })
 

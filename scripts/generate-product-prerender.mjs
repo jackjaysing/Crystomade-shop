@@ -94,6 +94,9 @@ function buildProductHtml({ product, siteUrl, assets }) {
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:url" content="${escapeHtml(pageUrl)}" />
     <meta property="og:image" content="${escapeHtml(absoluteImage)}" />
+    <meta property="og:image:secure_url" content="${escapeHtml(absoluteImage)}" />
+    <meta property="og:image:alt" content="${escapeHtml(`${product.name}天然水晶商品照片`)}" />
+    <link rel="image_src" href="${escapeHtml(absoluteImage)}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />

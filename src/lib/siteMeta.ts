@@ -72,6 +72,7 @@ function applyMetaBundle(meta: PageMeta, pathname: string, imagePath = SITE_OG_I
   upsertLink('canonical', pageUrl)
 
   const ogImage = absoluteUrl(imagePath)
+  upsertLink('image_src', ogImage)
   const ogPairs: Array<[string, string]> = [
     ['og:site_name', SITE_NAME],
     ['og:type', 'website'],
@@ -79,6 +80,7 @@ function applyMetaBundle(meta: PageMeta, pathname: string, imagePath = SITE_OG_I
     ['og:description', meta.description],
     ['og:url', pageUrl],
     ['og:image', ogImage],
+    ['og:image:secure_url', ogImage],
     ['og:image:alt', SITE_OG_IMAGE_ALT],
   ]
 
@@ -166,8 +168,11 @@ export function applyProductSiteMeta(product: ProductShareMeta) {
     ['og:description', description],
     ['og:url', pageUrl],
     ['og:image', ogImage],
+    ['og:image:secure_url', ogImage],
     ['og:image:alt', `${product.name}天然水晶商品照片`],
   ]
+
+  upsertLink('image_src', ogImage)
 
   for (const [property, content] of ogPairs) {
     upsertMeta(
