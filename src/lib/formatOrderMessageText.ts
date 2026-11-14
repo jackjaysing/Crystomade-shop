@@ -20,7 +20,10 @@ export function formatNumberedItemSection(
   index: number,
   sectionLabel: string,
   lineItems: OrderLineItem[],
-  group?: Pick<OrderGroup, 'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd'>
+  group?: Pick<
+    OrderGroup,
+    'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd' | 'cvs_brand'
+  >
 ): string[] {
   const header = `${index}. ${sectionLabel}`
   const detailLines = lineItems.flatMap((item, i) => {

@@ -34,7 +34,7 @@ export function buildLineOrderNotificationMessage(
     '',
     formatNumberedField(1, '訂單編號', orderId),
     formatNumberedField(2, '收件姓名', group.buyer_name),
-    ...formatNumberedItemSection(3, '訂購明細', group.lineItems),
+    ...formatNumberedItemSection(3, '訂購明細', group.lineItems, group),
     formatNumberedField(4, '訂單總額', `NT$ ${total}`),
     formatNumberedField(5, '配送進度', '包裹已封箱準備寄出！'),
     formatNumberedField(6, '寄件單號', tracking),

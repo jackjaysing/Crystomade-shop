@@ -730,7 +730,7 @@ export function OrderTable({ orders, loading, onUpdated, onDeleted }: OrderTable
                       <p className="text-sm text-white/90">
                         <span className="text-white/50">
                           {group.cvs_brand === '自取'
-                            ? '自取 · '
+                            ? '取件 · '
                             : group.cvs_brand === '宅配'
                               ? '宅配 · '
                               : '超商 · '}
