@@ -30,6 +30,11 @@ describe('detectShippingFee', () => {
     // S=500, F=60, C=50 → paid totals sum to 510
     expect(detectShippingFee(510, 0, 50, '7-11')).toBe(60)
   })
+
+  it('treats studio pickup as free shipping', () => {
+    expect(detectShippingFee(300, 0, 0, '自取')).toBe(0)
+    expect(detectShippingFee(300, 10, 100, '自取')).toBe(0)
+  })
 })
 
 describe('reconstructPaidLineSubtotals', () => {

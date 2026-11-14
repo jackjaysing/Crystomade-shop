@@ -61,6 +61,8 @@ export function detectShippingFee(
   couponDiscountNtd: number,
   cvsBrand?: CvsBrand | null
 ): number {
+  if (cvsBrand === '自取') return 0
+
   const isCourier = cvsBrand === '宅配'
   const standardFee = isCourier ? COURIER_SHIPPING_FEE : SHIPPING_FEE
   const threshold = isCourier

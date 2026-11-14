@@ -16,10 +16,16 @@ import {
   cartHasRaffleGiftBase,
   RAFFLE_GIFT_REQUIRES_BASE_MESSAGE,
 } from '../lib/cartCheckoutRules'
-import { CVS_BRANDS } from '../constants/cvs'
+import {
+  CHECKOUT_SHIPPING_OPTIONS,
+  COURIER_SHIPPING_OPTIONS,
+} from '../constants/cvs'
 import {
   COURIER_CVS_BRAND,
   COURIER_FREE_SHIPPING_THRESHOLD,
+  PICKUP_CHECKOUT_HINT,
+  PICKUP_CVS_BRAND,
+  PICKUP_STORE_LABEL,
 } from '../constants/shipping'
 import { CheckoutMagicianShipping } from '../components/checkout/CheckoutMagicianShipping'
 import { fetchMemberMagicianShippingQuota } from '../lib/api/grimoireMagicianShipping'
@@ -136,9 +142,16 @@ export function CheckoutPage() {
     }
   }, [profile?.id])
 
+  const requiresCourier = useMemo(
+    () => cartRequiresCourier(checkoutItems),
+    [checkoutItems]
+  )
+  const isStudioPickup = form.cvs_brand === PICKUP_CVS_BRAND
   const magicianShippingOffered = useMemo(
-    () => canOfferMagicianShipping(checkoutItems, magicianQuota),
-    [checkoutItems, magicianQuota]
+    () =>
+      !isStudioPickup &&
+      canOfferMagicianShipping(checkoutItems, magicianQuota),
+    [checkoutItems, magicianQuota, isStudioPickup]
   )
   const magicianShippingApplied = useMemo(
     () =>
@@ -147,18 +160,18 @@ export function CheckoutPage() {
       (magicianQuota?.remaining ?? 0) > 0,
     [magicianShippingOffered, useMagicianShipping, magicianQuota?.remaining]
   )
-  const shippingFee = useMemo(
-    () =>
-      calcShippingFeeWithMagicianPerk(checkoutItems, {
-        useMagicianShipping: magicianShippingApplied,
-        magicianRemaining: magicianQuota?.remaining,
-      }),
-    [checkoutItems, magicianQuota?.remaining, magicianShippingApplied]
-  )
-  const requiresCourier = useMemo(
-    () => cartRequiresCourier(checkoutItems),
-    [checkoutItems]
-  )
+  const shippingFee = useMemo(() => {
+    if (isStudioPickup) return 0
+    return calcShippingFeeWithMagicianPerk(checkoutItems, {
+      useMagicianShipping: magicianShippingApplied,
+      magicianRemaining: magicianQuota?.remaining,
+    })
+  }, [
+    checkoutItems,
+    isStudioPickup,
+    magicianQuota?.remaining,
+    magicianShippingApplied,
+  ])
   const productSubtotalForShipping = useMemo(
     () => calcProductSubtotal(checkoutItems),
     [checkoutItems]
@@ -168,26 +181,44 @@ export function CheckoutPage() {
     [checkoutItems]
   )
   const freeShippingByThreshold =
+    !isStudioPickup &&
     productSubtotalForShipping > 0 &&
     productSubtotalForShipping >= freeShippingThreshold
+  const shippingOptions = requiresCourier
+    ? COURIER_SHIPPING_OPTIONS
+    : CHECKOUT_SHIPPING_OPTIONS
 
   useEffect(() => {
     if (!requiresCourier) return
-    setForm((prev) =>
-      prev.cvs_brand === COURIER_CVS_BRAND
-        ? prev
-        : { ...prev, cvs_brand: COURIER_CVS_BRAND, cvs_store: '' }
-    )
+    setForm((prev) => {
+      if (
+        prev.cvs_brand === COURIER_CVS_BRAND ||
+        prev.cvs_brand === PICKUP_CVS_BRAND
+      ) {
+        return prev
+      }
+      return { ...prev, cvs_brand: COURIER_CVS_BRAND, cvs_store: '' }
+    })
   }, [requiresCourier])
 
   useEffect(() => {
     if (requiresCourier) return
-    setForm((prev) =>
-      prev.cvs_brand === COURIER_CVS_BRAND
-        ? { ...prev, cvs_brand: '7-11', cvs_store: '' }
-        : prev
-    )
+    setForm((prev) => {
+      if (prev.cvs_brand === COURIER_CVS_BRAND) {
+        return { ...prev, cvs_brand: '7-11', cvs_store: '' }
+      }
+      return prev
+    })
   }, [requiresCourier])
+
+  useEffect(() => {
+    if (!isStudioPickup) return
+    setForm((prev) =>
+      prev.cvs_store === PICKUP_STORE_LABEL
+        ? prev
+        : { ...prev, cvs_store: PICKUP_STORE_LABEL }
+    )
+  }, [isStudioPickup])
 
   if (items.length === 0 && !showSuccess) {
     return <Navigate to="/products" replace />
@@ -285,27 +316,41 @@ export function CheckoutPage() {
       }
 
       const latestRequiresCourier = cartRequiresCourier(latest.checkoutItems)
-      const submitForm = latestRequiresCourier
-        ? { ...form, cvs_brand: COURIER_CVS_BRAND }
-        : form.cvs_brand === COURIER_CVS_BRAND
-          ? { ...form, cvs_brand: '7-11' as const }
-          : form
+      const wantsPickup = form.cvs_brand === PICKUP_CVS_BRAND
+      let submitForm = { ...form }
+      if (wantsPickup) {
+        submitForm = {
+          ...form,
+          cvs_brand: PICKUP_CVS_BRAND,
+          cvs_store: PICKUP_STORE_LABEL,
+        }
+      } else if (latestRequiresCourier) {
+        submitForm = { ...form, cvs_brand: COURIER_CVS_BRAND }
+      } else if (form.cvs_brand === COURIER_CVS_BRAND) {
+        submitForm = { ...form, cvs_brand: '7-11' as const }
+      }
       const submitValidation = validateOrderForm(submitForm, {
-        requiresCourier: latestRequiresCourier,
+        requiresCourier:
+          latestRequiresCourier && submitForm.cvs_brand !== PICKUP_CVS_BRAND,
       })
       if (submitValidation) {
         throw new Error(submitValidation)
       }
 
-      const submitOffered = canOfferMagicianShipping(latest.checkoutItems, magicianQuota)
+      const submitOffered =
+        submitForm.cvs_brand !== PICKUP_CVS_BRAND &&
+        canOfferMagicianShipping(latest.checkoutItems, magicianQuota)
       const submitApplied =
         submitOffered &&
         useMagicianShipping &&
         (magicianQuota?.remaining ?? 0) > 0
-      const latestShippingFee = calcShippingFeeWithMagicianPerk(latest.checkoutItems, {
-        useMagicianShipping: submitApplied,
-        magicianRemaining: magicianQuota?.remaining,
-      })
+      const latestShippingFee =
+        submitForm.cvs_brand === PICKUP_CVS_BRAND
+          ? 0
+          : calcShippingFeeWithMagicianPerk(latest.checkoutItems, {
+              useMagicianShipping: submitApplied,
+              magicianRemaining: magicianQuota?.remaining,
+            })
 
       const createdOrders = await createOrdersFromCart(
         latest.checkoutItems,
@@ -501,7 +546,8 @@ export function CheckoutPage() {
             <div className="flex justify-between text-white/60">
               <span>
                 運費
-                {productSubtotalForShipping > 0 &&
+                {!isStudioPickup &&
+                  productSubtotalForShipping > 0 &&
                   productSubtotalForShipping < freeShippingThreshold &&
                   !magicianShippingApplied && (
                   <span className="ml-1 text-xs text-white/30">
@@ -511,7 +557,9 @@ export function CheckoutPage() {
                 )}
               </span>
               <span>
-                {shippingFee === 0 && freeShippingByThreshold ? (
+                {shippingFee === 0 && isStudioPickup ? (
+                  <span className="text-emerald-400">自取免運</span>
+                ) : shippingFee === 0 && freeShippingByThreshold ? (
                   <span className="text-emerald-400">免運</span>
                 ) : shippingFee === 0 && magicianShippingApplied ? (
                   <span className="text-emerald-400">魔法師免運</span>
@@ -595,23 +643,39 @@ export function CheckoutPage() {
 
           <GlassPanel className="p-6 sm:p-8">
             <p className="text-xs tracking-widest text-white/40">
-              {requiresCourier ? '填寫宅配收件資訊' : '填寫取件資訊（超商）'}
+              {isStudioPickup
+                ? '填寫自取聯絡資訊'
+                : requiresCourier
+                  ? '填寫宅配收件資訊'
+                  : '填寫取件資訊'}
             </p>
 
-            {requiresCourier && (
+            {requiresCourier && !isStudioPickup && (
               <p className="mt-3 rounded-lg border border-amber-glow/30 bg-amber-glow/10 px-3 py-2.5 text-sm leading-relaxed text-amber-glow/95">
-                購買商品超過超商規格，須走宅配。請提供收件人姓名、電話及收件地址。
+                購買商品超過超商規格，請選擇宅配或工作室自取。
                 <span className="mt-1 block text-xs text-white/45">
                   宅配運費 NT$120，滿 NT$
-                  {COURIER_FREE_SHIPPING_THRESHOLD.toLocaleString()} 免運
+                  {COURIER_FREE_SHIPPING_THRESHOLD.toLocaleString()} 免運；自取免運
                 </span>
+              </p>
+            )}
+
+            {isStudioPickup && (
+              <p className="mt-3 rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 py-2.5 text-sm leading-relaxed text-emerald-300/95">
+                {PICKUP_CHECKOUT_HINT}
               </p>
             )}
 
             <div className="mt-4 space-y-4">
               <input
                 required
-                placeholder={requiresCourier ? '收件人姓名 *' : '姓名 *'}
+                placeholder={
+                  isStudioPickup
+                    ? '聯絡人姓名 *'
+                    : requiresCourier
+                      ? '收件人姓名 *'
+                      : '姓名 *'
+                }
                 value={form.buyer_name}
                 onChange={(e) => setForm({ ...form, buyer_name: e.target.value })}
                 className="input-field"
@@ -627,13 +691,53 @@ export function CheckoutPage() {
               <input
                 required
                 type="tel"
-                placeholder={requiresCourier ? '收件人電話 *' : '聯絡電話 *'}
+                placeholder={
+                  isStudioPickup
+                    ? '聯絡電話 *'
+                    : requiresCourier
+                      ? '收件人電話 *'
+                      : '聯絡電話 *'
+                }
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="input-field"
               />
 
-              {requiresCourier ? (
+              <div>
+                <p className="mb-2 text-xs text-white/50">取件／運送方式 *</p>
+                <div className="flex flex-wrap gap-2">
+                  {shippingOptions.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          cvs_brand: option.id,
+                          cvs_store:
+                            option.id === PICKUP_CVS_BRAND
+                              ? PICKUP_STORE_LABEL
+                              : option.id === COURIER_CVS_BRAND ||
+                                  form.cvs_brand === PICKUP_CVS_BRAND
+                                ? ''
+                                : form.cvs_store,
+                        })
+                      }
+                      aria-pressed={form.cvs_brand === option.id}
+                      className={`rounded-full border px-4 py-2 text-sm transition ${
+                        form.cvs_brand === option.id
+                          ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
+                          : 'border-white/10 text-white/50'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {isStudioPickup ? null : form.cvs_brand === COURIER_CVS_BRAND ||
+                requiresCourier ? (
                 <>
                   <textarea
                     required
@@ -655,29 +759,6 @@ export function CheckoutPage() {
                 </>
               ) : (
                 <>
-                  <div>
-                    <p className="mb-2 text-xs text-white/50">收件超商 *</p>
-                    <div className="flex flex-wrap gap-2">
-                      {CVS_BRANDS.map((brand) => (
-                        <button
-                          key={brand.id}
-                          type="button"
-                          onClick={() =>
-                            setForm({ ...form, cvs_brand: brand.id })
-                          }
-                          aria-pressed={form.cvs_brand === brand.id}
-                          className={`rounded-full border px-4 py-2 text-sm transition ${
-                            form.cvs_brand === brand.id
-                              ? 'border-amber-glow bg-amber-glow/10 text-amber-glow'
-                              : 'border-white/10 text-white/50'
-                          }`}
-                        >
-                          {brand.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   <input
                     required
                     placeholder="收件門市（店名或店號）*"

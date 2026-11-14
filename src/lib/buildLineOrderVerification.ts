@@ -11,12 +11,21 @@ export interface LineOrderVerificationOptions {
   bankTransferInfo?: string
 }
 
-/** 超商／宅配收件一行描述 */
+/** 超商／宅配／自取收件一行描述 */
 export function formatCvsPickupLine(group: OrderGroup): string {
+  if (group.cvs_brand === '自取') {
+    return '工作室自取（免運）'
+  }
   if (group.cvs_brand === '宅配') {
     return `宅配 · ${group.cvs_store}`.trim()
   }
   return `${group.cvs_brand} ${group.cvs_store}`.trim()
+}
+
+function pickupFieldLabel(brand: OrderGroup['cvs_brand']): string {
+  if (brand === '自取') return '取件方式'
+  if (brand === '宅配') return '收件地址'
+  return '收件門市'
 }
 
 /**
@@ -42,11 +51,7 @@ export function buildLineOrderVerificationMessage(
     formatNumberedField(1, '訂單編號', orderId),
     formatNumberedField(2, '收件姓名', group.buyer_name),
     formatNumberedField(3, '聯絡電話', group.phone),
-    formatNumberedField(
-      4,
-      group.cvs_brand === '宅配' ? '收件地址' : '收件門市',
-      formatCvsPickupLine(group)
-    ),
+    formatNumberedField(4, pickupFieldLabel(group.cvs_brand), formatCvsPickupLine(group)),
     ...formatNumberedItemSection(5, '預訂明細', group.lineItems, group),
     formatNumberedField(6, '應付總額', `NT$ ${grandTotal}`),
     '',

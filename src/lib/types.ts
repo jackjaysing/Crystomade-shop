@@ -12,7 +12,7 @@ export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
 export type OrderPaymentStatus = 'unpaid' | 'paid' | 'partial'
 
 /** 超商品牌 */
-export type CvsBrand = '7-11' | '全家' | '宅配'
+export type CvsBrand = '7-11' | '全家' | '宅配' | '自取'
 
 /** 商品品類 */
 export type ProductCategory = '手串' | '配飾' | '擺件' | '礦石'

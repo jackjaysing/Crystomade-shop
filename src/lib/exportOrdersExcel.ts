@@ -72,6 +72,9 @@ function formatOrderCreatedAt(iso: string): string {
 }
 
 function formatCvsPickup(group: OrderGroup): string {
+  if (group.cvs_brand === '自取') {
+    return '工作室自取（免運）'
+  }
   if (group.cvs_brand === '宅配') {
     return `宅配 · ${group.cvs_store}`.trim()
   }

@@ -122,6 +122,12 @@ export function FreeShippingProgress({
           </>
         )}
       </p>
+      <p className="mt-1.5 text-center text-xs leading-relaxed text-white/55">
+        結帳時選擇
+        <span className="font-medium text-amber-glow">工作室自取</span>
+        亦可
+        <span className="font-medium text-emerald-300">免運費</span>
+      </p>
     </div>
   )
 }
