@@ -131,8 +131,10 @@ export function MemberCouponList({
 }
 
 export function splitMemberCoupons(rows: MemberCouponWithDefinition[]) {
-  const giftCoupons = rows.filter((mc) => isCartRaffleGiftCoupon(mc.coupon))
-  const discountCoupons = rows.filter(
+  // 會員中心不顯示已過期（會越積越多）；已使用仍保留以便對帳
+  const visible = rows.filter((mc) => !isMemberCouponExpired(mc))
+  const giftCoupons = visible.filter((mc) => isCartRaffleGiftCoupon(mc.coupon))
+  const discountCoupons = visible.filter(
     (mc) => !isCartRaffleGiftCoupon(mc.coupon)
   )
   return { discountCoupons, giftCoupons }
