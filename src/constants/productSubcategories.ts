@@ -18,6 +18,7 @@ export const ORNAMENT_SUBCATEGORIES = [
   { id: '龍龜', label: '龍龜' },
   { id: '貔貅', label: '貔貅' },
   { id: '原礦', label: '原礦' },
+  { id: '晶盆', label: '晶盆' },
   { id: '其他', label: '其他' },
 ] as const satisfies readonly SubcategoryOption[]
 
