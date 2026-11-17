@@ -50,7 +50,7 @@ export function HotProductFrame({
             width="180%"
             height="180%"
           >
-            <feGaussianBlur stdDeviation="1.4" result="blur" />
+            <feGaussianBlur stdDeviation="0.7" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -67,10 +67,10 @@ export function HotProductFrame({
           ry={rx}
           pathLength={100}
           fill="none"
-          stroke="rgba(212,165,116,0.55)"
-          strokeWidth={3.2}
+          stroke="rgba(212,165,116,0.5)"
+          strokeWidth={1.4}
           strokeLinecap="round"
-          strokeDasharray="18 82"
+          strokeDasharray="14 86"
           filter={`url(#${glowId})`}
           vectorEffect="nonScalingStroke"
           className="hot-orbit-dash hot-orbit-dash--trail"
@@ -86,9 +86,9 @@ export function HotProductFrame({
           pathLength={100}
           fill="none"
           stroke="rgba(255,240,210,1)"
-          strokeWidth={3.6}
+          strokeWidth={1.8}
           strokeLinecap="round"
-          strokeDasharray="7 93"
+          strokeDasharray="5 95"
           filter={`url(#${glowId})`}
           vectorEffect="nonScalingStroke"
           className="hot-orbit-dash"
