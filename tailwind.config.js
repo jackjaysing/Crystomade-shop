@@ -31,6 +31,7 @@ export default {
         fadeIn: 'fadeIn 0.4s ease-out',
         flameFlicker: 'flameFlicker 1.8s ease-in-out infinite',
         flameGlow: 'flameGlow 2.2s ease-in-out infinite',
+        hotOrbit: 'hotOrbit 4.5s linear infinite',
       },
       keyframes: {
         shimmer: {
@@ -54,6 +55,10 @@ export default {
             boxShadow:
               '0 0 32px rgba(251,146,60,0.55), 0 0 14px rgba(212,165,116,0.4), inset 0 1px 0 rgba(255,255,255,0.18)',
           },
+        },
+        hotOrbit: {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
         },
       },
     },
