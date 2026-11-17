@@ -44,6 +44,30 @@
     display: none;
   }
 
+  /* 熱門商品：光點沿邊框繞圈 */
+  .hot-orbit-dash {
+    animation: hot-orbit-dash 2.6s linear infinite;
+  }
+
+  .hot-orbit-dash--trail {
+    animation-duration: 2.6s;
+    opacity: 0.85;
+  }
+
+  @keyframes hot-orbit-dash {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hot-orbit-dash {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
   @keyframes raffle-win-pulse {
     0%,
     100% {
