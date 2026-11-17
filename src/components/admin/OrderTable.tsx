@@ -67,9 +67,9 @@ interface OrderTableProps {
 
 function shipStatusClassName(status: OrderGroupStatus): string {
   if (status === 'cancelled') return 'border-white/20 bg-white/5 text-white/50'
-  if (status === 'shipped') return 'border-amber-glow/50 bg-amber-glow/15 text-amber-glow'
+  if (status === 'shipped') return 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
   if (status === 'partial') return 'border-sky-500/40 bg-sky-500/15 text-sky-300'
-  return 'border-white/15 bg-white/5 text-white/55'
+  return 'border-amber-glow/40 bg-amber-glow/10 text-amber-glow'
 }
 
 function paymentStatusClassName(status: OrderPaymentStatus): string {
@@ -83,9 +83,9 @@ function panelAccentClassName(
   status: OrderGroupStatus
 ): string {
   if (status === 'cancelled') return 'border-l-[8px] border-l-white/25'
-  // 已出貨：黃色；已付款未出貨：綠色；未付款：紅色
-  if (status === 'shipped') return 'border-l-[8px] border-l-amber-glow/80'
-  if (paymentStatus === 'paid') return 'border-l-[8px] border-l-emerald-500/70'
+  // 已付款已出貨：綠色；已付款未出貨：黃色；未付款：紅色
+  if (status === 'shipped') return 'border-l-[8px] border-l-emerald-500/70'
+  if (paymentStatus === 'paid') return 'border-l-[8px] border-l-amber-glow/80'
   return 'border-l-[8px] border-l-red-500/60'
 }
 
