@@ -1,4 +1,5 @@
 import { getProductSalePrice } from './productPricing'
+import { isProductSoldOut } from './productStock'
 import type { Product } from './types'
 
 /** 新上架優先（created_at 較新者在前） */
@@ -12,6 +13,14 @@ function compareBySortOrderThenNewest(a: Product, b: Product): number {
     return a.sort_order - b.sort_order
   }
   return compareByNewestFirst(a, b)
+}
+
+/** 售罄往後；有貨在前 */
+function compareSoldOutLast(a: Product, b: Product): number {
+  const aSold = isProductSoldOut(a)
+  const bSold = isProductSoldOut(b)
+  if (aSold === bSold) return 0
+  return aSold ? 1 : -1
 }
 
 /** 依價格排序（特價）；相同則 sort_order → 新上架 */
@@ -32,8 +41,10 @@ function compareInDefaultMode(a: Product, b: Product): number {
   return compareBySortOrderThenNewest(a, b)
 }
 
-/** 前台／後台共用：熱門置頂 → 各區塊內 sort_order → 新上架優先 */
+/** 前台／後台共用：有貨優先 → 熱門置頂 → sort_order → 新上架 */
 export function compareProducts(a: Product, b: Product): number {
+  const soldOut = compareSoldOutLast(a, b)
+  if (soldOut !== 0) return soldOut
   if (a.is_hot !== b.is_hot) {
     return a.is_hot ? -1 : 1
   }
@@ -63,10 +74,7 @@ function compareWithinGroup(a: Product, b: Product, mode: ProductSortMode): numb
   return compareInDefaultMode(a, b)
 }
 
-export function sortProductsByMode(
-  products: Product[],
-  mode: ProductSortMode
-): Product[] {
+function sortHotThenRest(products: Product[], mode: ProductSortMode): Product[] {
   const hot = products.filter((product) => product.is_hot)
   const rest = products.filter((product) => !product.is_hot)
 
@@ -76,7 +84,20 @@ export function sortProductsByMode(
   return [...hot, ...rest]
 }
 
-/** 是否可與相鄰商品交換排序（不可跨熱門／一般區塊） */
+export function sortProductsByMode(
+  products: Product[],
+  mode: ProductSortMode
+): Product[] {
+  const available = products.filter((product) => !isProductSoldOut(product))
+  const soldOut = products.filter((product) => isProductSoldOut(product))
+
+  return [
+    ...sortHotThenRest(available, mode),
+    ...sortHotThenRest(soldOut, mode),
+  ]
+}
+
+/** 是否可與相鄰商品交換排序（不可跨熱門／一般／售罄區塊） */
 export function canSwapProductWithNeighbor(
   products: Product[],
   index: number,
@@ -84,5 +105,10 @@ export function canSwapProductWithNeighbor(
 ): boolean {
   const swapIndex = direction === 'up' ? index - 1 : index + 1
   if (swapIndex < 0 || swapIndex >= products.length) return false
-  return products[index].is_hot === products[swapIndex].is_hot
+  const current = products[index]
+  const neighbor = products[swapIndex]
+  return (
+    current.is_hot === neighbor.is_hot &&
+    isProductSoldOut(current) === isProductSoldOut(neighbor)
+  )
 }
