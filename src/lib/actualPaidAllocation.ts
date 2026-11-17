@@ -89,6 +89,29 @@ export function resolveLineMerchandiseRevenues(
     })
   }
 
+  // 有標價小計時依標價比例攤「訂單合計 − 運費」，避免後台品項實收出現 1862.23 這類怪小數
+  const allHaveSubtotal = group.lineItems.every(
+    (item) => item.lineSubtotal != null && item.lineSubtotal > 0
+  )
+  if (allHaveSubtotal) {
+    const subtotalSum = group.lineItems.reduce(
+      (sum, item) => sum + Number(item.lineSubtotal),
+      0
+    )
+    const merchandiseTotal = Math.max(0, Math.round(grossTotal - shipping))
+    let allocated = 0
+    return group.lineItems.map((item, index) => {
+      if (index === group.lineItems.length - 1) {
+        return Math.max(0, merchandiseTotal - allocated)
+      }
+      const amount = Math.round(
+        (Number(item.lineSubtotal) / subtotalSum) * merchandiseTotal
+      )
+      allocated += amount
+      return Math.max(0, amount)
+    })
+  }
+
   return group.lineItems.map((item) => {
     const ratio = grossTotal > 0 ? item.lineTotal / grossTotal : 0
     return Math.max(0, Math.round(item.lineTotal - shipping * ratio))

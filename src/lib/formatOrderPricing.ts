@@ -1,14 +1,41 @@
-import type { OrderGroup } from './groupOrders'
+import type { OrderGroup, OrderLineItem } from './groupOrders'
 import { formatNtdInteger } from './orderGroupPricing'
 
 export type OrderPricingSummary = Pick<
   OrderGroup,
-  'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd' | 'cvs_brand'
+  | 'pointsDiscountNtd'
+  | 'couponDiscountNtd'
+  | 'shippingFeeNtd'
+  | 'cvs_brand'
+  | 'lineItems'
 >
 
-/** 訂單金額調整列（運費、折抵）；免運／自取也明確列出，避免核對明細只有商品價看起來缺一截 */
+export function lineItemDisplayAmount(item: {
+  lineSubtotal?: number
+  lineTotal: number
+}): number {
+  return item.lineSubtotal != null && item.lineSubtotal > 0
+    ? item.lineSubtotal
+    : item.lineTotal
+}
+
+export function sumLineItemDisplayAmounts(lineItems: OrderLineItem[]): number {
+  return lineItems.reduce((sum, item) => sum + lineItemDisplayAmount(item), 0)
+}
+
+/** 訂單金額調整列（運費、折抵）；有折抵時先列商品小計，避免核對看起來跳號 */
 export function formatOrderPricingAdjustments(group: OrderPricingSummary): string[] {
   const lines: string[] = []
+  const hasDiscounts =
+    group.pointsDiscountNtd > 0 || group.couponDiscountNtd > 0
+  const hasPaidShipping = group.shippingFeeNtd > 0
+
+  if (hasDiscounts || hasPaidShipping) {
+    const merchandiseSubtotal = sumLineItemDisplayAmounts(group.lineItems)
+    if (merchandiseSubtotal > 0) {
+      lines.push(`商品小計 NT$ ${formatNtdInteger(merchandiseSubtotal)}`)
+    }
+  }
 
   if (group.shippingFeeNtd > 0) {
     lines.push(`運費 NT$ ${formatNtdInteger(group.shippingFeeNtd)}`)
@@ -36,9 +63,5 @@ export function formatOrderLineDisplayAmount(item: {
   lineSubtotal?: number
   lineTotal: number
 }): string {
-  const amount =
-    item.lineSubtotal != null && item.lineSubtotal > 0
-      ? item.lineSubtotal
-      : item.lineTotal
-  return formatNtdInteger(amount)
+  return formatNtdInteger(lineItemDisplayAmount(item))
 }

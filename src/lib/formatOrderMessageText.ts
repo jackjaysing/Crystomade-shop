@@ -22,7 +22,11 @@ export function formatNumberedItemSection(
   lineItems: OrderLineItem[],
   group?: Pick<
     OrderGroup,
-    'pointsDiscountNtd' | 'couponDiscountNtd' | 'shippingFeeNtd' | 'cvs_brand'
+    | 'pointsDiscountNtd'
+    | 'couponDiscountNtd'
+    | 'shippingFeeNtd'
+    | 'cvs_brand'
+    | 'lineItems'
   >
 ): string[] {
   const header = `${index}. ${sectionLabel}`
