@@ -6,7 +6,7 @@ import {
   escapeHtml,
   loadProjectEnv,
   productDetailPath,
-  productSlug,
+  productPrerenderDirName,
   resolveSiteUrl,
   truncateText,
 } from './prerender-utils.mjs'
@@ -177,20 +177,50 @@ async function main() {
   }
 
   let written = 0
+  let fallbackId = 0
   for (const product of data) {
     const html = buildProductHtml({ product, siteUrl, assets })
-    const outPath = resolve(
-      distDir,
-      'products',
-      encodeURIComponent(productSlug(product)),
-      'index.html'
-    )
-    mkdirSync(dirname(outPath), { recursive: true })
-    writeFileSync(outPath, html, 'utf8')
+    const candidates = [
+      productPrerenderDirName(product),
+      String(product.id || '').trim(),
+    ].filter(Boolean)
+    // 去重，保留順序
+    const dirs = [...new Set(candidates)]
+
+    let saved = false
+    let lastErr = null
+    for (const dir of dirs) {
+      try {
+        const outPath = resolve(distDir, 'products', dir, 'index.html')
+        mkdirSync(dirname(outPath), { recursive: true })
+        writeFileSync(outPath, html, 'utf8')
+        saved = true
+        if (dir === String(product.id || '').trim() && dirs[0] !== dir) {
+          fallbackId += 1
+        }
+        break
+      } catch (err) {
+        lastErr = err
+        if (err && (err.code === 'ENAMETOOLONG' || err.code === 'EINVAL')) {
+          continue
+        }
+        throw err
+      }
+    }
+
+    if (!saved) {
+      console.warn(
+        `[prerender] 略過商品「${product.name || product.id}」：${lastErr?.message || '無法建立目錄'}`
+      )
+      continue
+    }
     written += 1
   }
 
-  console.log(`[prerender] 已產生 ${written} 個商品靜態頁（供 Google 收錄）`)
+  console.log(
+    `[prerender] 已產生 ${written} 個商品靜態頁（供 Google 收錄）` +
+      (fallbackId > 0 ? `，其中 ${fallbackId} 個改用 id 路徑` : '')
+  )
 }
 
 await main()

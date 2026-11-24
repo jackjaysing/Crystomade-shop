@@ -77,6 +77,27 @@ export function productDetailPath(product) {
   return `/products/${encodeURIComponent(productSlug(product))}`
 }
 
+/**
+ * 靜態預渲染用的資料夾名：不可 percent-encode（會超過 NAME_MAX），
+ * 並截短到約 200 bytes，避免 ENAMETOOLONG。
+ */
+export function productPrerenderDirName(product) {
+  const id = String(product?.id || '').trim()
+  const raw = String(productSlug(product) || id)
+    .replace(/[<>:"|?*\u0000-\u001f]/g, '')
+    .replace(/[\/\\]+/g, '')
+  if (!id) return raw.slice(0, 80) || 'unknown'
+
+  const maxBytes = 200
+  let name = raw
+  while (Buffer.byteLength(name, 'utf8') > maxBytes && name.length > id.length + 1) {
+    name = name.slice(0, -1)
+  }
+  if (Buffer.byteLength(name, 'utf8') > maxBytes) return id
+  if (!name.endsWith(id)) return id
+  return name
+}
+
 export function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
