@@ -60,6 +60,7 @@ const member: AdminRegisteredCustomer = {
   referral_code: null,
   referred_by: null,
   grimoire_merit_xp: 0,
+  five_element_chart: null,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
   order_count: 1,

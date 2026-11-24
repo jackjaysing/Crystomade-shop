@@ -8,6 +8,7 @@ import {
 import { normalizeOrder } from '../normalizeOrder'
 import { supabase } from '../supabase'
 import type { MemberProfile, Order, PointsHistoryEntry } from '../types'
+import { parseMemberFiveElementChart } from '../memberFiveElementChart'
 import { issueAutoRegisterCouponsToMember } from './coupons'
 import {
   memberRegisterMetadata,
@@ -33,6 +34,7 @@ function normalizeProfile(row: Record<string, unknown>): MemberProfile {
       typeof row.grimoire_merit_xp === 'number'
         ? row.grimoire_merit_xp
         : Number(row.grimoire_merit_xp) || 0,
+    five_element_chart: parseMemberFiveElementChart(row.five_element_chart),
     created_at: String(row.created_at ?? ''),
     updated_at: String(row.updated_at ?? ''),
   }

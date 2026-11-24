@@ -1,7 +1,13 @@
 import { recordAdminActivity } from './adminActivityLog'
 import { formatErrorMessage } from '../formatError'
+import {
+  formatMemberFiveElementChartSummary,
+  parseMemberFiveElementChart,
+  sanitizeMemberFiveElementChart,
+} from '../memberFiveElementChart'
 import { normalizePhone, formatPhoneDisplay } from '../phoneAuth'
 import { supabase } from '../supabase'
+import type { MemberFiveElementChart } from '../../constants/fiveElements'
 import type { AdminGuestCustomer, AdminRegisteredCustomer } from '../types'
 
 function normalizeMemberRow(row: Record<string, unknown>): AdminRegisteredCustomer {
@@ -18,6 +24,7 @@ function normalizeMemberRow(row: Record<string, unknown>): AdminRegisteredCustom
       typeof row.grimoire_merit_xp === 'number'
         ? row.grimoire_merit_xp
         : Number(row.grimoire_merit_xp) || 0,
+    five_element_chart: parseMemberFiveElementChart(row.five_element_chart),
     created_at: String(row.created_at ?? ''),
     updated_at: String(row.updated_at ?? ''),
     order_count: 0,
@@ -218,6 +225,55 @@ export async function adminUpdateMemberPoints(
   })
 
   const profile = normalizeMemberRow(row as Record<string, unknown>)
+  return { ...profile, order_count: 0, last_order_at: null, total_spent: 0 }
+}
+
+export interface AdminUpdateMemberFiveElementChartContext {
+  realName: string
+  phone: string
+}
+
+/** 後台：更新會員五行命盤 */
+export async function adminUpdateMemberFiveElementChart(
+  userId: string,
+  chart: MemberFiveElementChart,
+  member: AdminUpdateMemberFiveElementChartContext
+): Promise<AdminRegisteredCustomer> {
+  const sanitized = sanitizeMemberFiveElementChart(chart)
+  const memberLabel = `${member.realName.trim() || '（未填姓名）'} · ${formatPhoneDisplay(member.phone)}`
+  const summaryLabel = formatMemberFiveElementChartSummary(sanitized)
+
+  const { data, error } = await supabase
+    .from('member_profiles')
+    .update({
+      five_element_chart: sanitized,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+    .select('*')
+    .single()
+
+  if (error) {
+    const msg = formatErrorMessage(error)
+    if (/five_element_chart|42703/i.test(msg)) {
+      throw new Error(
+        '資料庫尚未啟用會員五行命盤，請執行 supabase/migration-member-five-element-chart.sql'
+      )
+    }
+    throw new Error(msg)
+  }
+
+  if (!data) throw new Error('更新失敗')
+
+  void recordAdminActivity({
+    action: 'update',
+    entityType: 'member',
+    entityId: userId,
+    entityLabel: memberLabel,
+    summary: `更新會員「${member.realName.trim() || '未填姓名'}」五行命盤：${summaryLabel}`,
+  })
+
+  const profile = normalizeMemberRow(data as Record<string, unknown>)
   return { ...profile, order_count: 0, last_order_at: null, total_spent: 0 }
 }
 

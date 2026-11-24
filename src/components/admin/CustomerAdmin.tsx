@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   adminDeleteMember,
+  adminUpdateMemberFiveElementChart,
   adminUpdateMemberPoints,
   fetchGuestCustomers,
   fetchRegisteredCustomers,
   formatPhoneDisplay,
 } from '../../lib/api/adminCustomers'
+import { formatMemberFiveElementChartSummary } from '../../lib/memberFiveElementChart'
+import type { MemberFiveElementChart } from '../../constants/fiveElements'
 import { recordAdminActivity } from '../../lib/api/adminActivityLog'
 import { fetchAdminCrystalSoulCards, fetchAdminPurchaseMeritCounts } from '../../lib/api/adminGrimoire'
 import type { AdminLegacyGrimoireIssueRow } from '../../lib/api/adminGrimoire'
@@ -23,6 +26,7 @@ import type {
 } from '../../lib/types'
 import { useAdminSession } from '../../hooks/useAdminSession'
 import { BirthdayMembersPanel } from './BirthdayMembersPanel'
+import { CustomerFiveElementChartModal } from './CustomerFiveElementChartModal'
 import { CustomerPointsHistoryModal } from './CustomerPointsHistoryModal'
 import { DeleteMemberConfirmModal } from './DeleteMemberConfirmModal'
 import { LegacyGrimoireIssueModal } from './LegacyGrimoireIssueModal'
@@ -80,6 +84,9 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
     useState<AdminRegisteredCustomer | null>(null)
   const [historyMember, setHistoryMember] =
     useState<AdminRegisteredCustomer | null>(null)
+  const [chartMember, setChartMember] =
+    useState<AdminRegisteredCustomer | null>(null)
+  const [chartSaving, setChartSaving] = useState(false)
 
   const reloadMembers = useCallback(async () => {
     if (!enabled) return
@@ -217,6 +224,25 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
     }
   }
 
+  const handleSaveFiveElementChart = async (chart: MemberFiveElementChart) => {
+    if (!chartMember) return
+    setChartSaving(true)
+    setMessage('')
+    try {
+      await adminUpdateMemberFiveElementChart(chartMember.id, chart, {
+        realName: chartMember.real_name,
+        phone: chartMember.phone,
+      })
+      setMessage(`已更新 ${chartMember.real_name} 的五行命盤`)
+      setChartMember(null)
+      await reloadAll()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '儲存五行失敗')
+    } finally {
+      setChartSaving(false)
+    }
+  }
+
   const handleSavePoints = async () => {
     if (!editing) return
 
@@ -338,7 +364,7 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         </GlassPanel>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full min-w-[880px] text-left text-sm">
+          <table className="w-full min-w-[980px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.03] text-xs tracking-wider text-white/45">
                 {view === 'registered' ? (
@@ -346,6 +372,7 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                     <th className="px-4 py-3 font-medium">姓名</th>
                     <th className="px-4 py-3 font-medium">電話</th>
                     <th className="px-4 py-3 font-medium">生日</th>
+                    <th className="px-4 py-3 font-medium">五行</th>
                     <th className="px-4 py-3 font-medium">VIP 等級</th>
                     <th className="px-4 py-3 font-medium">經驗值</th>
                     <th className="px-4 py-3 font-medium">點數</th>
@@ -385,6 +412,9 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                         {formatPhoneDisplay(c.phone)}
                       </td>
                       <td className="px-4 py-3 text-white/60">{c.birthday}</td>
+                      <td className="px-4 py-3 text-xs text-white/55">
+                        {formatMemberFiveElementChartSummary(c.five_element_chart)}
+                      </td>
                       <td className="px-4 py-3 text-white/75">
                         <span className="block">{magician.title}</span>
                         <span className="text-xs text-white/40">
@@ -416,6 +446,13 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setChartMember(c)}
+                            className="rounded border border-sky-400/35 px-3 py-1 text-xs text-sky-200 transition hover:bg-sky-500/10"
+                          >
+                            五行
+                          </button>
                           <button
                             type="button"
                             onClick={() => setHistoryMember(c)}
@@ -483,6 +520,17 @@ export function CustomerAdmin({ enabled = true, reloadSignal = 0 }: CustomerAdmi
         <p className="text-xs text-white/35">
           未註冊客戶為訪客下單紀錄（無會員帳號），依電話彙總；若已註冊同號碼則僅顯示於「已註冊會員」。
         </p>
+      )}
+
+      {chartMember && (
+        <CustomerFiveElementChartModal
+          customer={chartMember}
+          saving={chartSaving}
+          onClose={() => {
+            if (!chartSaving) setChartMember(null)
+          }}
+          onSave={handleSaveFiveElementChart}
+        />
       )}
 
       {historyMember && (

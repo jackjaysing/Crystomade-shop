@@ -1,7 +1,10 @@
 /** 資料庫型別定義（對應 Supabase 表格） */
 
 import type { CrystalMagicStatus } from '../constants/grimoire'
-import type { FiveElement } from '../constants/fiveElements'
+import type {
+  FiveElement,
+  MemberFiveElementChart,
+} from '../constants/fiveElements'
 import type { ProductSubcategory } from '../constants/productSubcategories'
 import type { BraceletConfig } from './braceletConfig'
 
@@ -181,6 +184,8 @@ export interface MemberProfile {
   referred_by: string | null
   /** 極境後日常修行累積的巫師修為 */
   grimoire_merit_xp: number
+  /** 後台五行命盤（缺由本命∪綜合推導） */
+  five_element_chart: MemberFiveElementChart | null
   created_at: string
   updated_at: string
 }
