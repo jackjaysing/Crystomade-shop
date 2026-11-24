@@ -13,6 +13,7 @@ const INTENSITY_SET = new Set<string>(ELEMENT_INTENSITIES)
 export const EMPTY_MEMBER_FIVE_ELEMENT_CHART: MemberFiveElementChart = {
   natal: [],
   composite: [],
+  missing: [],
   balance: [],
   reduce: [],
   note: '',
@@ -67,6 +68,11 @@ export function parseMemberFiveElementChart(
   const composite = sanitizeChartTrio(
     Array.isArray(row.composite) ? row.composite.map(String) : []
   )
+  const derivedMissing = deriveMissingElements(natal, composite)
+  // 舊資料無 missing 欄位時，用自動缺帶入
+  const missing = Array.isArray(row.missing)
+    ? sanitizeFiveElements(row.missing.map(String))
+    : derivedMissing
   const balance = sanitizeWeightedList(row.balance)
   const reduce = sanitizeWeightedList(row.reduce)
   const note = typeof row.note === 'string' ? row.note.trim() : ''
@@ -74,6 +80,7 @@ export function parseMemberFiveElementChart(
   if (
     natal.length === 0 &&
     composite.length === 0 &&
+    missing.length === 0 &&
     balance.length === 0 &&
     reduce.length === 0 &&
     !note
@@ -81,7 +88,7 @@ export function parseMemberFiveElementChart(
     return null
   }
 
-  return { natal, composite, balance, reduce, note }
+  return { natal, composite, missing, balance, reduce, note }
 }
 
 export function sanitizeMemberFiveElementChart(
@@ -103,9 +110,10 @@ export function formatMemberFiveElementChartSummary(
   chart: MemberFiveElementChart | null | undefined
 ): string {
   if (!chart) return '—'
-  const missing = deriveMissingElements(chart.natal, chart.composite)
   const parts: string[] = []
-  if (missing.length > 0) parts.push(`缺${missing.join('')}`)
+  if (chart.missing.length > 0) {
+    parts.push(`缺${chart.missing.join('')}`)
+  }
   if (chart.balance.length > 0) {
     parts.push(`平${formatWeightedShort(chart.balance)}`)
   }

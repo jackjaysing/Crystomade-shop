@@ -13,10 +13,12 @@ export type WeightedElement = {
   intensity: ElementIntensity
 }
 
-/** 會員五行命盤（缺由 natal∪composite 推導，不另存） */
+/** 會員五行命盤（缺可自動帶入，亦可手動增刪後存檔） */
 export type MemberFiveElementChart = {
   natal: FiveElement[]
   composite: FiveElement[]
+  /** 缺：預設＝本命∪綜合未出現者，可手動補／改 */
+  missing: FiveElement[]
   balance: WeightedElement[]
   reduce: WeightedElement[]
   note: string

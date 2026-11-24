@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
-import { FIVE_ELEMENTS, type FiveElement, type WeightedElement } from '../../constants/fiveElements'
+import {
+  FIVE_ELEMENTS,
+  type FiveElement,
+  type MemberFiveElementChart,
+  type WeightedElement,
+} from '../../constants/fiveElements'
 import { formatPhoneDisplay } from '../../lib/api/adminCustomers'
 import {
   EMPTY_MEMBER_FIVE_ELEMENT_CHART,
   deriveMissingElements,
 } from '../../lib/memberFiveElementChart'
 import type { AdminRegisteredCustomer } from '../../lib/types'
-import type { MemberFiveElementChart } from '../../constants/fiveElements'
 import { GlassPanel } from '../ui/GlassPanel'
 import { AdminChartTrioPicker } from './AdminChartTrioPicker'
+import { AdminFiveElementsPicker } from './AdminFiveElementsPicker'
 import { AdminWeightedFiveElementsPicker } from './AdminWeightedFiveElementsPicker'
 
 interface CustomerFiveElementChartModalProps {
@@ -22,10 +27,11 @@ interface CustomerFiveElementChartModalProps {
 function cloneChart(
   chart: MemberFiveElementChart | null | undefined
 ): MemberFiveElementChart {
-  if (!chart) return { ...EMPTY_MEMBER_FIVE_ELEMENT_CHART }
+  if (!chart) return { ...EMPTY_MEMBER_FIVE_ELEMENT_CHART, missing: [] }
   return {
     natal: [...chart.natal],
     composite: [...chart.composite],
+    missing: [...(chart.missing ?? [])],
     balance: chart.balance.map((item) => ({ ...item })),
     reduce: chart.reduce.map((item) => ({ ...item })),
     note: chart.note,
@@ -36,6 +42,19 @@ function defaultBalanceFromMissing(missing: FiveElement[]): WeightedElement[] {
   return missing.map((element) => ({ element, intensity: '中' as const }))
 }
 
+function withAutoMissing(chart: MemberFiveElementChart): MemberFiveElementChart {
+  const auto = deriveMissingElements(chart.natal, chart.composite)
+  const next = { ...chart, missing: auto }
+  if (
+    next.balance.length === 0 &&
+    auto.length > 0 &&
+    auto.length < FIVE_ELEMENTS.length
+  ) {
+    next.balance = defaultBalanceFromMissing(auto)
+  }
+  return next
+}
+
 /** 後台：編輯會員五行命盤 */
 export function CustomerFiveElementChartModal({
   customer,
@@ -43,64 +62,61 @@ export function CustomerFiveElementChartModal({
   onClose,
   onSave,
 }: CustomerFiveElementChartModalProps) {
-  const [chart, setChart] = useState<MemberFiveElementChart>(() =>
-    cloneChart(customer.five_element_chart)
-  )
+  const [chart, setChart] = useState<MemberFiveElementChart>(() => {
+    const cloned = cloneChart(customer.five_element_chart)
+    if (
+      cloned.missing.length === 0 &&
+      (cloned.natal.length > 0 || cloned.composite.length > 0)
+    ) {
+      return withAutoMissing(cloned)
+    }
+    return cloned
+  })
 
   useEffect(() => {
-    const next = cloneChart(customer.five_element_chart)
-    const nextMissing = deriveMissingElements(next.natal, next.composite)
-    // 已有本命／綜合且平衡空白時，預設帶入缺@中
+    const cloned = cloneChart(customer.five_element_chart)
     if (
-      next.balance.length === 0 &&
-      nextMissing.length > 0 &&
-      nextMissing.length < FIVE_ELEMENTS.length
+      cloned.missing.length === 0 &&
+      (cloned.natal.length > 0 || cloned.composite.length > 0)
     ) {
-      next.balance = defaultBalanceFromMissing(nextMissing)
+      setChart(withAutoMissing(cloned))
+      return
     }
-    setChart(next)
+    if (
+      cloned.balance.length === 0 &&
+      cloned.missing.length > 0 &&
+      cloned.missing.length < FIVE_ELEMENTS.length
+    ) {
+      cloned.balance = defaultBalanceFromMissing(cloned.missing)
+    }
+    setChart(cloned)
   }, [customer])
 
-  const missing = useMemo(
+  const autoMissing = useMemo(
     () => deriveMissingElements(chart.natal, chart.composite),
     [chart.natal, chart.composite]
   )
 
   const applyNatal = (natal: FiveElement[]) => {
-    setChart((prev) => {
-      const next = { ...prev, natal }
-      const nextMissing = deriveMissingElements(natal, prev.composite)
-      if (
-        prev.balance.length === 0 &&
-        nextMissing.length > 0 &&
-        nextMissing.length < FIVE_ELEMENTS.length
-      ) {
-        return { ...next, balance: defaultBalanceFromMissing(nextMissing) }
-      }
-      return next
-    })
+    setChart((prev) => withAutoMissing({ ...prev, natal }))
   }
 
   const applyComposite = (composite: FiveElement[]) => {
-    setChart((prev) => {
-      const next = { ...prev, composite }
-      const nextMissing = deriveMissingElements(prev.natal, composite)
-      if (
-        prev.balance.length === 0 &&
-        nextMissing.length > 0 &&
-        nextMissing.length < FIVE_ELEMENTS.length
-      ) {
-        return { ...next, balance: defaultBalanceFromMissing(nextMissing) }
-      }
-      return next
-    })
+    setChart((prev) => withAutoMissing({ ...prev, composite }))
+  }
+
+  const handleResyncMissing = () => {
+    setChart((prev) => ({
+      ...prev,
+      missing: deriveMissingElements(prev.natal, prev.composite),
+    }))
   }
 
   const handleSeedBalance = () => {
-    if (missing.length === 0) return
+    if (chart.missing.length === 0) return
     setChart((prev) => ({
       ...prev,
-      balance: defaultBalanceFromMissing(missing),
+      balance: defaultBalanceFromMissing(prev.missing),
     }))
   }
 
@@ -154,26 +170,28 @@ export function CustomerFiveElementChartModal({
             onChange={applyComposite}
           />
 
-          <div>
-            <p className="mb-2 text-xs text-white/50">缺（自動）</p>
-            <div className="flex flex-wrap gap-2">
-              {missing.length === 0 ? (
-                <span className="text-xs text-white/35">
-                  {chart.natal.length === 0 && chart.composite.length === 0
-                    ? '請先選本命／綜合'
-                    : '無缺'}
-                </span>
-              ) : (
-                FIVE_ELEMENTS.filter((el) => missing.includes(el)).map((el) => (
-                  <span
-                    key={el}
-                    className="flex h-9 min-w-9 items-center justify-center rounded-full border border-sky-400/35 bg-sky-400/10 px-3 text-sm text-sky-200"
-                  >
-                    {el}
-                  </span>
-                ))
-              )}
-            </div>
+          <div className="space-y-2">
+            <AdminFiveElementsPicker
+              label="缺"
+              hint="改本命／綜合會自動帶入；也可再點選補充或取消"
+              accent="sky"
+              value={chart.missing}
+              onChange={(missing) =>
+                setChart((prev) => ({ ...prev, missing }))
+              }
+            />
+            {(chart.natal.length > 0 || chart.composite.length > 0) && (
+              <button
+                type="button"
+                onClick={handleResyncMissing}
+                className="text-[11px] text-white/40 underline-offset-2 transition hover:text-sky-200 hover:underline"
+              >
+                依本命／綜合重算缺
+                {autoMissing.length > 0
+                  ? `（${autoMissing.join('')}）`
+                  : '（無缺）'}
+              </button>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -182,7 +200,7 @@ export function CustomerFiveElementChartModal({
               value={chart.balance}
               onChange={(balance) => setChart((prev) => ({ ...prev, balance }))}
             />
-            {missing.length > 0 && (
+            {chart.missing.length > 0 && (
               <button
                 type="button"
                 onClick={handleSeedBalance}
